@@ -1,13 +1,27 @@
 import { Router } from "express";
+import authRoutes from "../modules/auth/auth.routes.js";
+import bookRoutes from "../modules/books/book.routes.js";
+import transactionRoutes from "../modules/transactions/transaction.routes.js";
+import pointRoutes from "../modules/points/point.routes.js";
+import { successResponse } from "../utils/response.js";
 
 const router = Router();
 
 router.get("/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "Book Club API is running",
-    timestamp: new Date().toISOString(),
-  });
+  successResponse(
+    res,
+    {
+      status: "OK",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    },
+    "Book Club API is running",
+  );
 });
+
+router.use("/auth", authRoutes);
+router.use("/books", bookRoutes);
+router.use("/transactions", transactionRoutes);
+router.use("/points", pointRoutes);
 
 export default router;

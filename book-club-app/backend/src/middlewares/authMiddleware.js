@@ -1,0 +1,33 @@
+import jwt from "jsonwebtoken";
+
+const createHttpError = (message, statusCode) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
+export const protect = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return next(createHttpError("Not authorized, no token", 401));
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    return next();
+  } catch (error) {
+    return next(createHttpError("Not authorized, token failed", 401));
+  }
+};
+
+export const authorizeRoles = (...roles) => (req, res, next) => {
+  if (!req.user || !roles.includes(req.user.role)) {
+    return next(createHttpError("Forbidden: insufficient role", 403));
+  }
+
+  return next();
+};
