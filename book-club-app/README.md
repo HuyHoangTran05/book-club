@@ -28,13 +28,29 @@ book-club-app/
       routes/
         index.js
       middlewares/
+        authMiddleware.js
         errorHandler.js
         notFoundHandler.js
+      utils/
+        asyncHandler.js
+        response.js
       modules/
         auth/
+          auth.routes.js
+          auth.controller.js
+          auth.service.js
         books/
+          book.routes.js
+          book.controller.js
+          book.service.js
         transactions/
+          transaction.routes.js
+          transaction.controller.js
+          transaction.service.js
         points/
+          point.routes.js
+          point.controller.js
+          point.service.js
       models/
       migrations/
       seeders/
@@ -73,14 +89,32 @@ Server running on port 5000
 
 ```text
 GET http://localhost:5000/api/health
+GET http://localhost:5000/api/auth/ping
+GET http://localhost:5000/api/books/ping
+GET http://localhost:5000/api/transactions/ping
+GET http://localhost:5000/api/points/ping
 ```
 
-Expected response:
+Expected health response:
 
 ```json
 {
   "success": true,
   "message": "Book Club API is running",
-  "timestamp": "2026-05-28T00:00:00.000Z"
+  "data": {
+    "status": "OK",
+    "timestamp": "2026-05-28T00:00:00.000Z",
+    "uptime": 12.345
+  }
+}
+```
+
+Expected module ping response:
+
+```json
+{
+  "success": true,
+  "message": "auth module is ready",
+  "data": null
 }
 ```

@@ -1,8 +1,7 @@
-const notFoundHandler = (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route ${req.originalUrl} not found`,
-  });
+const notFoundHandler = (req, res, next) => {
+  const error = new Error(`Route not found: ${req.method} ${req.originalUrl}`);
+  error.statusCode = 404;
+  next(error);
 };
 
 export default notFoundHandler;
