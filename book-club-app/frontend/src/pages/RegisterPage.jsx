@@ -1,44 +1,201 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Alert, Button, Card, FormField } from "../components/common/index.js";
+import "./RegisterPage.css";
+
+const heroImages = import.meta.glob("../assets/*-hero.png", {
+  eager: true,
+  import: "default",
+});
+
+const registerHero =
+  heroImages["../assets/register-hero.png"] || heroImages["../assets/login-hero.png"];
 
 function RegisterPage() {
-  function handleSubmit(event) {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function validateForm() {
+    if (!fullName.trim()) {
+      return "Vui lòng nhập họ và tên.";
+    }
+
+    if (!email.trim()) {
+      return "Vui lòng nhập email.";
+    }
+
+    if (!phoneNumber.trim()) {
+      return "Vui lòng nhập số điện thoại.";
+    }
+
+    if (!password.trim()) {
+      return "Vui lòng nhập mật khẩu.";
+    }
+
+    return "";
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    console.log("Register form data", Object.fromEntries(formData.entries()));
+
+    const validationError = validateForm();
+
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setError("");
+    setLoading(true);
+
+    try {
+      const formData = new FormData(event.currentTarget);
+      console.log("Register form data", Object.fromEntries(formData.entries()));
+    } catch (submitError) {
+      setError(submitError.message || "Đăng ký thất bại. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="mx-auto max-w-xl">
-      <Card>
-        <div className="mb-6">
-          <p className="text-sm font-bold uppercase tracking-wide text-teal-700">Join the club</p>
-          <h1 className="mt-2 text-3xl font-black text-slate-950">Create Account</h1>
-          <p className="mt-2 text-sm text-slate-500">Start trading books with members in your reading community.</p>
-        </div>
+    <>
+      {/* Nếu dán HTML từ Stitch/Figma, cần đổi class -> className, for -> htmlFor, style string -> object nếu có. */}
+      {/* Giữ form onSubmit={handleSubmit}, value/onChange của input, error/loading state và các field đang submit. */}
+      {/* ================= STITCH / FIGMA REGISTER HTML PASTE ZONE START ================= */}
+      <main className="register-page" aria-labelledby="register-title">
+        <section className="register-hero" aria-label="BookCommunity register branding">
+          <div className="register-hero-content">
+            <div className="register-brand-row">
+              <div className="register-brand-mark" aria-hidden="true">
+                <span className="register-brand-book" />
+                <span className="register-brand-leaf" />
+              </div>
+              <p className="register-brand-name">BookCommunity</p>
+            </div>
 
-        <Alert type="info" className="mb-5">
-          New accounts receive 20 starting points.
-        </Alert>
+            <div className="register-hero-image-wrap">
+              {registerHero ? (
+                <img
+                  src={registerHero}
+                  alt="BookCommunity reading community"
+                  className="register-hero-image"
+                />
+              ) : (
+                <div className="register-hero-image register-hero-image-fallback" aria-hidden="true" />
+              )}
+            </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <FormField label="Full name" name="fullName" type="text" placeholder="Alex Morgan" required />
-          <FormField label="Email" name="email" type="email" placeholder="alex@example.com" required />
-          <FormField label="Password" name="password" type="password" placeholder="Create a password" required />
-          <FormField label="Phone number" name="phoneNumber" type="tel" placeholder="+1 555 0123" required />
-          <Button type="submit" className="w-full">
-            Create Account
-          </Button>
-        </form>
+            <div className="register-hero-copy">
+              <h1>Tham gia cộng đồng đọc sách thông minh</h1>
+              <p>Tạo tài khoản để chia sẻ sách, kết nối thành viên và tích luỹ điểm thưởng trong cộng đồng.</p>
+            </div>
+          </div>
+        </section>
 
-        <p className="mt-5 text-center text-sm text-slate-600">
-          Already registered?{" "}
-          <Link to="/login" className="font-bold text-teal-700 hover:text-teal-800">
-            Login
-          </Link>
-        </p>
-      </Card>
-    </div>
+        <section className="register-panel" aria-label="Đăng ký BookCommunity">
+          <div className="register-card">
+            <div className="register-mobile-brand">
+              <div className="register-brand-mark" aria-hidden="true">
+                <span className="register-brand-book" />
+                <span className="register-brand-leaf" />
+              </div>
+              <p>BookCommunity</p>
+            </div>
+
+            <div className="register-form-heading">
+              <p className="register-form-eyebrow">Thành viên mới</p>
+              <h2 id="register-title">Đăng ký</h2>
+              <p>Tạo tài khoản BookCommunity của bạn</p>
+            </div>
+
+            <div className="register-info-message">
+              Tài khoản mới nhận 20 điểm khởi đầu.
+            </div>
+
+            <form className="register-form" onSubmit={handleSubmit} noValidate>
+              {error ? (
+                <div className="register-error" role="alert">
+                  {error}
+                </div>
+              ) : null}
+
+              <div className="register-field">
+                <label htmlFor="fullName">Họ và tên</label>
+                <input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  placeholder="Alex Morgan"
+                  autoComplete="name"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div className="register-field">
+                <label htmlFor="email">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="alex@example.com"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div className="register-field">
+                <label htmlFor="phoneNumber">Số điện thoại</label>
+                <input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel"
+                  placeholder="+1 555 0123"
+                  autoComplete="tel"
+                  value={phoneNumber}
+                  onChange={(event) => setPhoneNumber(event.target.value)}
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <div className="register-field">
+                <label htmlFor="password">Mật khẩu</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Tạo mật khẩu"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  disabled={loading}
+                  required
+                />
+              </div>
+
+              <button className="register-submit-button" type="submit" disabled={loading}>
+                {loading ? "Đang đăng ký..." : "Đăng ký"}
+              </button>
+            </form>
+
+            <p className="register-login-text">
+              Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
+            </p>
+          </div>
+        </section>
+      </main>
+      {/* ================= STITCH / FIGMA REGISTER HTML PASTE ZONE END ================= */}
+    </>
   );
 }
 

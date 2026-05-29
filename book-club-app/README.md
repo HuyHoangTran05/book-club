@@ -8,7 +8,7 @@ Demo project for an app that connects members of a book reading club.
 - ORM: Sequelize
 - Database: PostgreSQL
 - Future auth: JWT + bcrypt
-- Future frontend: React + Vite
+- Frontend: React + Vite
 - Package manager: npm
 - Local environment: Windows PowerShell
 
@@ -83,6 +83,27 @@ The backend should log:
 ```text
 Database connected successfully
 Server running on port 5000
+```
+
+## Setup Frontend
+
+```powershell
+cd frontend
+npm install
+copy .env.example .env
+npm run dev
+```
+
+The frontend should run at:
+
+```text
+http://localhost:5173
+```
+
+For a production build:
+
+```powershell
+npm run build
 ```
 
 ## Test API

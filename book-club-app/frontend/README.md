@@ -35,15 +35,16 @@ npm run build
 - `/register`
 - `/books`
 - `/books/add`
+- `/my-books`
 - `/transactions`
-- `/points`
+- `/points/history`
 
 ## Environment
 
 Create a local `.env` file if you need to override the API URL.
 
 ```bash
-VITE_API_URL=http://localhost:3000/api
+VITE_API_URL=http://localhost:5000/api
 ```
 
 ## Day 1 Notes
@@ -51,4 +52,4 @@ VITE_API_URL=http://localhost:3000/api
 - The frontend uses mock data only.
 - The backend is not connected yet.
 - Form submissions log data to the browser console.
-- Axios is prepared in `src/services/axiosClient.js` for future API integration.
+- Axios is prepared in `src/services/apiClient.js` for future API integration.

@@ -4,8 +4,9 @@ import { classNames } from "../../utils/classNames.js";
 const navigationItems = [
   { label: "Book List", to: "/books" },
   { label: "Add Book", to: "/books/add" },
+  { label: "My Books", to: "/my-books" },
   { label: "My Transactions", to: "/transactions" },
-  { label: "Point History", to: "/points" },
+  { label: "Point History", to: "/points/history" },
   { label: "Login", to: "/login" },
   { label: "Register", to: "/register" },
 ];

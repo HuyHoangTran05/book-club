@@ -10,14 +10,17 @@ import TransactionPage from "../pages/TransactionPage.jsx";
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
       <Route element={<MainLayout />}>
-        <Route path="/" element={<Navigate to="/books" replace />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/" element={<BookListPage />} />
         <Route path="/books" element={<BookListPage />} />
         <Route path="/books/add" element={<AddBookPage />} />
+        <Route path="/my-books" element={<BookListPage />} />
         <Route path="/transactions" element={<TransactionPage />} />
-        <Route path="/points" element={<PointHistoryPage />} />
+        <Route path="/points" element={<Navigate to="/points/history" replace />} />
+        <Route path="/points/history" element={<PointHistoryPage />} />
       </Route>
     </Routes>
   );
