@@ -143,9 +143,24 @@ npm run build
 ```text
 GET http://localhost:5000/api/health
 GET http://localhost:5000/api/auth/ping
+POST http://localhost:5000/api/auth/register
+POST http://localhost:5000/api/auth/login
+GET http://localhost:5000/api/auth/me
+GET http://localhost:5000/api/members/me
+PUT http://localhost:5000/api/members/me
+GET http://localhost:5000/api/members/me/points
 GET http://localhost:5000/api/books/ping
 GET http://localhost:5000/api/transactions/ping
 GET http://localhost:5000/api/points/ping
+```
+
+Example login payload:
+
+```json
+{
+  "email": "an@example.com",
+  "password": "Password123"
+}
 ```
 
 Expected health response:

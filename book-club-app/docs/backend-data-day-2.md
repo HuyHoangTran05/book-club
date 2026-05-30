@@ -13,6 +13,13 @@ This document tracks the Day 2 backend/data scope from the implementation plan.
   - not found handler
   - error handler
   - JWT auth middleware skeleton
+- Member demo API is available:
+  - `POST /api/auth/register`
+  - `POST /api/auth/login`
+  - `GET /api/auth/me`
+  - `GET /api/members/me`
+  - `PUT /api/members/me`
+  - `GET /api/members/me/points`
 - Core database migration exists for the 5 MVP tables:
   - `members`
   - `book_titles`
@@ -64,6 +71,10 @@ Latest local verification with Docker PostgreSQL:
 | `npm.cmd run db:seed` | Pass |
 | `GET /api/health` | Pass |
 | `GET /api/auth/ping` | Pass |
+| `POST /api/auth/login` with seeded member | Pass |
+| `GET /api/auth/me` with token | Pass |
+| `GET /api/members/me` with token | Pass |
+| `GET /api/members/me/points` with token | Pass |
 | `GET /api/books/ping` | Pass |
 | `GET /api/transactions/ping` | Pass |
 | `GET /api/points/ping` | Pass |
