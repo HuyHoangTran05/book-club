@@ -65,13 +65,13 @@ function RegisterPage() {
     <main className="register-page" aria-labelledby="register-title">
       <section className="register-hero" aria-label="Thương hiệu Cộng Đồng Sách">
         <div className="register-hero-content">
-          <div className="register-brand-row">
+          <Link to="/" className="register-brand-row" aria-label="Về trang chủ">
             <div className="register-brand-mark" aria-hidden="true">
               <span className="register-brand-book" />
               <span className="register-brand-leaf" />
             </div>
             <p className="register-brand-name">Cộng Đồng Sách</p>
-          </div>
+          </Link>
 
           <div className="register-hero-image-wrap">
             {registerHero ? (
@@ -90,13 +90,17 @@ function RegisterPage() {
 
       <section className="register-panel" aria-label="Đăng ký Cộng Đồng Sách">
         <div className="register-card">
-          <div className="register-mobile-brand">
+          <Link to="/" className="register-card-home-link" aria-label="Về trang chủ">
+            ← Về trang chủ
+          </Link>
+
+          <Link to="/" className="register-mobile-brand" aria-label="Về trang chủ">
             <div className="register-brand-mark" aria-hidden="true">
               <span className="register-brand-book" />
               <span className="register-brand-leaf" />
             </div>
             <p>Cộng Đồng Sách</p>
-          </div>
+          </Link>
 
           <div className="register-form-heading">
             <p className="register-form-eyebrow">Thành viên mới</p>

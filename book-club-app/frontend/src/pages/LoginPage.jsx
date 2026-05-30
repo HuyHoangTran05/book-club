@@ -48,13 +48,13 @@ function LoginPage() {
     <main className="login-page" aria-labelledby="login-title">
       <section className="login-hero" aria-label="Thương hiệu Cộng Đồng Sách">
         <div className="login-hero-content">
-          <div className="login-brand-row">
+          <Link to="/" className="login-brand-row" aria-label="Về trang chủ">
             <div className="login-brand-mark" aria-hidden="true">
               <span className="login-brand-book" />
               <span className="login-brand-leaf" />
             </div>
             <p className="login-brand-name">Cộng Đồng Sách</p>
-          </div>
+          </Link>
 
           <div className="login-hero-image-wrap">
             <img src={loginHero} alt="Cộng đồng đọc sách" className="login-hero-image" />
@@ -69,13 +69,17 @@ function LoginPage() {
 
       <section className="login-panel" aria-label="Đăng nhập Cộng Đồng Sách">
         <div className="login-card">
-          <div className="login-mobile-brand">
+          <Link to="/" className="login-card-home-link" aria-label="Về trang chủ">
+            ← Về trang chủ
+          </Link>
+
+          <Link to="/" className="login-mobile-brand" aria-label="Về trang chủ">
             <div className="login-brand-mark" aria-hidden="true">
               <span className="login-brand-book" />
               <span className="login-brand-leaf" />
             </div>
             <p>Cộng Đồng Sách</p>
-          </div>
+          </Link>
 
           <div className="login-form-heading">
             <p className="login-form-eyebrow">Thành viên câu lạc bộ</p>
