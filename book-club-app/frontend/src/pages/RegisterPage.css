@@ -19,6 +19,16 @@
   overflow: hidden;
   background: var(--register-cream);
   color: var(--register-ink);
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Arial", sans-serif;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+.register-page :where(h1, h2, p, label, input, button, a) {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .register-hero {
@@ -146,6 +156,7 @@
   font-size: clamp(1.75rem, 2.8vw, 2.35rem);
   line-height: 1.18;
   font-weight: 850;
+  text-wrap: balance;
 }
 
 .register-hero-copy p {
@@ -154,6 +165,7 @@
   color: rgba(255, 255, 255, 0.8);
   font-size: 0.98rem;
   line-height: 1.65;
+  text-wrap: pretty;
 }
 
 .register-panel {
@@ -207,8 +219,8 @@
   color: var(--register-green-700);
   font-size: 0.78rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-transform: none;
 }
 
 .register-form-heading h2 {
@@ -216,6 +228,7 @@
   font-size: clamp(2rem, 5vw, 2.65rem);
   line-height: 1.1;
   font-weight: 850;
+  text-wrap: balance;
 }
 
 .register-form-heading p:last-child {
@@ -223,6 +236,7 @@
   color: var(--register-muted);
   font-size: 1rem;
   line-height: 1.6;
+  text-wrap: pretty;
 }
 
 .register-info-message {

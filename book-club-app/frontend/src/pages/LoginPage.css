@@ -19,6 +19,16 @@
   overflow: hidden;
   background: var(--login-cream);
   color: var(--login-ink);
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Arial", sans-serif;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+.login-page :where(h1, h2, p, label, input, button, a) {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .login-hero {
@@ -120,6 +130,7 @@
   font-size: clamp(1.75rem, 2.8vw, 2.35rem);
   line-height: 1.18;
   font-weight: 850;
+  text-wrap: balance;
 }
 
 .login-hero-copy p {
@@ -128,6 +139,7 @@
   color: rgba(255, 255, 255, 0.8);
   font-size: 0.98rem;
   line-height: 1.65;
+  text-wrap: pretty;
 }
 
 .login-hero-image-wrap {
@@ -199,8 +211,8 @@
   color: var(--login-green-700);
   font-size: 0.78rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-transform: none;
 }
 
 .login-form-heading h2 {
@@ -208,6 +220,7 @@
   font-size: clamp(2rem, 5vw, 2.8rem);
   line-height: 1.1;
   font-weight: 850;
+  text-wrap: balance;
 }
 
 .login-form-heading p:last-child {
@@ -215,6 +228,7 @@
   color: var(--login-muted);
   font-size: 1rem;
   line-height: 1.6;
+  text-wrap: pretty;
 }
 
 .login-form {
