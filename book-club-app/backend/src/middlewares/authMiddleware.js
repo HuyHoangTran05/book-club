@@ -1,10 +1,5 @@
 import jwt from "jsonwebtoken";
-
-const createHttpError = (message, statusCode) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-};
+import createHttpError from "../utils/createHttpError.js";
 
 const getBearerToken = (authHeader) => {
   if (!authHeader || typeof authHeader !== "string") {

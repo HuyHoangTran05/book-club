@@ -8,19 +8,15 @@ export const pingAuth = (req, res) => {
 
 export const register = asyncHandler(async (req, res) => {
   const result = await authService.register(req.body);
-
   successResponse(res, result, "Register successfully", 201);
 });
 
 export const login = asyncHandler(async (req, res) => {
-  const result = await authService.login(req.body.email, req.body.password);
-
+  const result = await authService.login(req.body);
   successResponse(res, result, "Login successfully");
 });
 
 export const getMe = asyncHandler(async (req, res) => {
-  const memberId = req.user?.member_id;
-  const user = await authService.getMe(memberId);
-
-  successResponse(res, user, "Get current member successfully");
+  const member = await authService.getCurrentMember(req.user.member_id);
+  successResponse(res, member, "Current member profile");
 });

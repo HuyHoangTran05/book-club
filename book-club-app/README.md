@@ -27,10 +27,24 @@ book-club-app/
         database.js
       routes/
         index.js
+      migrations/
+        202605300001-create-core-tables.js
       middlewares/
         authMiddleware.js
         errorHandler.js
         notFoundHandler.js
+      models/
+        index.js
+        member.model.js
+        bookTitle.model.js
+        bookCopy.model.js
+        bookTransaction.model.js
+        pointHistory.model.js
+      seeders/
+        202605300001-core-demo-data.js
+      scripts/
+        migrate.js
+        seed.js
       utils/
         asyncHandler.js
         response.js
@@ -51,9 +65,6 @@ book-club-app/
           point.routes.js
           point.controller.js
           point.service.js
-      models/
-      migrations/
-      seeders/
   frontend/
   docs/
   docker-compose.yml
@@ -75,8 +86,29 @@ docker compose up -d
 cd backend
 npm install
 copy .env.example .env
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
+
+## Database Day 2
+
+The Day 2 database deliverable is implemented with five core tables from the plan and
+system design:
+
+- `members`
+- `book_titles`
+- `book_copies`
+- `book_transactions`
+- `point_histories`
+
+The migration adds the required foreign keys, status checks, point balance check, and
+indexes for the MVP flow. The seed creates 3 demo members, 5 book titles, 5 book
+copies, and initial point history rows. Demo accounts all use password
+`Password123`.
+
+See `docs/backend-data-day-2.md` for the backend/data checklist and verification
+result.
 
 The backend should log:
 
@@ -111,9 +143,24 @@ npm run build
 ```text
 GET http://localhost:5000/api/health
 GET http://localhost:5000/api/auth/ping
+POST http://localhost:5000/api/auth/register
+POST http://localhost:5000/api/auth/login
+GET http://localhost:5000/api/auth/me
+GET http://localhost:5000/api/members/me
+PUT http://localhost:5000/api/members/me
+GET http://localhost:5000/api/members/me/points
 GET http://localhost:5000/api/books/ping
 GET http://localhost:5000/api/transactions/ping
 GET http://localhost:5000/api/points/ping
+```
+
+Example login payload:
+
+```json
+{
+  "email": "an@example.com",
+  "password": "Password123"
+}
 ```
 
 Expected health response:
