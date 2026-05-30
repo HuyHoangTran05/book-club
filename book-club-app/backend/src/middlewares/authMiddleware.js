@@ -6,14 +6,30 @@ const createHttpError = (message, statusCode) => {
   return error;
 };
 
-export const protect = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return next(createHttpError("Not authorized, no token", 401));
+const getBearerToken = (authHeader) => {
+  if (!authHeader || typeof authHeader !== "string") {
+    return null;
   }
 
-  const token = authHeader.split(" ")[1];
+  const [scheme, token] = authHeader.split(" ");
+
+  if (scheme !== "Bearer" || !token) {
+    return null;
+  }
+
+  return token;
+};
+
+export const protect = (req, res, next) => {
+  if (!process.env.JWT_SECRET) {
+    return next(createHttpError("JWT_SECRET is not configured", 500));
+  }
+
+  const token = getBearerToken(req.headers.authorization);
+
+  if (!token) {
+    return next(createHttpError("Not authorized, no token", 401));
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
