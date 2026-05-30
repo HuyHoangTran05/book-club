@@ -62,140 +62,134 @@ function RegisterPage() {
   }
 
   return (
-    <>
-      {/* Nếu dán HTML từ Stitch/Figma, cần đổi class -> className, for -> htmlFor, style string -> object nếu có. */}
-      {/* Giữ form onSubmit={handleSubmit}, value/onChange của input, error/loading state và các field đang submit. */}
-      {/* ================= STITCH / FIGMA REGISTER HTML PASTE ZONE START ================= */}
-      <main className="register-page" aria-labelledby="register-title">
-        <section className="register-hero" aria-label="BookCommunity register branding">
-          <div className="register-hero-content">
-            <div className="register-brand-row">
-              <div className="register-brand-mark" aria-hidden="true">
-                <span className="register-brand-book" />
-                <span className="register-brand-leaf" />
-              </div>
-              <p className="register-brand-name">BookCommunity</p>
+    <main className="register-page" aria-labelledby="register-title">
+      <section className="register-hero" aria-label="Thương hiệu Cộng Đồng Sách">
+        <div className="register-hero-content">
+          <Link to="/" className="register-brand-row" aria-label="Về trang chủ">
+            <div className="register-brand-mark" aria-hidden="true">
+              <span className="register-brand-book" />
+              <span className="register-brand-leaf" />
             </div>
+            <p className="register-brand-name">Cộng Đồng Sách</p>
+          </Link>
 
-            <div className="register-hero-image-wrap">
-              {registerHero ? (
-                <img
-                  src={registerHero}
-                  alt="BookCommunity reading community"
-                  className="register-hero-image"
-                />
-              ) : (
-                <div className="register-hero-image register-hero-image-fallback" aria-hidden="true" />
-              )}
-            </div>
-
-            <div className="register-hero-copy">
-              <h1>Tham gia cộng đồng đọc sách thông minh</h1>
-              <p>Tạo tài khoản để chia sẻ sách, kết nối thành viên và tích luỹ điểm thưởng trong cộng đồng.</p>
-            </div>
+          <div className="register-hero-image-wrap">
+            {registerHero ? (
+              <img src={registerHero} alt="Cộng đồng đọc sách" className="register-hero-image" />
+            ) : (
+              <div className="register-hero-image register-hero-image-fallback" aria-hidden="true" />
+            )}
           </div>
-        </section>
 
-        <section className="register-panel" aria-label="Đăng ký BookCommunity">
-          <div className="register-card">
-            <div className="register-mobile-brand">
-              <div className="register-brand-mark" aria-hidden="true">
-                <span className="register-brand-book" />
-                <span className="register-brand-leaf" />
-              </div>
-              <p>BookCommunity</p>
-            </div>
-
-            <div className="register-form-heading">
-              <p className="register-form-eyebrow">Thành viên mới</p>
-              <h2 id="register-title">Đăng ký</h2>
-              <p>Tạo tài khoản BookCommunity của bạn</p>
-            </div>
-
-            <div className="register-info-message">
-              Tài khoản mới nhận 20 điểm khởi đầu.
-            </div>
-
-            <form className="register-form" onSubmit={handleSubmit} noValidate>
-              {error ? (
-                <div className="register-error" role="alert">
-                  {error}
-                </div>
-              ) : null}
-
-              <div className="register-field">
-                <label htmlFor="fullName">Họ và tên</label>
-                <input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  placeholder="Alex Morgan"
-                  autoComplete="name"
-                  value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
-                  disabled={loading}
-                  required
-                />
-              </div>
-
-              <div className="register-field">
-                <label htmlFor="email">Email</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="alex@example.com"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  disabled={loading}
-                  required
-                />
-              </div>
-
-              <div className="register-field">
-                <label htmlFor="phoneNumber">Số điện thoại</label>
-                <input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  type="tel"
-                  placeholder="+1 555 0123"
-                  autoComplete="tel"
-                  value={phoneNumber}
-                  onChange={(event) => setPhoneNumber(event.target.value)}
-                  disabled={loading}
-                  required
-                />
-              </div>
-
-              <div className="register-field">
-                <label htmlFor="password">Mật khẩu</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Tạo mật khẩu"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  disabled={loading}
-                  required
-                />
-              </div>
-
-              <button className="register-submit-button" type="submit" disabled={loading}>
-                {loading ? "Đang đăng ký..." : "Đăng ký"}
-              </button>
-            </form>
-
-            <p className="register-login-text">
-              Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
-            </p>
+          <div className="register-hero-copy">
+            <h1>Tham gia cộng đồng đọc sách thông minh</h1>
+            <p>Tạo tài khoản để chia sẻ sách, kết nối thành viên và tích lũy điểm thưởng trong cộng đồng.</p>
           </div>
-        </section>
-      </main>
-      {/* ================= STITCH / FIGMA REGISTER HTML PASTE ZONE END ================= */}
-    </>
+        </div>
+      </section>
+
+      <section className="register-panel" aria-label="Đăng ký Cộng Đồng Sách">
+        <div className="register-card">
+          <Link to="/" className="register-card-home-link" aria-label="Về trang chủ">
+            ← Về trang chủ
+          </Link>
+
+          <Link to="/" className="register-mobile-brand" aria-label="Về trang chủ">
+            <div className="register-brand-mark" aria-hidden="true">
+              <span className="register-brand-book" />
+              <span className="register-brand-leaf" />
+            </div>
+            <p>Cộng Đồng Sách</p>
+          </Link>
+
+          <div className="register-form-heading">
+            <p className="register-form-eyebrow">Thành viên mới</p>
+            <h2 id="register-title">Đăng ký</h2>
+            <p>Tạo tài khoản Cộng Đồng Sách của bạn</p>
+          </div>
+
+          <div className="register-info-message">
+            Tài khoản mới nhận 20 điểm khởi đầu.
+          </div>
+
+          <form className="register-form" onSubmit={handleSubmit} noValidate>
+            {error ? (
+              <div className="register-error" role="alert">
+                {error}
+              </div>
+            ) : null}
+
+            <div className="register-field">
+              <label htmlFor="fullName">Họ và tên</label>
+              <input
+                id="fullName"
+                name="fullName"
+                type="text"
+                placeholder="Nguyễn Văn A"
+                autoComplete="name"
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+
+            <div className="register-field">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="nguyenvana@example.com"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+
+            <div className="register-field">
+              <label htmlFor="phoneNumber">Số điện thoại</label>
+              <input
+                id="phoneNumber"
+                name="phoneNumber"
+                type="tel"
+                placeholder="0912345678"
+                autoComplete="tel"
+                value={phoneNumber}
+                onChange={(event) => setPhoneNumber(event.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+
+            <div className="register-field">
+              <label htmlFor="password">Mật khẩu</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Tạo mật khẩu"
+                autoComplete="new-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+
+            <button className="register-submit-button" type="submit" disabled={loading}>
+              {loading ? "Đang đăng ký..." : "Đăng ký"}
+            </button>
+          </form>
+
+          <p className="register-login-text">
+            Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }
 

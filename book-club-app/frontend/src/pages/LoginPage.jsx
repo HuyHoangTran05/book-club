@@ -45,102 +45,96 @@ function LoginPage() {
   }
 
   return (
-    <>
-      {/* Khi dán HTML từ Stitch/Figma vào vùng dưới, cần chuyển class -> className, for -> htmlFor, style string -> object nếu có. */}
-      {/* Giữ form onSubmit={handleSubmit}, input email/password dùng value + onChange, button type="submit", error/loading lấy từ state. */}
-      {/* ================= STITCH / FIGMA HTML PASTE ZONE START ================= */}
-      <main className="login-page" aria-labelledby="login-title">
-        <section className="login-hero" aria-label="BookCommunity branding">
-          <div className="login-hero-content">
-            <div className="login-brand-row">
-              <div className="login-brand-mark" aria-hidden="true">
-                <span className="login-brand-book" />
-                <span className="login-brand-leaf" />
-              </div>
-              <p className="login-brand-name">BookCommunity</p>
+    <main className="login-page" aria-labelledby="login-title">
+      <section className="login-hero" aria-label="Thương hiệu Cộng Đồng Sách">
+        <div className="login-hero-content">
+          <Link to="/" className="login-brand-row" aria-label="Về trang chủ">
+            <div className="login-brand-mark" aria-hidden="true">
+              <span className="login-brand-book" />
+              <span className="login-brand-leaf" />
             </div>
+            <p className="login-brand-name">Cộng Đồng Sách</p>
+          </Link>
 
-            <div className="login-hero-image-wrap">
-              <img
-                src={loginHero}
-                alt="BookCommunity reading community"
-                className="login-hero-image"
+          <div className="login-hero-image-wrap">
+            <img src={loginHero} alt="Cộng đồng đọc sách" className="login-hero-image" />
+          </div>
+
+          <div className="login-hero-copy">
+            <h1>Kết nối tri thức qua từng cuốn sách</h1>
+            <p>Nền tảng giúp thành viên chia sẻ, trao đổi và lan tỏa văn hóa đọc trong cộng đồng.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="login-panel" aria-label="Đăng nhập Cộng Đồng Sách">
+        <div className="login-card">
+          <Link to="/" className="login-card-home-link" aria-label="Về trang chủ">
+            ← Về trang chủ
+          </Link>
+
+          <Link to="/" className="login-mobile-brand" aria-label="Về trang chủ">
+            <div className="login-brand-mark" aria-hidden="true">
+              <span className="login-brand-book" />
+              <span className="login-brand-leaf" />
+            </div>
+            <p>Cộng Đồng Sách</p>
+          </Link>
+
+          <div className="login-form-heading">
+            <p className="login-form-eyebrow">Thành viên câu lạc bộ</p>
+            <h2 id="login-title">Đăng nhập</h2>
+            <p>Chào mừng bạn quay lại với cộng đồng đọc sách</p>
+          </div>
+
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
+            {error ? (
+              <div className="login-error-message" role="alert">
+                {error}
+              </div>
+            ) : null}
+
+            <div className="login-field">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Nhập email của bạn"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                required
               />
             </div>
 
-            <div className="login-hero-copy">
-              <h1>Kết nối tri thức qua từng cuốn sách</h1>
-              <p>Nền tảng giúp thành viên chia sẻ, trao đổi và lan toả văn hoá đọc trong cộng đồng.</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="login-panel" aria-label="Đăng nhập BookCommunity">
-          <div className="login-card">
-            <div className="login-mobile-brand">
-              <div className="login-brand-mark" aria-hidden="true">
-                <span className="login-brand-book" />
-                <span className="login-brand-leaf" />
-              </div>
-              <p>BookCommunity</p>
+            <div className="login-field">
+              <label htmlFor="password">Mật khẩu</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Nhập mật khẩu"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                required
+              />
             </div>
 
-            <div className="login-form-heading">
-              <p className="login-form-eyebrow">Thành viên câu lạc bộ</p>
-              <h2 id="login-title">Đăng nhập</h2>
-              <p>Chào mừng bạn quay lại với cộng đồng đọc sách</p>
-            </div>
+            <button className="login-submit-button" type="submit" disabled={loading}>
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            </button>
+          </form>
 
-            <form className="login-form" onSubmit={handleSubmit} noValidate>
-              {error ? (
-                <div className="login-error-message" role="alert">
-                  {error}
-                </div>
-              ) : null}
-
-              <div className="login-field">
-                <label htmlFor="email">Email</label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Nhập email của bạn"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
-                  required
-                />
-              </div>
-
-              <div className="login-field">
-                <label htmlFor="password">Mật khẩu</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Nhập mật khẩu"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                  required
-                />
-              </div>
-
-              <button className="login-submit-button" type="submit" disabled={loading}>
-                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-              </button>
-            </form>
-
-            <p className="login-register-text">
-              Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
-            </p>
-          </div>
-        </section>
-      </main>
-      {/* ================= STITCH / FIGMA HTML PASTE ZONE END ================= */}
-    </>
+          <p className="login-register-text">
+            Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }
 
