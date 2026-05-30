@@ -4,7 +4,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["Be Vietnam Pro", "Inter", "Segoe UI", "Roboto", "Arial", "sans-serif"],
+        serif: ["Noto Serif", "Merriweather", "Georgia", "Times New Roman", "serif"],
       },
       boxShadow: {
         stitch: "0 20px 45px rgba(31, 41, 55, 0.08)",
