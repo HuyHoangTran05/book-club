@@ -11,7 +11,7 @@ BookTitle.hasMany(BookCopy, {
 });
 BookCopy.belongsTo(BookTitle, {
   foreignKey: "book_id",
-  as: "book",
+  as: "bookTitle",
 });
 
 Member.hasMany(BookCopy, {
