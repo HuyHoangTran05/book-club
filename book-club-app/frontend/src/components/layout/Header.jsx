@@ -1,39 +1,42 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, Badge } from "../common/index.js";
 
-function Header({ currentUser, onMenuClick }) {
+function Header({ currentUser, onLogout, onMenuClick }) {
+  const navigate = useNavigate();
+  const points = currentUser?.points ?? currentUser?.pointBalance ?? currentUser?.point_balance ?? 0;
+
+  function handleLogout() {
+    onLogout();
+    navigate("/login", { replace: true });
+  }
+
   return (
-    <header className="sticky top-0 z-30 border-b border-white/70 bg-white/80 backdrop-blur">
-      <div className="flex min-h-20 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 border-b border-[#d9e2d8] bg-[#fbfaf3]/88 backdrop-blur">
+      <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <Button variant="secondary" className="lg:hidden" onClick={onMenuClick}>
-            Menu
+            Mở menu
           </Button>
-          <Link to="/books" className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-teal-600 text-lg font-black text-white shadow-soft">
-              BC
+          <Link to="/" className="flex items-center gap-3" aria-label="Cộng Đồng Sách trang chủ">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#064834] text-lg font-black text-white shadow-soft">
+              S
             </span>
             <div>
-              <p className="text-base font-black text-slate-950 sm:text-lg">Book Club Exchange</p>
-              <p className="hidden text-xs font-medium text-slate-500 sm:block">Share stories, trade books, earn points</p>
+              <p className="text-base font-black text-[#082d24] sm:text-lg">Cộng Đồng Sách</p>
+              <p className="hidden text-xs font-medium text-[#64736d] sm:block">Chia sẻ sách, kết nối thành viên, tích lũy điểm</p>
             </div>
           </Link>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="hidden text-right sm:block">
-            <p className="text-sm font-bold text-slate-900">{currentUser.fullName}</p>
-            <p className="text-xs text-slate-500">Mock current user</p>
+            <p className="text-sm font-bold text-[#082d24]">{currentUser?.fullName || currentUser?.full_name || currentUser?.name || "Thành viên"}</p>
+            <p className="text-xs text-[#64736d]">Thành viên cộng đồng</p>
           </div>
-          <Badge status="completed">{currentUser.points} points</Badge>
-          <div className="hidden items-center gap-2 md:flex">
-            <Link className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100" to="/login">
-              Login
-            </Link>
-            <Link className="rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800" to="/register">
-              Register
-            </Link>
-          </div>
+          <Badge status="completed">{points} điểm</Badge>
+          <button className="rounded-xl px-3 py-2 text-sm font-semibold text-[#064834] hover:bg-[#e7f1e8]" type="button" onClick={handleLogout}>
+            Đăng xuất
+          </button>
         </div>
       </div>
     </header>
