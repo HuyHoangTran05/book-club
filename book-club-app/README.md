@@ -150,6 +150,12 @@ GET http://localhost:5000/api/members/me
 PUT http://localhost:5000/api/members/me
 GET http://localhost:5000/api/members/me/points
 GET http://localhost:5000/api/books/ping
+GET http://localhost:5000/api/books
+GET http://localhost:5000/api/books/my
+GET http://localhost:5000/api/books/:copyId
+POST http://localhost:5000/api/books
+PUT http://localhost:5000/api/books/:copyId
+DELETE http://localhost:5000/api/books/:copyId
 GET http://localhost:5000/api/transactions/ping
 GET http://localhost:5000/api/points/ping
 ```
@@ -160,6 +166,20 @@ Example login payload:
 {
   "email": "an@example.com",
   "password": "Password123"
+}
+```
+
+Example create book payload:
+
+```json
+{
+  "title": "Nha Gia Kim",
+  "author": "Paulo Coelho",
+  "category": "Tieu thuyet",
+  "publication_year": 2020,
+  "condition": "good",
+  "exchange_type": "both",
+  "note": "San sang trao doi hoac cho muon"
 }
 ```
 
