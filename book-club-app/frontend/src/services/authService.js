@@ -37,13 +37,17 @@ function normalizeAuthResult(response) {
   return { token, user, raw: payload };
 }
 
-export function getAuthErrorMessage(error, fallback = "Đã có lỗi xảy ra. Vui lòng thử lại.") {
+export function getAuthErrorMessage(error, fallback = "Đã có lỗi xảy ra. Vui lòng thử lại.", context = "auth") {
   if (!error.response) {
     return "Không thể kết nối máy chủ. Vui lòng kiểm tra backend.";
   }
 
   const status = error.response.status;
   const serverMessage = String(error.response.data?.message || error.response.data?.error || "").toLowerCase();
+
+  if (context === "register" && status === 400) {
+    return "Thông tin đăng ký chưa hợp lệ.";
+  }
 
   if (status === 401 || status === 403) {
     return "Email hoặc mật khẩu không đúng.";
@@ -56,8 +60,19 @@ export function getAuthErrorMessage(error, fallback = "Đã có lỗi xảy ra. 
   return fallback;
 }
 
+function normalizeRegisterPayload(payload) {
+  const fullName = payload.full_name || payload.fullName;
+
+  return {
+    full_name: fullName,
+    email: payload.email,
+    phone: payload.phone,
+    password: payload.password,
+  };
+}
+
 export async function register(payload) {
-  const response = await api.post(apiPath("/auth/register"), payload);
+  const response = await api.post(apiPath("/auth/register"), normalizeRegisterPayload(payload));
   const result = normalizeAuthResult(response);
 
   if (result.token) {

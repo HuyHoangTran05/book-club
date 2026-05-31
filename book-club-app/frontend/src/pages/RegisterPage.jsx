@@ -31,6 +31,10 @@ function RegisterPage() {
       return "Vui lòng nhập email.";
     }
 
+    if (!phoneNumber.trim()) {
+      return "Vui lòng nhập số điện thoại.";
+    }
+
     if (password.length < 8) {
       return "Mật khẩu phải có ít nhất 8 ký tự.";
     }
@@ -53,9 +57,9 @@ function RegisterPage() {
 
     try {
       const result = await register({
-        fullName: fullName.trim(),
+        full_name: fullName.trim(),
         email: email.trim(),
-        phone: phoneNumber.trim() || undefined,
+        phone: phoneNumber.trim(),
         password,
       });
 
@@ -66,7 +70,8 @@ function RegisterPage() {
 
       navigate("/books", { replace: true });
     } catch (submitError) {
-      setError(getAuthErrorMessage(submitError, "Đã có lỗi xảy ra. Vui lòng thử lại."));
+      console.error("Lỗi đăng ký từ backend:", submitError.response?.data || submitError);
+      setError(getAuthErrorMessage(submitError, "Đã có lỗi xảy ra. Vui lòng thử lại.", "register"));
     } finally {
       setLoading(false);
     }
@@ -171,6 +176,7 @@ function RegisterPage() {
                 value={phoneNumber}
                 onChange={(event) => setPhoneNumber(event.target.value)}
                 disabled={loading}
+                required
               />
             </div>
 
