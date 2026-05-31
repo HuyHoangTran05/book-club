@@ -3,6 +3,7 @@ import BookCard, { CommunityBookActions } from "../components/books/BookCard.jsx
 import BookFilters from "../components/books/BookFilters.jsx";
 import { Card } from "../components/common/index.js";
 import { getBookErrorMessage, getBooks } from "../services/bookService.js";
+import { isHiddenBookStatus } from "../utils/bookLabels.js";
 
 function BookListPage() {
   const [books, setBooks] = useState([]);
@@ -46,6 +47,10 @@ function BookListPage() {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return books.filter((book) => {
+      if (isHiddenBookStatus(book.status)) {
+        return false;
+      }
+
       const searchText = `${book.title} ${book.author} ${book.category}`.toLowerCase();
       const matchesSearch = !normalizedSearch || searchText.includes(normalizedSearch);
       const matchesCategory = categoryFilter === "all" || book.category === categoryFilter;
