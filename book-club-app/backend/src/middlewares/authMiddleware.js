@@ -8,7 +8,7 @@ const getBearerToken = (authHeader) => {
 
   const [scheme, token] = authHeader.split(" ");
 
-  if (scheme !== "Bearer" || !token) {
+  if (scheme?.toLowerCase() !== "bearer" || !token) {
     return null;
   }
 
@@ -28,6 +28,11 @@ export const protect = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded.member_id) {
+      return next(createHttpError("Not authorized, invalid token payload", 401));
+    }
+
     req.user = decoded;
     return next();
   } catch (error) {

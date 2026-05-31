@@ -12,11 +12,11 @@ export const register = asyncHandler(async (req, res) => {
 });
 
 export const login = asyncHandler(async (req, res) => {
-  const result = await authService.login(req.body);
+  const result = await authService.login(req.body.email, req.body.password);
   successResponse(res, result, "Login successfully");
 });
 
 export const getMe = asyncHandler(async (req, res) => {
-  const member = await authService.getCurrentMember(req.user.member_id);
-  successResponse(res, member, "Current member profile");
+  const user = await authService.getMe(req.user.member_id);
+  successResponse(res, user, "Current member profile");
 });
