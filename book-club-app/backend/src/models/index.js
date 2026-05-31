@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import Member from "./member.model.js";
-
-export { Member };
-
-export default {
-  Member,
-=======
 import sequelize from "../config/database.js";
 import Member from "./member.model.js";
 import BookTitle from "./bookTitle.model.js";
@@ -92,5 +84,4 @@ export {
   BookCopy,
   BookTransaction,
   PointHistory,
->>>>>>> origin/main
 };
