@@ -2,13 +2,13 @@ import { NavLink } from "react-router-dom";
 import { classNames } from "../../utils/classNames.js";
 
 const navigationItems = [
-  { label: "Book List", to: "/books" },
-  { label: "Add Book", to: "/books/add" },
-  { label: "My Books", to: "/my-books" },
-  { label: "My Transactions", to: "/transactions" },
-  { label: "Point History", to: "/points/history" },
-  { label: "Login", to: "/login" },
-  { label: "Register", to: "/register" },
+  { label: "Khám phá sách", to: "/books" },
+  { label: "Thêm sách", to: "/books/new" },
+  { label: "Sách của tôi", to: "/my-books" },
+  { label: "Giao dịch của tôi", to: "/transactions" },
+  { label: "Lịch sử điểm", to: "/points/history" },
+  { label: "Đăng nhập", to: "/login" },
+  { label: "Đăng ký", to: "/register" },
 ];
 
 function Sidebar({ isOpen, onClose }) {
@@ -16,21 +16,21 @@ function Sidebar({ isOpen, onClose }) {
     <>
       <div
         className={classNames(
-          "fixed inset-0 z-40 bg-slate-950/30 transition lg:hidden",
+          "fixed inset-0 z-40 bg-[#082d24]/35 transition lg:hidden",
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
         onClick={onClose}
       />
       <aside
         className={classNames(
-          "fixed left-0 top-0 z-50 h-full w-72 border-r border-white/70 bg-white/95 p-4 shadow-stitch transition-transform lg:sticky lg:top-20 lg:z-20 lg:h-[calc(100vh-5rem)] lg:translate-x-0 lg:bg-white/65 lg:shadow-none",
+          "fixed left-0 top-0 z-50 h-full w-72 border-r border-[#d9e2d8] bg-[#fbfaf3]/95 p-4 shadow-stitch transition-transform lg:sticky lg:top-20 lg:z-20 lg:h-[calc(100vh-5rem)] lg:translate-x-0 lg:bg-transparent lg:shadow-none",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="mb-5 flex items-center justify-between lg:hidden">
-          <p className="text-sm font-black text-slate-950">Navigation</p>
-          <button className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100" onClick={onClose}>
-            Close
+          <p className="text-sm font-black text-[#082d24]">Điều hướng</p>
+          <button className="rounded-xl px-3 py-2 text-sm font-semibold text-[#64736d] hover:bg-[#e7f1e8]" onClick={onClose}>
+            Đóng
           </button>
         </div>
 
@@ -43,7 +43,7 @@ function Sidebar({ isOpen, onClose }) {
               className={({ isActive }) =>
                 classNames(
                   "block rounded-lg px-4 py-3 text-sm font-bold transition",
-                  isActive ? "bg-teal-600 text-white shadow-soft" : "text-slate-700 hover:bg-white hover:text-slate-950"
+                  isActive ? "bg-[#064834] text-white shadow-soft" : "text-[#64736d] hover:bg-white hover:text-[#082d24]"
                 )
               }
             >

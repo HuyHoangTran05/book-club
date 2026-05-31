@@ -11,7 +11,7 @@ function Modal({ isOpen, title, children, onClose }) {
         <div className="mb-4 flex items-start justify-between gap-4">
           <h2 className="text-lg font-bold text-slate-950">{title}</h2>
           <Button variant="ghost" className="px-3 py-1.5" onClick={onClose}>
-            Close
+            Đóng
           </Button>
         </div>
         {children}

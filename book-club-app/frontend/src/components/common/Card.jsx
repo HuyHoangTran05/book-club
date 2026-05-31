@@ -2,7 +2,7 @@ import { classNames } from "../../utils/classNames.js";
 
 function Card({ children, className = "", as: Component = "section" }) {
   return (
-    <Component className={classNames("rounded-lg border border-white/80 bg-white/90 p-5 shadow-stitch backdrop-blur", className)}>
+    <Component className={classNames("rounded-3xl border border-[#d9e2d8] bg-white p-6 shadow-stitch", className)}>
       {children}
     </Component>
   );
