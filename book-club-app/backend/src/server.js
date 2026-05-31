@@ -4,6 +4,7 @@ dotenv.config();
 
 const { default: app } = await import("./app.js");
 const { default: sequelize } = await import("./config/database.js");
+await import("./models/index.js");
 
 const PORT = process.env.PORT || 5000;
 

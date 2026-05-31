@@ -1,10 +1,5 @@
 import jwt from "jsonwebtoken";
-
-const createHttpError = (message, statusCode) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-};
+import createHttpError from "../utils/createHttpError.js";
 
 export const protect = (req, res, next) => {
   const authHeader = req.headers.authorization;
