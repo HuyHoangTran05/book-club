@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext.jsx";
-import { getAuthErrorMessage } from "../services/authService.js";
+import apiClient from "../services/apiClient.js";
 import "./RegisterPage.css";
 
 const heroImages = import.meta.glob("../assets/*-hero.png", {
@@ -13,14 +12,23 @@ const registerHero =
   heroImages["../assets/register-hero.png"] || heroImages["../assets/login-hero.png"];
 
 function RegisterPage() {
+  const navigate = useNavigate();
+  const redirectTimerRef = useRef(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { register } = useAuth();
-  const navigate = useNavigate();
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
 
   function validateForm() {
     if (!fullName.trim()) {
@@ -49,29 +57,28 @@ function RegisterPage() {
 
     if (validationError) {
       setError(validationError);
+      setSuccess("");
       return;
     }
 
     setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
-      const result = await register({
+      await apiClient.post("/auth/register", {
         full_name: fullName.trim(),
         email: email.trim(),
         phone: phoneNumber.trim(),
         password,
       });
 
-      if (!result.token) {
-        setError("Đã có lỗi xảy ra. Vui lòng thử lại.");
-        return;
-      }
-
-      navigate("/books", { replace: true });
+      setSuccess("Đăng ký thành công! Vui lòng đăng nhập.");
+      redirectTimerRef.current = setTimeout(() => {
+        navigate("/login");
+      }, 1800);
     } catch (submitError) {
-      console.error("Lỗi đăng ký từ backend:", submitError.response?.data || submitError);
-      setError(getAuthErrorMessage(submitError, "Đã có lỗi xảy ra. Vui lòng thử lại.", "register"));
+      setError(submitError.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -129,6 +136,12 @@ function RegisterPage() {
           </div>
 
           <form className="register-form" onSubmit={handleSubmit} noValidate>
+            {success ? (
+              <div className="register-success" role="status">
+                {success}
+              </div>
+            ) : null}
+
             {error ? (
               <div className="register-error" role="alert">
                 {error}
@@ -145,7 +158,7 @@ function RegisterPage() {
                 autoComplete="name"
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
-                disabled={loading}
+                disabled={loading || Boolean(success)}
                 required
               />
             </div>
@@ -160,7 +173,7 @@ function RegisterPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                disabled={loading}
+                disabled={loading || Boolean(success)}
                 required
               />
             </div>
@@ -175,7 +188,7 @@ function RegisterPage() {
                 autoComplete="tel"
                 value={phoneNumber}
                 onChange={(event) => setPhoneNumber(event.target.value)}
-                disabled={loading}
+                disabled={loading || Boolean(success)}
                 required
               />
             </div>
@@ -190,13 +203,13 @@ function RegisterPage() {
                 autoComplete="new-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                disabled={loading}
+                disabled={loading || Boolean(success)}
                 required
               />
             </div>
 
-            <button className="register-submit-button" type="submit" disabled={loading}>
-              {loading ? "Đang tạo tài khoản..." : "Đăng ký"}
+            <button className="register-submit-button" type="submit" disabled={loading || Boolean(success)}>
+              {loading ? "Đang đăng ký..." : success ? "Đang chuyển đến đăng nhập..." : "Đăng ký"}
             </button>
           </form>
 

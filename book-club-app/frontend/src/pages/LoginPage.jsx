@@ -1,20 +1,25 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import loginHero from "../assets/login-hero.png";
-import { useAuth } from "../contexts/AuthContext.jsx";
-import { getAuthErrorMessage } from "../services/authService.js";
+import apiClient from "../services/apiClient.js";
 import "./LoginPage.css";
 
 function LoginPage() {
+  const navigate = useNavigate();
+  const redirectTimerRef = useRef(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [success, setSuccess] = useState("");
 
-  const redirectTo = location.state?.from?.pathname || "/books";
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
 
   function validateForm() {
     if (!email.trim()) {
@@ -35,26 +40,37 @@ function LoginPage() {
 
     if (validationError) {
       setError(validationError);
+      setSuccess("");
       return;
     }
 
     setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
-      const result = await login({
+      const response = await apiClient.post("/auth/login", {
         email: email.trim(),
         password,
       });
+      const responseData = response.data?.data || response.data || {};
+      const token = responseData.token || responseData.accessToken || responseData.access_token;
+      const user = responseData.user || responseData.member || responseData.customer;
 
-      if (!result.token) {
-        setError("Đã có lỗi xảy ra. Vui lòng thử lại.");
-        return;
+      if (token) {
+        localStorage.setItem("token", token);
       }
 
-      navigate(redirectTo, { replace: true });
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+
+      setSuccess("Đăng nhập thành công!");
+      redirectTimerRef.current = setTimeout(() => {
+        navigate("/");
+      }, 500);
     } catch (submitError) {
-      setError(getAuthErrorMessage(submitError, "Email hoặc mật khẩu không đúng."));
+      setError(submitError.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
     } finally {
       setLoading(false);
     }
@@ -104,6 +120,12 @@ function LoginPage() {
           </div>
 
           <form className="login-form" onSubmit={handleSubmit} noValidate>
+            {success ? (
+              <div className="login-success-message" role="status">
+                {success}
+              </div>
+            ) : null}
+
             {error ? (
               <div className="login-error-message" role="alert">
                 {error}
@@ -119,8 +141,8 @@ function LoginPage() {
                 placeholder="Nhập email của bạn"
                 autoComplete="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                disabled={loading}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading || Boolean(success)}
                 required
               />
             </div>
@@ -134,14 +156,14 @@ function LoginPage() {
                 placeholder="Nhập mật khẩu"
                 autoComplete="current-password"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                disabled={loading}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading || Boolean(success)}
                 required
               />
             </div>
 
-            <button className="login-submit-button" type="submit" disabled={loading}>
-              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            <button className="login-submit-button" type="submit" disabled={loading || Boolean(success)}>
+              {loading ? "Đang đăng nhập..." : success ? "Đang chuyển về trang chủ..." : "Đăng nhập"}
             </button>
           </form>
 
