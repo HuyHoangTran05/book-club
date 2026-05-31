@@ -1,5 +1,6 @@
 import { successResponse } from "../../utils/response.js";
 import asyncHandler from "../../utils/asyncHandler.js";
+<<<<<<< HEAD
 import AuthService from "./auth.service.js";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -9,12 +10,16 @@ const createValidationError = (message) => {
   error.statusCode = 400;
   return error;
 };
+=======
+import authService from "./auth.service.js";
+>>>>>>> origin/main
 
 export const pingAuth = (req, res) => {
   successResponse(res, null, "auth module is ready");
 };
 
 export const register = asyncHandler(async (req, res) => {
+<<<<<<< HEAD
   const { full_name, email, password, phone } = req.body;
 
   if (!full_name || !full_name.trim()) {
@@ -63,4 +68,18 @@ export const getMe = asyncHandler(async (req, res) => {
   const user = await AuthService.getMe(memberId);
 
   successResponse(res, { user }, "Lấy thông tin người dùng thành công");
+=======
+  const result = await authService.register(req.body);
+  successResponse(res, result, "Register successfully", 201);
+});
+
+export const login = asyncHandler(async (req, res) => {
+  const result = await authService.login(req.body);
+  successResponse(res, result, "Login successfully");
+});
+
+export const getMe = asyncHandler(async (req, res) => {
+  const member = await authService.getCurrentMember(req.user.member_id);
+  successResponse(res, member, "Current member profile");
+>>>>>>> origin/main
 });

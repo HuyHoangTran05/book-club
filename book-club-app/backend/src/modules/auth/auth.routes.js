@@ -1,4 +1,5 @@
 import { Router } from "express";
+<<<<<<< HEAD
 import {
   getMe,
   login,
@@ -6,6 +7,10 @@ import {
   register,
 } from "./auth.controller.js";
 import { protect } from "../../middlewares/authMiddleware.js";
+=======
+import { protect } from "../../middlewares/authMiddleware.js";
+import { getMe, login, pingAuth, register } from "./auth.controller.js";
+>>>>>>> origin/main
 
 const router = Router();
 
