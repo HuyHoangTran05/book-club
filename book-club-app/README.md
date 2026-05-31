@@ -86,8 +86,8 @@ docker compose up -d
 cd backend
 npm install
 copy .env.example .env
-npm run db:migrate
-npm run db:seed
+npm run migrate
+npm run seed
 npm run dev
 ```
 
@@ -106,6 +106,9 @@ The migration adds the required foreign keys, status checks, point balance check
 indexes for the MVP flow. The seed creates 3 demo members, 5 book titles, 5 book
 copies, and initial point history rows. Demo accounts all use password
 `Password123`.
+
+Book copy responses use `bookTitle` as the canonical alias for the related
+`book_titles` record.
 
 See `docs/backend-data-day-2.md` for the backend/data checklist and verification
 result.

@@ -39,7 +39,7 @@ const normalizePagination = ({ page = 1, limit = 20 } = {}) => {
 const bookInclude = [
   {
     model: BookTitle,
-    as: "book",
+    as: "bookTitle",
   },
   {
     model: Member,
@@ -214,7 +214,7 @@ const listBooks = async (query = {}) => {
     include: [
       {
         model: BookTitle,
-        as: "book",
+        as: "bookTitle",
         where: Object.keys(bookWhere).length > 0 ? bookWhere : undefined,
       },
       bookInclude[1],
@@ -289,7 +289,7 @@ const updateBook = async (memberId, copyId, payload) => {
     }
 
     if (payload.title || payload.author || payload.isbn) {
-      const existingTitle = bookCopy.book?.get({ plain: true }) || {};
+      const existingTitle = bookCopy.bookTitle?.get({ plain: true }) || {};
       const bookTitle = await findOrCreateBookTitle(
         {
           ...existingTitle,
