@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import loginHero from "../assets/login-hero.png";
+import { useAuth } from "../contexts/AuthContext.jsx";
+import { getAuthErrorMessage } from "../services/authService.js";
 import "./LoginPage.css";
 
 function LoginPage() {
@@ -8,6 +10,11 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectTo = location.state?.from?.pathname || "/books";
 
   function validateForm() {
     if (!email.trim()) {
@@ -35,10 +42,19 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const formData = new FormData(event.currentTarget);
-      console.log("Login form data", Object.fromEntries(formData.entries()));
+      const result = await login({
+        email: email.trim(),
+        password,
+      });
+
+      if (!result.token) {
+        setError("Đã có lỗi xảy ra. Vui lòng thử lại.");
+        return;
+      }
+
+      navigate(redirectTo, { replace: true });
     } catch (submitError) {
-      setError(submitError.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+      setError(getAuthErrorMessage(submitError, "Email hoặc mật khẩu không đúng."));
     } finally {
       setLoading(false);
     }
@@ -103,7 +119,7 @@ function LoginPage() {
                 placeholder="Nhập email của bạn"
                 autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 disabled={loading}
                 required
               />
@@ -118,7 +134,7 @@ function LoginPage() {
                 placeholder="Nhập mật khẩu"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 disabled={loading}
                 required
               />
