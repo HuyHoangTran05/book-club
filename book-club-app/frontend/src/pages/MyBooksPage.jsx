@@ -6,6 +6,7 @@ import ConfirmDialog from "../components/books/ConfirmDialog.jsx";
 import { validateBookValues } from "../components/books/bookValidation.js";
 import { Alert, Button, Card } from "../components/common/index.js";
 import { deleteBook, getBookErrorMessage, getMyBooks, updateBook } from "../services/bookService.js";
+import { isHiddenBookStatus } from "../utils/bookLabels.js";
 
 const tabs = [
   { value: "all", label: "Tất cả" },
@@ -13,7 +14,6 @@ const tabs = [
   { value: "reserved", label: "Đang giữ chỗ" },
   { value: "borrowed", label: "Đang mượn" },
   { value: "exchanged", label: "Đã trao đổi" },
-  { value: "unavailable", label: "Tạm ẩn" },
 ];
 
 function MyBooksPage() {
@@ -68,7 +68,9 @@ function MyBooksPage() {
   }, []);
 
   const filteredBooks = useMemo(() => {
-    return books.filter((book) => activeTab === "all" || book.status === activeTab);
+    return books.filter(
+      (book) => !isHiddenBookStatus(book.status) && (activeTab === "all" || book.status === activeTab)
+    );
   }, [activeTab, books]);
 
   function openEdit(book) {
