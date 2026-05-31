@@ -1,7 +1,15 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button, Badge } from "../common/index.js";
 
-function Header({ currentUser, onMenuClick }) {
+function Header({ currentUser, onLogout, onMenuClick }) {
+  const navigate = useNavigate();
+  const points = currentUser?.points ?? currentUser?.pointBalance ?? currentUser?.point_balance ?? 0;
+
+  function handleLogout() {
+    onLogout();
+    navigate("/login", { replace: true });
+  }
+
   return (
     <header className="sticky top-0 z-30 border-b border-[#d9e2d8] bg-[#fbfaf3]/88 backdrop-blur">
       <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
@@ -22,18 +30,13 @@ function Header({ currentUser, onMenuClick }) {
 
         <div className="flex items-center gap-3">
           <div className="hidden text-right sm:block">
-            <p className="text-sm font-bold text-[#082d24]">{currentUser.fullName}</p>
+            <p className="text-sm font-bold text-[#082d24]">{currentUser?.fullName || currentUser?.full_name || currentUser?.name || "Thành viên"}</p>
             <p className="text-xs text-[#64736d]">Thành viên cộng đồng</p>
           </div>
-          <Badge status="completed">{currentUser.points} điểm</Badge>
-          <div className="hidden items-center gap-2 md:flex">
-            <Link className="rounded-xl px-3 py-2 text-sm font-semibold text-[#064834] hover:bg-[#e7f1e8]" to="/login">
-              Đăng nhập
-            </Link>
-            <Link className="rounded-xl bg-[#064834] px-3 py-2 text-sm font-semibold text-white shadow-soft hover:bg-[#033b2a]" to="/register">
-              Đăng ký
-            </Link>
-          </div>
+          <Badge status="completed">{points} điểm</Badge>
+          <button className="rounded-xl px-3 py-2 text-sm font-semibold text-[#064834] hover:bg-[#e7f1e8]" type="button" onClick={handleLogout}>
+            Đăng xuất
+          </button>
         </div>
       </div>
     </header>

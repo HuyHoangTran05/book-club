@@ -7,8 +7,6 @@ const navigationItems = [
   { label: "Sách của tôi", to: "/my-books" },
   { label: "Giao dịch của tôi", to: "/transactions" },
   { label: "Lịch sử điểm", to: "/points/history" },
-  { label: "Đăng nhập", to: "/login" },
-  { label: "Đăng ký", to: "/register" },
 ];
 
 function Sidebar({ isOpen, onClose }) {

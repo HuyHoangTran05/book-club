@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext.jsx";
+import { getAuthErrorMessage } from "../services/authService.js";
 import "./RegisterPage.css";
 
 const heroImages = import.meta.glob("../assets/*-hero.png", {
@@ -17,6 +19,8 @@ function RegisterPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   function validateForm() {
     if (!fullName.trim()) {
@@ -27,12 +31,8 @@ function RegisterPage() {
       return "Vui lòng nhập email.";
     }
 
-    if (!phoneNumber.trim()) {
-      return "Vui lòng nhập số điện thoại.";
-    }
-
-    if (!password.trim()) {
-      return "Vui lòng nhập mật khẩu.";
+    if (password.length < 8) {
+      return "Mật khẩu phải có ít nhất 8 ký tự.";
     }
 
     return "";
@@ -52,10 +52,21 @@ function RegisterPage() {
     setLoading(true);
 
     try {
-      const formData = new FormData(event.currentTarget);
-      console.log("Register form data", Object.fromEntries(formData.entries()));
+      const result = await register({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phone: phoneNumber.trim() || undefined,
+        password,
+      });
+
+      if (!result.token) {
+        setError("Đã có lỗi xảy ra. Vui lòng thử lại.");
+        return;
+      }
+
+      navigate("/books", { replace: true });
     } catch (submitError) {
-      setError(submitError.message || "Đăng ký thất bại. Vui lòng thử lại.");
+      setError(getAuthErrorMessage(submitError, "Đã có lỗi xảy ra. Vui lòng thử lại."));
     } finally {
       setLoading(false);
     }
@@ -160,7 +171,6 @@ function RegisterPage() {
                 value={phoneNumber}
                 onChange={(event) => setPhoneNumber(event.target.value)}
                 disabled={loading}
-                required
               />
             </div>
 
@@ -180,7 +190,7 @@ function RegisterPage() {
             </div>
 
             <button className="register-submit-button" type="submit" disabled={loading}>
-              {loading ? "Đang đăng ký..." : "Đăng ký"}
+              {loading ? "Đang tạo tài khoản..." : "Đăng ký"}
             </button>
           </form>
 
