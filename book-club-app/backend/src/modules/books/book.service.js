@@ -240,7 +240,10 @@ const listMyBooks = async (memberId, query = {}) => {
   const { page, limit, offset } = normalizePagination(query);
 
   const { rows, count } = await BookCopy.findAndCountAll({
-    where: { owner_id: memberId },
+    where: {
+      owner_id: memberId,
+      status: { [Op.ne]: "unavailable" },
+    },
     include: bookInclude,
     order: [["created_at", "DESC"]],
     limit,
