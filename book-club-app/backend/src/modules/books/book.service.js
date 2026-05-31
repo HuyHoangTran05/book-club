@@ -2,15 +2,13 @@ import { Op } from "sequelize";
 import { sequelize, BookCopy, BookTitle, Member } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
 
+const BOOK_TITLE_ALIAS = "book";
+const OWNER_ALIAS = "owner";
+
 const validConditions = ["new", "good", "fair", "worn"];
-const validStatuses = [
-  "available",
-  "reserved",
-  "borrowed",
-  "exchanged",
-  "unavailable",
-];
 const validExchangeTypes = ["permanent", "lending", "both"];
+const updatableCopyFields = ["condition", "exchange_type", "note", "status"];
+const validUpdateStatuses = ["available", "unavailable"];
 
 const normalizeText = (value) => {
   if (value === undefined || value === null) {
@@ -22,176 +20,147 @@ const normalizeText = (value) => {
   }
 
   const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
+  return trimmed !== "" ? trimmed : null;
 };
 
-const normalizePagination = ({ page = 1, limit = 20 } = {}) => {
-  const normalizedPage = Math.max(Number(page) || 1, 1);
-  const normalizedLimit = Math.min(Math.max(Number(limit) || 20, 1), 100);
-
-  return {
-    page: normalizedPage,
-    limit: normalizedLimit,
-    offset: (normalizedPage - 1) * normalizedLimit,
-  };
+const normalizeCondition = (condition) => {
+  const normalized = normalizeText(condition);
+  return normalized === "like_new" ? "new" : normalized;
 };
+
+const normalizePublicationYear = (publicationYear) => {
+  if (publicationYear === undefined || publicationYear === null || publicationYear === "") {
+    return null;
+  }
+
+  const year = Number(publicationYear);
+  if (!Number.isInteger(year)) {
+    throw createHttpError("publication_year phải là số nguyên", 400);
+  }
+
+  return year;
+};
+
+const ownerAttributes = [
+  "member_id",
+  "full_name",
+  "email",
+  "phone",
+  "point_balance",
+  "role",
+  "is_deliverer",
+  "account_status",
+  "email_verified",
+  "created_at",
+];
 
 const bookInclude = [
   {
     model: BookTitle,
-    as: "bookTitle",
+    as: BOOK_TITLE_ALIAS,
   },
   {
     model: Member,
-    as: "owner",
-    attributes: ["member_id", "full_name", "email", "point_balance"],
+    as: OWNER_ALIAS,
+    attributes: ownerAttributes,
   },
 ];
 
-const buildTitleWhere = ({ title, author, publication_year, edition, isbn }) => {
-  const normalizedIsbn = normalizeText(isbn);
+const hasWhereConditions = (where) => (
+  Object.keys(where).length > 0 || Object.getOwnPropertySymbols(where).length > 0
+);
 
-  if (normalizedIsbn) {
-    return { isbn: normalizedIsbn };
+const sanitizeBookCopy = (bookCopy) => {
+  if (!bookCopy) {
+    return null;
   }
 
-  return {
-    title: normalizeText(title),
-    author: normalizeText(author),
-    publication_year: publication_year || null,
-    edition: normalizeText(edition),
-  };
+  const plainBookCopy = typeof bookCopy.get === "function"
+    ? bookCopy.get({ plain: true })
+    : { ...bookCopy };
+
+  if (plainBookCopy[OWNER_ALIAS]) {
+    delete plainBookCopy[OWNER_ALIAS].password_hash;
+    delete plainBookCopy[OWNER_ALIAS].password;
+  }
+
+  return plainBookCopy;
 };
 
-const findOrCreateBookTitle = async (payload, transaction) => {
-  const title = normalizeText(payload.title);
-  const author = normalizeText(payload.author);
-
-  if (!title || !author) {
-    throw createHttpError("title and author are required", 400);
+const validateTitlePayload = (dto) => {
+  if (!normalizeText(dto.title)) {
+    throw createHttpError("title là bắt buộc", 400);
   }
 
-  const titleWhere = buildTitleWhere({ ...payload, title, author });
+  if (!normalizeText(dto.author)) {
+    throw createHttpError("author là bắt buộc", 400);
+  }
+};
 
-  const [bookTitle] = await BookTitle.findOrCreate({
-    where: titleWhere,
-    defaults: {
+const validateCopyPayload = (dto) => {
+  const condition = normalizeCondition(dto.condition ?? "good");
+  const exchangeType = normalizeText(dto.exchange_type ?? "both");
+
+  if (!validConditions.includes(condition)) {
+    throw createHttpError(`condition phải là một trong: ${validConditions.join(", ")}`, 400);
+  }
+
+  if (!validExchangeTypes.includes(exchangeType)) {
+    throw createHttpError(`exchange_type phải là một trong: ${validExchangeTypes.join(", ")}`, 400);
+  }
+};
+
+const findOrCreateBookTitle = async (dto, transaction = null) => {
+  validateTitlePayload(dto);
+
+  const isbn = normalizeText(dto.isbn);
+  if (isbn) {
+    const existingByIsbn = await BookTitle.findOne({
+      where: { isbn },
+      transaction,
+    });
+
+    if (existingByIsbn) {
+      return existingByIsbn;
+    }
+  }
+
+  const title = normalizeText(dto.title);
+  const author = normalizeText(dto.author);
+  const existingByTitleAuthor = await BookTitle.findOne({
+    where: {
       title,
       author,
-      category: normalizeText(payload.category),
-      publisher: normalizeText(payload.publisher),
-      edition: normalizeText(payload.edition),
-      publication_year: payload.publication_year || null,
-      isbn: normalizeText(payload.isbn),
-      language: normalizeText(payload.language) || "Vietnamese",
-      description: normalizeText(payload.description),
-      cover_url: normalizeText(payload.cover_url),
     },
     transaction,
   });
 
-  return bookTitle;
-};
-
-const validateCopyPayload = ({ condition, status, exchange_type }) => {
-  const normalizedCondition = normalizeText(condition);
-  const normalizedStatus = normalizeText(status);
-  const normalizedExchangeType = normalizeText(exchange_type);
-
-  if (condition !== undefined && !normalizedCondition) {
-    throw createHttpError("condition cannot be empty", 400);
+  if (existingByTitleAuthor) {
+    return existingByTitleAuthor;
   }
 
-  if (status !== undefined && !normalizedStatus) {
-    throw createHttpError("status cannot be empty", 400);
-  }
-
-  if (exchange_type !== undefined && !normalizedExchangeType) {
-    throw createHttpError("exchange_type cannot be empty", 400);
-  }
-
-  if (normalizedCondition && !validConditions.includes(normalizedCondition)) {
-    throw createHttpError(`condition must be one of: ${validConditions.join(", ")}`, 400);
-  }
-
-  if (normalizedStatus && !validStatuses.includes(normalizedStatus)) {
-    throw createHttpError(`status must be one of: ${validStatuses.join(", ")}`, 400);
-  }
-
-  if (normalizedExchangeType && !validExchangeTypes.includes(normalizedExchangeType)) {
-    throw createHttpError(
-      `exchange_type must be one of: ${validExchangeTypes.join(", ")}`,
-      400,
-    );
-  }
-};
-
-const getOwnedBookCopy = async (copyId, memberId) => {
-  const bookCopy = await BookCopy.findOne({
-    where: {
-      copy_id: copyId,
-      owner_id: memberId,
+  return BookTitle.create(
+    {
+      title,
+      author,
+      category: normalizeText(dto.category),
+      publisher: normalizeText(dto.publisher),
+      edition: normalizeText(dto.edition),
+      publication_year: normalizePublicationYear(dto.publication_year),
+      isbn,
+      language: normalizeText(dto.language) || "Vietnamese",
+      description: normalizeText(dto.description),
+      cover_url: normalizeText(dto.cover_url),
     },
-    include: bookInclude,
-  });
-
-  if (!bookCopy) {
-    throw createHttpError("Book copy not found or you do not own it", 404);
-  }
-
-  return bookCopy;
+    { transaction },
+  );
 };
 
-const createBook = async (memberId, payload) => {
-  validateCopyPayload(payload);
-
-  return sequelize.transaction(async (transaction) => {
-    const bookTitle = await findOrCreateBookTitle(payload, transaction);
-
-    const bookCopy = await BookCopy.create(
-      {
-        book_id: bookTitle.book_id,
-        owner_id: memberId,
-        condition: normalizeText(payload.condition) || "good",
-        status: normalizeText(payload.status) || "available",
-        exchange_type: normalizeText(payload.exchange_type) || "both",
-        note: normalizeText(payload.note),
-      },
-      { transaction },
-    );
-
-    return BookCopy.findByPk(bookCopy.copy_id, {
-      include: bookInclude,
-      transaction,
-    });
-  });
-};
-
-const listBooks = async (query = {}) => {
-  const { page, limit, offset } = normalizePagination(query);
-  const where = {};
+const getAvailableBooks = async (query = {}) => {
   const bookWhere = {};
+  const keyword = normalizeText(query.keyword ?? query.q);
+  const category = normalizeText(query.category);
 
-  if (query.status) {
-    if (!validStatuses.includes(query.status)) {
-      throw createHttpError(`status must be one of: ${validStatuses.join(", ")}`, 400);
-    }
-    where.status = query.status;
-  } else {
-    where.status = { [Op.ne]: "unavailable" };
-  }
-
-  if (query.exchange_type) {
-    if (!validExchangeTypes.includes(query.exchange_type)) {
-      throw createHttpError(
-        `exchange_type must be one of: ${validExchangeTypes.join(", ")}`,
-        400,
-      );
-    }
-    where.exchange_type = query.exchange_type;
-  }
-
-  const keyword = normalizeText(query.q);
   if (keyword) {
     bookWhere[Op.or] = [
       { title: { [Op.iLike]: `%${keyword}%` } },
@@ -201,132 +170,174 @@ const listBooks = async (query = {}) => {
     ];
   }
 
-  if (query.category) {
-    bookWhere.category = { [Op.iLike]: `%${query.category.trim()}%` };
+  if (category) {
+    bookWhere.category = { [Op.iLike]: `%${category}%` };
   }
 
-  if (query.author) {
-    bookWhere.author = { [Op.iLike]: `%${query.author.trim()}%` };
-  }
-
-  const { rows, count } = await BookCopy.findAndCountAll({
-    where,
+  const books = await BookCopy.findAll({
+    where: {
+      status: "available",
+    },
     include: [
       {
         model: BookTitle,
-        as: "bookTitle",
-        where: Object.keys(bookWhere).length > 0 ? bookWhere : undefined,
+        as: BOOK_TITLE_ALIAS,
+        where: hasWhereConditions(bookWhere) ? bookWhere : undefined,
       },
       bookInclude[1],
     ],
     order: [["created_at", "DESC"]],
-    limit,
-    offset,
-    distinct: true,
   });
 
-  return {
-    items: rows,
-    pagination: {
-      page,
-      limit,
-      total: count,
-      totalPages: Math.ceil(count / limit),
-    },
-  };
+  return books.map(sanitizeBookCopy);
 };
 
-const listMyBooks = async (memberId, query = {}) => {
-  const { page, limit, offset } = normalizePagination(query);
-
-  const { rows, count } = await BookCopy.findAndCountAll({
+const getMyBooks = async (memberId) => {
+  const books = await BookCopy.findAll({
     where: {
       owner_id: memberId,
-      status: { [Op.ne]: "unavailable" },
     },
     include: bookInclude,
     order: [["created_at", "DESC"]],
-    limit,
-    offset,
-    distinct: true,
   });
 
-  return {
-    items: rows,
-    pagination: {
-      page,
-      limit,
-      total: count,
-      totalPages: Math.ceil(count / limit),
-    },
-  };
+  return books.map(sanitizeBookCopy);
 };
 
-const getBookByCopyId = async (copyId) => {
+const getBookById = async (copyId) => {
   const bookCopy = await BookCopy.findByPk(copyId, {
     include: bookInclude,
   });
 
   if (!bookCopy) {
-    throw createHttpError("Book copy not found", 404);
+    throw createHttpError("Không tìm thấy sách", 404);
+  }
+
+  return sanitizeBookCopy(bookCopy);
+};
+
+const getBookCopyForOwnerAction = async (memberId, copyId) => {
+  const bookCopy = await BookCopy.findByPk(copyId, {
+    include: bookInclude,
+  });
+
+  if (!bookCopy) {
+    throw createHttpError("Không tìm thấy sách", 404);
+  }
+
+  if (bookCopy.owner_id !== memberId) {
+    throw createHttpError("Bạn không có quyền thao tác với sách này", 403);
   }
 
   return bookCopy;
 };
 
-const updateBook = async (memberId, copyId, payload) => {
-  validateCopyPayload(payload);
+const createBook = async (memberId, dto) => {
+  validateTitlePayload(dto);
+  validateCopyPayload(dto);
 
   return sequelize.transaction(async (transaction) => {
-    const bookCopy = await getOwnedBookCopy(copyId, memberId);
-    const copyUpdate = {};
+    const bookTitle = await findOrCreateBookTitle(dto, transaction);
+    const bookCopy = await BookCopy.create(
+      {
+        book_id: bookTitle.book_id,
+        owner_id: memberId,
+        condition: normalizeCondition(dto.condition) || "good",
+        status: "available",
+        exchange_type: normalizeText(dto.exchange_type) || "both",
+        note: normalizeText(dto.note),
+      },
+      { transaction },
+    );
 
-    for (const field of ["condition", "status", "exchange_type", "note"]) {
-      if (Object.prototype.hasOwnProperty.call(payload, field)) {
-        copyUpdate[field] = normalizeText(payload[field]);
-      }
-    }
-
-    if (Object.keys(copyUpdate).length > 0) {
-      await bookCopy.update(copyUpdate, { transaction });
-    }
-
-    if (payload.title || payload.author || payload.isbn) {
-      const existingTitle = bookCopy.bookTitle?.get({ plain: true }) || {};
-      const bookTitle = await findOrCreateBookTitle(
-        {
-          ...existingTitle,
-          ...payload,
-        },
-        transaction,
-      );
-      await bookCopy.update({ book_id: bookTitle.book_id }, { transaction });
-    }
-
-    return BookCopy.findByPk(copyId, {
+    const createdBook = await BookCopy.findByPk(bookCopy.copy_id, {
       include: bookInclude,
       transaction,
     });
+
+    return sanitizeBookCopy(createdBook);
   });
+};
+
+const updateBook = async (memberId, copyId, dto) => {
+  const bookCopy = await getBookCopyForOwnerAction(memberId, copyId);
+
+  if (bookCopy.status === "reserved") {
+    throw createHttpError("Không thể cập nhật sách đang trong giao dịch", 400);
+  }
+
+  const updates = {};
+
+  for (const field of updatableCopyFields) {
+    if (!Object.prototype.hasOwnProperty.call(dto, field)) {
+      continue;
+    }
+
+    if (field === "condition") {
+      const condition = normalizeCondition(dto.condition);
+      if (!condition || !validConditions.includes(condition)) {
+        throw createHttpError(`condition phải là một trong: ${validConditions.join(", ")}`, 400);
+      }
+      updates.condition = condition;
+      continue;
+    }
+
+    if (field === "exchange_type") {
+      const exchangeType = normalizeText(dto.exchange_type);
+      if (!exchangeType || !validExchangeTypes.includes(exchangeType)) {
+        throw createHttpError(`exchange_type phải là một trong: ${validExchangeTypes.join(", ")}`, 400);
+      }
+      updates.exchange_type = exchangeType;
+      continue;
+    }
+
+    if (field === "status") {
+      const status = normalizeText(dto.status);
+      if (!status || !validUpdateStatuses.includes(status)) {
+        throw createHttpError(`status chỉ được cập nhật thành: ${validUpdateStatuses.join(", ")}`, 400);
+      }
+      updates.status = status;
+      continue;
+    }
+
+    updates.note = normalizeText(dto.note);
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw createHttpError("Không có trường hợp lệ để cập nhật", 400);
+  }
+
+  await bookCopy.update(updates);
+
+  return getBookById(copyId);
 };
 
 const deleteBook = async (memberId, copyId) => {
-  const bookCopy = await getOwnedBookCopy(copyId, memberId);
+  const bookCopy = await getBookCopyForOwnerAction(memberId, copyId);
 
-  await bookCopy.update({ status: "unavailable" });
+  if (bookCopy.status === "reserved") {
+    throw createHttpError("Không thể xóa sách đang trong giao dịch", 400);
+  }
 
-  return BookCopy.findByPk(copyId, {
-    include: bookInclude,
+  await bookCopy.update({
+    status: "unavailable",
   });
+
+  return {
+    copy_id: bookCopy.copy_id,
+    status: "unavailable",
+  };
 };
 
 const bookService = {
+  getAvailableBooks,
+  getMyBooks,
+  getBookById,
   createBook,
-  listBooks,
-  listMyBooks,
-  getBookByCopyId,
   updateBook,
   deleteBook,
+  findOrCreateBookTitle,
+  sanitizeBookCopy,
 };
 
 export default bookService;
