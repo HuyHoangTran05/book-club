@@ -4,6 +4,7 @@ import AddBookPage from "../pages/AddBookPage.jsx";
 import BookListPage from "../pages/BookListPage.jsx";
 import HomePage from "../pages/HomePage.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
+import MyBooksPage from "../pages/MyBooksPage.jsx";
 import PointHistoryPage from "../pages/PointHistoryPage.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
 import TransactionPage from "../pages/TransactionPage.jsx";
@@ -17,8 +18,9 @@ function AppRoutes() {
 
       <Route element={<MainLayout />}>
         <Route path="/books" element={<BookListPage />} />
+        <Route path="/books/new" element={<AddBookPage />} />
         <Route path="/books/add" element={<AddBookPage />} />
-        <Route path="/my-books" element={<BookListPage />} />
+        <Route path="/my-books" element={<MyBooksPage />} />
         <Route path="/transactions" element={<TransactionPage />} />
         <Route path="/points" element={<Navigate to="/points/history" replace />} />
         <Route path="/points/history" element={<PointHistoryPage />} />

@@ -9,7 +9,7 @@ function MainLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#f6f4ea] text-[#082d24]">
       <Header currentUser={mockCurrentUser} onMenuClick={() => setIsSidebarOpen(true)} />
       <div className="mx-auto flex max-w-7xl">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
