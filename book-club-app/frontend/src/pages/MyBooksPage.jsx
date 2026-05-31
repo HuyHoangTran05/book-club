@@ -1,7 +1,11 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Badge, Button, Card } from "../components/common/index.js";
-import { mockBooks } from "../data/mockData.js";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import BookCard from "../components/books/BookCard.jsx";
+import BookForm, { valuesFromBook } from "../components/books/BookForm.jsx";
+import ConfirmDialog from "../components/books/ConfirmDialog.jsx";
+import { validateBookValues } from "../components/books/bookValidation.js";
+import { Alert, Button, Card } from "../components/common/index.js";
+import { deleteBook, getBookErrorMessage, getMyBooks, updateBook } from "../services/bookService.js";
 
 const tabs = [
   { value: "all", label: "Tất cả" },
@@ -14,9 +18,117 @@ const tabs = [
 
 function MyBooksPage() {
   const [activeTab, setActiveTab] = useState("all");
-  const myBooks = useMemo(() => {
-    return mockBooks.filter((book) => book.isMine && (activeTab === "all" || book.status === activeTab));
-  }, [activeTab]);
+  const [books, setBooks] = useState([]);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editErrors, setEditErrors] = useState({});
+  const [editTarget, setEditTarget] = useState(null);
+  const [editValues, setEditValues] = useState(null);
+  const [error, setError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [message, setMessage] = useState("");
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setMessage(location.state.message);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadMyBooks() {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const result = await getMyBooks();
+
+        if (isMounted) {
+          setBooks(result.items);
+        }
+      } catch (loadError) {
+        if (isMounted) {
+          setError(getBookErrorMessage(loadError, "Không thể tải sách của bạn. Vui lòng thử lại."));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadMyBooks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredBooks = useMemo(() => {
+    return books.filter((book) => activeTab === "all" || book.status === activeTab);
+  }, [activeTab, books]);
+
+  function openEdit(book) {
+    setEditTarget(book);
+    setEditValues(valuesFromBook(book));
+    setEditErrors({});
+    setMessage("");
+  }
+
+  function closeEdit() {
+    setEditTarget(null);
+    setEditValues(null);
+    setEditErrors({});
+  }
+
+  async function handleUpdate(event) {
+    event.preventDefault();
+    const nextErrors = validateBookValues(editValues);
+    setEditErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0 || !editTarget) {
+      return;
+    }
+
+    setIsUpdating(true);
+    setMessage("");
+
+    try {
+      const updatedBook = await updateBook(editTarget.copyId, editValues);
+      setBooks((currentBooks) =>
+        currentBooks.map((book) => (book.copyId === updatedBook.copyId ? updatedBook : book))
+      );
+      setMessage("Cập nhật sách thành công.");
+      closeEdit();
+    } catch (updateError) {
+      setMessage(getBookErrorMessage(updateError, "Không thể cập nhật sách. Vui lòng thử lại."));
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setMessage("");
+
+    try {
+      await deleteBook(deleteTarget.copyId);
+      setBooks((currentBooks) => currentBooks.filter((book) => book.copyId !== deleteTarget.copyId));
+      setMessage("Xóa sách thành công.");
+      setDeleteTarget(null);
+    } catch (deleteError) {
+      setMessage(getBookErrorMessage(deleteError, "Không thể xóa sách. Vui lòng thử lại."));
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -38,6 +150,8 @@ function MyBooksPage() {
         </Link>
       </div>
 
+      {message ? <Alert type={message.includes("thành công") ? "success" : "error"}>{message}</Alert> : null}
+
       <Card>
         <div className="flex flex-wrap gap-2">
           {tabs.map((tab) => (
@@ -57,61 +171,78 @@ function MyBooksPage() {
         </div>
       </Card>
 
-      {myBooks.length ? (
+      {isLoading ? (
+        <Card className="text-center text-sm font-bold text-[#64736d]">Đang tải sách của bạn...</Card>
+      ) : error ? (
+        <Card className="text-center">
+          <h2 className="text-xl font-extrabold text-[#033b2a]">Không thể tải sách của bạn</h2>
+          <p className="mt-2 text-[#64736d]">{error}</p>
+        </Card>
+      ) : filteredBooks.length ? (
         <div className="grid gap-6 lg:grid-cols-2">
-          {myBooks.map((book) => (
-            <Card key={book.id} className="flex flex-col gap-5">
-              <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-                <div>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge status="neutral">{book.category}</Badge>
-                    <Badge status={book.status} />
-                  </div>
-                  <h2 className="mt-4 text-2xl font-extrabold leading-snug text-[#033b2a]">{book.title}</h2>
-                  <p className="mt-1 text-sm font-semibold text-[#64736d]">{book.author}</p>
-                </div>
-                <div className="rounded-2xl bg-[#fbfaf3] px-4 py-3 text-right">
-                  <p className="text-xs font-bold text-[#64736d]">Đánh giá</p>
-                  <p className="text-lg font-black text-[#9b742d]">★ {book.rating}</p>
-                </div>
-              </div>
-
-              <p className="text-sm leading-6 text-[#64736d]">{book.note}</p>
-
-              <dl className="grid gap-3 text-sm sm:grid-cols-3">
-                <div className="rounded-2xl bg-[#fbfaf3] p-3">
-                  <dt className="font-semibold text-[#64736d]">Tình trạng</dt>
-                  <dd className="mt-1 font-extrabold text-[#082d24]">{book.condition}</dd>
-                </div>
-                <div className="rounded-2xl bg-[#fbfaf3] p-3">
-                  <dt className="font-semibold text-[#64736d]">Hình thức</dt>
-                  <dd className="mt-1 font-extrabold text-[#082d24]">{book.exchangeType}</dd>
-                </div>
-                <div className="rounded-2xl bg-[#fbfaf3] p-3">
-                  <dt className="font-semibold text-[#64736d]">Thảo luận</dt>
-                  <dd className="mt-1 font-extrabold text-[#082d24]">{book.groups}</dd>
-                </div>
-              </dl>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Button type="button" className="sm:flex-1">
-                  Cập nhật
-                </Button>
-                <Button type="button" variant="secondary" className="sm:flex-1">
-                  Ẩn sách
-                </Button>
-              </div>
-            </Card>
+          {filteredBooks.map((book) => (
+            <BookCard
+              key={book.copyId}
+              book={book}
+              actions={
+                <>
+                  <Button type="button" className="sm:flex-1" onClick={() => openEdit(book)}>
+                    Sửa
+                  </Button>
+                  <Button type="button" variant="danger" className="sm:flex-1" onClick={() => setDeleteTarget(book)}>
+                    Xóa
+                  </Button>
+                </>
+              }
+            />
           ))}
         </div>
+      ) : books.length ? (
+        <Card className="text-center">
+          <h2 className="text-xl font-extrabold text-[#033b2a]">Không có sách trong trạng thái này.</h2>
+          <p className="mt-2 text-[#64736d]">Hãy chọn bộ lọc khác để xem thêm sách của bạn.</p>
+        </Card>
       ) : (
         <Card className="text-center">
-          <h2 className="text-xl font-extrabold text-[#033b2a]">Chưa có sách nào</h2>
+          <h2 className="text-xl font-extrabold text-[#033b2a]">Bạn chưa đăng cuốn sách nào.</h2>
           <p className="mt-2 text-[#64736d]">
             Hãy thêm cuốn sách đầu tiên để bắt đầu chia sẻ với cộng đồng.
           </p>
         </Card>
       )}
+
+      {editTarget ? (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#082d24]/45 px-4 py-6">
+          <div className="mx-auto w-full max-w-5xl rounded-3xl border border-[#d9e2d8] bg-white p-6 shadow-stitch">
+            <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+              <div>
+                <p className="text-sm font-extrabold text-[#c9ad2e]">Cập nhật thông tin sách</p>
+                <h2 className="mt-1 text-2xl font-extrabold text-[#033b2a]">Sửa sách</h2>
+              </div>
+              <Button type="button" variant="ghost" onClick={closeEdit} disabled={isUpdating}>
+                Đóng
+              </Button>
+            </div>
+            <BookForm
+              errors={editErrors}
+              isSubmitting={isUpdating}
+              onCancel={closeEdit}
+              onChange={setEditValues}
+              onSubmit={handleUpdate}
+              submitLabel="Lưu thay đổi"
+              submittingLabel="Đang cập nhật..."
+              values={editValues}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <ConfirmDialog
+        isOpen={Boolean(deleteTarget)}
+        isLoading={isDeleting}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

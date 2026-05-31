@@ -1,34 +1,58 @@
-import { useMemo, useState } from "react";
-import { Badge, Button, Card, FormField, Input } from "../components/common/index.js";
-import { mockBooks } from "../data/mockData.js";
-
-const categoryOptions = ["Tất cả", "Triết học", "Kinh tế", "Khoa học", "Văn học"];
-const statusOptions = [
-  { value: "all", label: "Tất cả trạng thái" },
-  { value: "available", label: "Sẵn sàng" },
-  { value: "reserved", label: "Đang giữ chỗ" },
-  { value: "borrowed", label: "Đang mượn" },
-  { value: "exchanged", label: "Đã trao đổi" },
-  { value: "unavailable", label: "Tạm ẩn" },
-];
+import { useEffect, useMemo, useState } from "react";
+import BookCard, { CommunityBookActions } from "../components/books/BookCard.jsx";
+import BookFilters from "../components/books/BookFilters.jsx";
+import { Card } from "../components/common/index.js";
+import { getBookErrorMessage, getBooks } from "../services/bookService.js";
 
 function BookListPage() {
+  const [books, setBooks] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("Tất cả");
-  const [statusFilter, setStatusFilter] = useState("all");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBooks() {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const result = await getBooks({ limit: 100 });
+
+        if (isMounted) {
+          setBooks(result.items);
+        }
+      } catch (loadError) {
+        if (isMounted) {
+          setError(getBookErrorMessage(loadError, "Không thể tải danh sách sách. Vui lòng thử lại."));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadBooks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredBooks = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return mockBooks.filter((book) => {
+    return books.filter((book) => {
       const searchText = `${book.title} ${book.author} ${book.category}`.toLowerCase();
       const matchesSearch = !normalizedSearch || searchText.includes(normalizedSearch);
-      const matchesCategory = categoryFilter === "Tất cả" || book.category === categoryFilter;
-      const matchesStatus = statusFilter === "all" || book.status === statusFilter;
+      const matchesCategory = categoryFilter === "all" || book.category === categoryFilter;
 
-      return matchesSearch && matchesCategory && matchesStatus;
+      return matchesSearch && matchesCategory;
     });
-  }, [categoryFilter, searchTerm, statusFilter]);
+  }, [books, categoryFilter, searchTerm]);
 
   return (
     <div className="space-y-8">
@@ -48,88 +72,30 @@ function BookListPage() {
         </div>
       </div>
 
-      <Card>
-        <div className="grid gap-4 lg:grid-cols-[1fr_180px_200px_120px] lg:items-end">
-          <label>
-            <span className="mb-2 block text-sm font-bold text-[#082d24]">
-              Tìm theo tên sách, tác giả hoặc thể loại
-            </span>
-            <Input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Nhập tên sách, tác giả hoặc thể loại"
-            />
-          </label>
-          <FormField label="Thể loại" as="select" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
-            {categoryOptions.map((category) => (
-              <option key={category}>{category}</option>
-            ))}
-          </FormField>
-          <FormField label="Trạng thái" as="select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-            {statusOptions.map((status) => (
-              <option key={status.value} value={status.value}>
-                {status.label}
-              </option>
-            ))}
-          </FormField>
-          <Button type="button" className="h-12">
-            Tìm kiếm
-          </Button>
-        </div>
-      </Card>
+      <BookFilters
+        category={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        onSearchChange={setSearchTerm}
+        searchTerm={searchTerm}
+      />
 
-      {filteredBooks.length ? (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {isLoading ? (
+        <Card className="text-center text-sm font-bold text-[#64736d]">Đang tải danh sách sách...</Card>
+      ) : error ? (
+        <Card className="text-center">
+          <h2 className="text-xl font-extrabold text-[#033b2a]">Không thể tải danh sách sách</h2>
+          <p className="mt-2 text-[#64736d]">{error}</p>
+        </Card>
+      ) : filteredBooks.length ? (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {filteredBooks.map((book) => (
-            <Card key={book.id} className="flex min-h-full flex-col gap-5">
-              <div className="flex items-start justify-between gap-4">
-                <Badge status="neutral">{book.category}</Badge>
-                <Badge status={book.status} />
-              </div>
-
-              <div>
-                <h2 className="text-2xl font-extrabold leading-snug text-[#033b2a]">{book.title}</h2>
-                <p className="mt-1 text-sm font-semibold text-[#64736d]">{book.author}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-2xl bg-[#fbfaf3] p-3">
-                  <p className="font-semibold text-[#64736d]">Đánh giá</p>
-                  <p className="mt-1 font-extrabold text-[#9b742d]">★ {book.rating}</p>
-                </div>
-                <div className="rounded-2xl bg-[#fbfaf3] p-3">
-                  <p className="font-semibold text-[#64736d]">Thảo luận</p>
-                  <p className="mt-1 font-extrabold text-[#082d24]">{book.groups}</p>
-                </div>
-                <div className="rounded-2xl bg-[#fbfaf3] p-3">
-                  <p className="font-semibold text-[#64736d]">Tình trạng</p>
-                  <p className="mt-1 font-extrabold text-[#082d24]">{book.condition}</p>
-                </div>
-                <div className="rounded-2xl bg-[#fbfaf3] p-3">
-                  <p className="font-semibold text-[#64736d]">Hình thức</p>
-                  <p className="mt-1 font-extrabold text-[#082d24]">{book.exchangeType}</p>
-                </div>
-              </div>
-
-              <div className="mt-auto border-t border-[#d9e2d8] pt-4">
-                <p className="text-sm font-semibold text-[#64736d]">Chủ sách</p>
-                <p className="mt-1 font-bold text-[#082d24]">{book.owner}</p>
-                <p className="mt-1 text-sm text-[#64736d]">{book.location}</p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Button type="button">Tạo giao dịch</Button>
-                <Button type="button" variant="secondary">
-                  Liên hệ chủ sách
-                </Button>
-              </div>
-            </Card>
+            <BookCard key={book.copyId || book.bookId || book.title} book={book} actions={<CommunityBookActions />} />
           ))}
         </div>
       ) : (
         <Card className="text-center">
-          <h2 className="text-xl font-extrabold text-[#033b2a]">Chưa có sách phù hợp</h2>
-          <p className="mt-2 text-[#64736d]">Hãy thử đổi từ khóa hoặc bộ lọc để tìm thêm sách trong cộng đồng.</p>
+          <h2 className="text-xl font-extrabold text-[#033b2a]">Chưa có sách nào trong cộng đồng.</h2>
+          <p className="mt-2 text-[#64736d]">Hãy thử đổi từ khóa hoặc quay lại sau khi có thêm sách mới.</p>
         </Card>
       )}
     </div>
