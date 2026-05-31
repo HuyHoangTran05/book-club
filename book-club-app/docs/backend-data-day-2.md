@@ -20,6 +20,13 @@ This document tracks the Day 2 backend/data scope from the implementation plan.
   - `GET /api/members/me`
   - `PUT /api/members/me`
   - `GET /api/members/me/points`
+- Book demo API is available:
+  - `POST /api/books`
+  - `GET /api/books`
+  - `GET /api/books/my`
+  - `GET /api/books/:copyId`
+  - `PUT /api/books/:copyId`
+  - `DELETE /api/books/:copyId`
 - Core database migration exists for the 5 MVP tables:
   - `members`
   - `book_titles`
@@ -76,6 +83,11 @@ Latest local verification with Docker PostgreSQL:
 | `GET /api/members/me` with token | Pass |
 | `GET /api/members/me/points` with token | Pass |
 | `GET /api/books/ping` | Pass |
+| `GET /api/books` | Pending re-check after Docker starts |
+| `GET /api/books/my` with token | Pending re-check after Docker starts |
+| `POST /api/books` with token | Pending re-check after Docker starts |
+| `PUT /api/books/:copyId` with owner token | Pending re-check after Docker starts |
+| `DELETE /api/books/:copyId` with owner token | Pending re-check after Docker starts |
 | `GET /api/transactions/ping` | Pass |
 | `GET /api/points/ping` | Pass |
 
