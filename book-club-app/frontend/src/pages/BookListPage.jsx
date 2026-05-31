@@ -1,89 +1,108 @@
-import { useMemo, useState } from "react";
-import { Badge, Button, Card, FormField, Input } from "../components/common/index.js";
-import { mockBooks } from "../data/mockData.js";
-
-const statusOptions = ["all", "available", "reserved", "borrowed", "exchanged", "unavailable"];
+import { useEffect, useMemo, useState } from "react";
+import BookCard, { CommunityBookActions } from "../components/books/BookCard.jsx";
+import BookFilters from "../components/books/BookFilters.jsx";
+import { Card } from "../components/common/index.js";
+import { getBookErrorMessage, getBooks } from "../services/bookService.js";
+import { isHiddenBookStatus } from "../utils/bookLabels.js";
 
 function BookListPage() {
+  const [books, setBooks] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBooks() {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const result = await getBooks({ limit: 100 });
+
+        if (isMounted) {
+          setBooks(result.items);
+        }
+      } catch (loadError) {
+        if (isMounted) {
+          setError(getBookErrorMessage(loadError, "Không thể tải danh sách sách. Vui lòng thử lại."));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadBooks();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredBooks = useMemo(() => {
-    return mockBooks.filter((book) => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return books.filter((book) => {
+      if (isHiddenBookStatus(book.status)) {
+        return false;
+      }
+
       const searchText = `${book.title} ${book.author} ${book.category}`.toLowerCase();
-      const matchesSearch = searchText.includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === "all" || book.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesSearch = !normalizedSearch || searchText.includes(normalizedSearch);
+      const matchesCategory = categoryFilter === "all" || book.category === categoryFilter;
+
+      return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, statusFilter]);
+  }, [books, categoryFilter, searchTerm]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <div className="space-y-8">
+      <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
         <div>
-          <p className="text-sm font-bold uppercase tracking-wide text-teal-700">Library</p>
-          <h1 className="mt-2 text-3xl font-black text-slate-950">Book List</h1>
-          <p className="mt-2 max-w-2xl text-sm text-slate-500">Browse mock books for Day 1 and prepare the UI for backend search and filters.</p>
+          <p className="text-sm font-extrabold text-[#c9ad2e]">Thư viện cộng đồng</p>
+          <h1 className="mt-2 font-serif text-4xl font-extrabold leading-tight text-[#033b2a] md:text-5xl">
+            Khám phá sách
+          </h1>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-[#64736d]">
+            Tìm kiếm những cuốn sách đang được thành viên chia sẻ trong cộng đồng.
+          </p>
+        </div>
+        <div className="rounded-3xl border border-[#d9e2d8] bg-white px-5 py-4 shadow-soft">
+          <p className="text-sm font-bold text-[#64736d]">Đang hiển thị</p>
+          <p className="mt-1 text-3xl font-black text-[#064834]">{filteredBooks.length} sách</p>
         </div>
       </div>
 
-      <Card>
-        <div className="grid gap-4 md:grid-cols-[1fr_220px]">
-          <label>
-            <span className="mb-1.5 block text-sm font-semibold text-slate-700">Search books</span>
-            <Input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search by title, author, or category" />
-          </label>
-          <FormField label="Status filter" as="select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {status === "all" ? "All statuses" : status.charAt(0).toUpperCase() + status.slice(1)}
-              </option>
-            ))}
-          </FormField>
+      <BookFilters
+        category={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        onSearchChange={setSearchTerm}
+        searchTerm={searchTerm}
+      />
+
+      {isLoading ? (
+        <Card className="text-center text-sm font-bold text-[#64736d]">Đang tải danh sách sách...</Card>
+      ) : error ? (
+        <Card className="text-center">
+          <h2 className="text-xl font-extrabold text-[#033b2a]">Không thể tải danh sách sách</h2>
+          <p className="mt-2 text-[#64736d]">{error}</p>
+        </Card>
+      ) : filteredBooks.length ? (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {filteredBooks.map((book) => (
+            <BookCard key={book.copyId || book.bookId || book.title} book={book} actions={<CommunityBookActions />} />
+          ))}
         </div>
-      </Card>
-
-      <div className="grid gap-5 lg:grid-cols-2">
-        {filteredBooks.map((book) => (
-          <Card key={book.id} className="flex flex-col justify-between gap-5">
-            <div>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-xl font-black text-slate-950">{book.title}</h2>
-                  <p className="mt-1 text-sm font-medium text-slate-500">by {book.author}</p>
-                </div>
-                <Badge status={book.status} />
-              </div>
-
-              <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-                <div>
-                  <dt className="font-semibold text-slate-500">Category</dt>
-                  <dd className="font-bold text-slate-900">{book.category}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-slate-500">Condition</dt>
-                  <dd className="font-bold text-slate-900">{book.condition}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-slate-500">Exchange type</dt>
-                  <dd className="font-bold text-slate-900">{book.exchangeType}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-slate-500">Owner</dt>
-                  <dd className="font-bold text-slate-900">{book.owner}</dd>
-                </div>
-              </dl>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button className="sm:flex-1">Create Transaction</Button>
-              <Button variant="secondary" className="sm:flex-1">
-                Contact Owner
-              </Button>
-            </div>
-          </Card>
-        ))}
-      </div>
+      ) : (
+        <Card className="text-center">
+          <h2 className="text-xl font-extrabold text-[#033b2a]">Chưa có sách nào trong cộng đồng.</h2>
+          <p className="mt-2 text-[#64736d]">Hãy thử đổi từ khóa hoặc quay lại sau khi có thêm sách mới.</p>
+        </Card>
+      )}
     </div>
   );
 }

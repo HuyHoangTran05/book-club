@@ -53,8 +53,8 @@ Run from `book-club-app/backend`.
 
 ```powershell
 npm.cmd install
-npm.cmd run db:migrate
-npm.cmd run db:seed
+npm.cmd run migrate
+npm.cmd run seed
 npm.cmd run dev
 ```
 
@@ -76,6 +76,8 @@ Latest local verification with Docker PostgreSQL:
 | --- | --- |
 | `npm.cmd run db:migrate` | Pass |
 | `npm.cmd run db:seed` | Pass |
+| `npm.cmd run migrate` | Alias for `db:migrate` |
+| `npm.cmd run seed` | Alias for `db:seed` |
 | `GET /api/health` | Pass |
 | `GET /api/auth/ping` | Pass |
 | `POST /api/auth/login` with seeded member | Pass |
@@ -102,3 +104,9 @@ Seeded table counts:
 | `point_histories` | 3 |
 
 `book_transactions` intentionally has no seed rows because transaction core is planned for Day 5.
+
+## Schema Notes
+
+- `BookCopy -> BookTitle` uses the canonical Sequelize alias `bookTitle`.
+- `book_transactions.updated_at` is available before Day 5.
+- `point_histories.updated_at` is available before Day 5.

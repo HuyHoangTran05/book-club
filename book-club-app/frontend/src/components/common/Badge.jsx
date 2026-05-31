@@ -1,23 +1,35 @@
 import { classNames } from "../../utils/classNames.js";
 
 const statusStyles = {
-  available: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  reserved: "bg-amber-50 text-amber-700 ring-amber-200",
-  borrowed: "bg-sky-50 text-sky-700 ring-sky-200",
-  exchanged: "bg-violet-50 text-violet-700 ring-violet-200",
+  available: "bg-[#e7f1e8] text-[#0f7a4f] ring-[#b9dcc4]",
+  reserved: "bg-[#f0e7b7] text-[#8a6500] ring-[#dfcf7a]",
+  borrowed: "bg-[#e5f4f1] text-[#0b5c43] ring-[#b7ded4]",
+  exchanged: "bg-[#f1eee3] text-[#64736d] ring-[#d9e2d8]",
   unavailable: "bg-slate-100 text-slate-600 ring-slate-200",
-  pending: "bg-amber-50 text-amber-700 ring-amber-200",
-  completed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  pending: "bg-[#f0e7b7] text-[#8a6500] ring-[#dfcf7a]",
+  completed: "bg-[#e7f1e8] text-[#0f7a4f] ring-[#b9dcc4]",
   cancelled: "bg-rose-50 text-rose-700 ring-rose-200",
-  positive: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  positive: "bg-[#e7f1e8] text-[#0f7a4f] ring-[#b9dcc4]",
   negative: "bg-rose-50 text-rose-700 ring-rose-200",
-  neutral: "bg-slate-100 text-slate-600 ring-slate-200",
+  neutral: "bg-[#fbfaf3] text-[#64736d] ring-[#d9e2d8]",
+};
+
+const statusLabels = {
+  available: "Sẵn sàng",
+  reserved: "Đang giữ chỗ",
+  borrowed: "Đang mượn",
+  exchanged: "Đã trao đổi",
+  unavailable: "Tạm ẩn",
+  pending: "Đang chờ",
+  completed: "Đã hoàn thành",
+  cancelled: "Đã hủy",
+  positive: "Tăng điểm",
+  negative: "Trừ điểm",
+  neutral: "Thông tin",
 };
 
 function formatLabel(value) {
-  return String(value)
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return statusLabels[value] || String(value).replace(/-/g, " ");
 }
 
 function Badge({ status = "neutral", children, className = "" }) {

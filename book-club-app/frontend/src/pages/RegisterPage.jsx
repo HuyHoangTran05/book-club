@@ -43,8 +43,8 @@ function RegisterPage() {
       return "Vui lòng nhập số điện thoại.";
     }
 
-    if (!password.trim()) {
-      return "Vui lòng nhập mật khẩu.";
+    if (password.length < 8) {
+      return "Mật khẩu phải có ít nhất 8 ký tự.";
     }
 
     return "";

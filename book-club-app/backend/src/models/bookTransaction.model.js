@@ -60,7 +60,7 @@ const BookTransaction = sequelize.define(
     underscored: true,
     timestamps: true,
     createdAt: "created_at",
-    updatedAt: false,
+    updatedAt: "updated_at",
   },
 );
 
