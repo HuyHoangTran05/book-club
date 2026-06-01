@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 import { getPointHistory } from "../services/pointService.js";
 import { getCurrentUser as getStoredCurrentUser } from "../utils/auth.js";
 import { displayReason } from "../utils/vietnameseDisplay.js";
+import "./PointHistoryPage.css";
 
 function getPointBadgeStatus(pointChange) {
   if (pointChange > 0) {
@@ -57,7 +58,16 @@ function formatDate(value) {
 
 function getUserPoints(user) {
   const fallbackUser = user || getStoredCurrentUser();
-  return fallbackUser?.point_balance ?? fallbackUser?.pointBalance ?? null;
+  return fallbackUser?.point_balance ?? fallbackUser?.pointBalance ?? fallbackUser?.points ?? null;
+}
+
+function normalizePointValue(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
 }
 
 function sumPointChanges(historyItems = []) {
@@ -68,20 +78,22 @@ function sumPointChanges(historyItems = []) {
 }
 
 function resolveCurrentPoints(apiCurrentPoints, historyItems, currentUser) {
-  if (apiCurrentPoints !== null && apiCurrentPoints !== undefined && apiCurrentPoints !== "") {
-    return Number(apiCurrentPoints);
+  const apiPoints = normalizePointValue(apiCurrentPoints);
+
+  if (apiPoints !== null) {
+    return apiPoints;
   }
 
-  const authUserPoints = getUserPoints(currentUser);
+  const authUserPoints = normalizePointValue(getUserPoints(currentUser));
 
-  if (authUserPoints !== null && authUserPoints !== undefined && authUserPoints !== "") {
-    return Number(authUserPoints);
+  if (authUserPoints !== null) {
+    return authUserPoints;
   }
 
-  const storedUserPoints = getUserPoints(getStoredCurrentUser());
+  const storedUserPoints = normalizePointValue(getUserPoints(getStoredCurrentUser()));
 
-  if (storedUserPoints !== null && storedUserPoints !== undefined && storedUserPoints !== "") {
-    return Number(storedUserPoints);
+  if (storedUserPoints !== null) {
+    return storedUserPoints;
   }
 
   if (historyItems.length > 0) {
@@ -117,7 +129,7 @@ function PointHistoryPage() {
 
         if (isMounted) {
           setError("Không thể tải lịch sử điểm. Vui lòng thử lại.");
-          setCurrentPoints(getUserPoints(user));
+          setCurrentPoints(resolveCurrentPoints(null, [], user));
         }
       } finally {
         if (isMounted) {
@@ -139,7 +151,8 @@ function PointHistoryPage() {
     });
   }, [items]);
 
-  const currentPointsText = currentPoints === null || currentPoints === undefined ? "-- điểm" : `${currentPoints} điểm`;
+  const normalizedCurrentPoints = normalizePointValue(currentPoints);
+  const currentPointsText = normalizedCurrentPoints === null ? "-- điểm" : `${normalizedCurrentPoints} điểm`;
 
   return (
     <div className="space-y-8">
@@ -153,10 +166,10 @@ function PointHistoryPage() {
             Theo dõi điểm thưởng của bạn trong quá trình chia sẻ và trao đổi sách.
           </p>
         </div>
-        <Card className="bg-[#064834] text-white">
-          <p className="text-sm font-semibold text-[#d9f2e4]">Điểm hiện tại</p>
-          <p className="mt-2 text-5xl font-black">{currentPointsText}</p>
-          <p className="mt-2 text-sm text-[#d9f2e4]">có thể dùng cho giao dịch mới</p>
+        <Card className="point-summary-card">
+          <p className="point-summary-title">Điểm hiện tại</p>
+          <p className="point-summary-value" aria-live="polite">{currentPointsText}</p>
+          <p className="point-summary-subtitle">điểm có thể dùng cho giao dịch mới</p>
         </Card>
       </div>
 
