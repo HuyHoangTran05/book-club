@@ -3,16 +3,16 @@ import { Button, Badge } from "../common/index.js";
 
 function Header({ currentUser, onLogout, onMenuClick }) {
   const navigate = useNavigate();
-  const points = currentUser?.points ?? currentUser?.pointBalance ?? currentUser?.point_balance ?? 0;
+  const points = currentUser?.points ?? currentUser?.pointBalance ?? currentUser?.point_balance ?? 20;
 
   function handleLogout() {
     onLogout();
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   }
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#d9e2d8] bg-[#fbfaf3]/88 backdrop-blur">
-      <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-20 w-full max-w-[1536px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10 xl:px-12">
         <div className="flex items-center gap-3">
           <Button variant="secondary" className="lg:hidden" onClick={onMenuClick}>
             Mở menu

@@ -129,6 +129,8 @@
 .theme-toggle,
 .home-login-btn,
 .home-join-btn,
+.home-dashboard-btn,
+.home-logout-btn,
 .home-primary-btn {
   display: inline-flex;
   align-items: center;
@@ -170,9 +172,53 @@
   box-shadow: 0 14px 28px rgba(27, 67, 50, 0.22);
 }
 
+.home-user-summary {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: var(--home-primary-deep);
+  text-align: right;
+}
+
+.home-user-summary strong {
+  max-width: 180px;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-user-summary span {
+  color: var(--home-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.home-dashboard-btn {
+  min-height: 42px;
+  padding: 0 18px;
+  background: #1b4332;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 14px 28px rgba(27, 67, 50, 0.22);
+}
+
+.home-logout-btn {
+  min-height: 42px;
+  border: 1px solid rgba(27, 67, 50, 0.22);
+  padding: 0 16px;
+  background: var(--home-surface);
+  color: var(--home-primary-deep);
+  font-size: 14px;
+  cursor: pointer;
+}
+
 .theme-toggle:hover,
 .home-login-btn:hover,
 .home-join-btn:hover,
+.home-dashboard-btn:hover,
+.home-logout-btn:hover,
 .home-primary-btn:hover {
   transform: translateY(-2px);
 }
@@ -786,10 +832,17 @@
   }
 
   .home-login-btn,
-  .home-join-btn {
+  .home-join-btn,
+  .home-dashboard-btn,
+  .home-logout-btn {
     min-height: 38px;
     padding: 0 12px;
     font-size: 13px;
+  }
+
+  .home-user-summary {
+    width: 100%;
+    text-align: right;
   }
 
   .home-main {
@@ -885,8 +938,14 @@
   }
 
   .home-login-btn,
-  .home-join-btn {
+  .home-join-btn,
+  .home-dashboard-btn,
+  .home-logout-btn {
     flex: 1;
+  }
+
+  .home-user-summary {
+    text-align: left;
   }
 }
 /* ================= STITCH / FIGMA HOMEPAGE CSS PASTE ZONE END ================= */

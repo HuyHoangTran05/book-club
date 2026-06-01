@@ -91,21 +91,8 @@ export function AuthProvider({ children }) {
   }, [refreshUser]);
 
   const register = useCallback(async (payload) => {
-    const result = await authService.register(payload);
-
-    if (result.token) {
-      setAuthToken(result.token);
-      setToken(result.token);
-    }
-
-    if (result.user) {
-      setUser(result.user);
-    } else {
-      await refreshUser();
-    }
-
-    return result;
-  }, [refreshUser]);
+    return authService.register(payload);
+  }, []);
 
   const logout = useCallback(() => {
     clearSession();

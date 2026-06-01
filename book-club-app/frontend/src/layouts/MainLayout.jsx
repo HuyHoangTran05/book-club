@@ -12,7 +12,7 @@ function MainLayout() {
   return (
     <div className="min-h-screen bg-[#f6f4ea] text-[#082d24]">
       <Header currentUser={user} onLogout={logout} onMenuClick={() => setIsSidebarOpen(true)} />
-      <div className="mx-auto flex max-w-7xl">
+      <div className="mx-auto flex w-full max-w-[1536px]">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <MainContainer>
           <Outlet />

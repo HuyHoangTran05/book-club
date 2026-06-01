@@ -3,7 +3,7 @@ import { classNames } from "../../utils/classNames.js";
 
 const navigationItems = [
   { label: "Khám phá sách", to: "/books" },
-  { label: "Thêm sách", to: "/books/new" },
+  { label: "Thêm sách", to: "/books/add" },
   { label: "Sách của tôi", to: "/my-books" },
   { label: "Giao dịch của tôi", to: "/transactions" },
   { label: "Lịch sử điểm", to: "/points/history" },
@@ -21,7 +21,7 @@ function Sidebar({ isOpen, onClose }) {
       />
       <aside
         className={classNames(
-          "fixed left-0 top-0 z-50 h-full w-72 border-r border-[#d9e2d8] bg-[#fbfaf3]/95 p-4 shadow-stitch transition-transform lg:sticky lg:top-20 lg:z-20 lg:h-[calc(100vh-5rem)] lg:translate-x-0 lg:bg-transparent lg:shadow-none",
+          "fixed left-0 top-0 z-50 h-full w-64 border-r border-[#d9e2d8] bg-[#fbfaf3]/95 p-3 shadow-stitch transition-transform lg:sticky lg:top-20 lg:z-20 lg:h-[calc(100vh-5rem)] lg:w-[220px] lg:min-w-[220px] lg:translate-x-0 lg:bg-transparent lg:shadow-none",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -40,7 +40,7 @@ function Sidebar({ isOpen, onClose }) {
               onClick={onClose}
               className={({ isActive }) =>
                 classNames(
-                  "block rounded-lg px-4 py-3 text-sm font-bold transition",
+                  "block whitespace-nowrap rounded-xl px-3.5 py-3 text-[15px] font-bold transition",
                   isActive ? "bg-[#064834] text-white shadow-soft" : "text-[#64736d] hover:bg-white hover:text-[#082d24]"
                 )
               }
