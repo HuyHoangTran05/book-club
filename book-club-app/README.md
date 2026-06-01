@@ -65,14 +65,6 @@ book-club-app/
           point.routes.js
           point.controller.js
           point.service.js
-<<<<<<< HEAD
-      models/
-        index.js
-        member.model.js
-      migrations/
-      seeders/
-=======
->>>>>>> origin/main
   frontend/
   docs/
   docker-compose.yml
@@ -157,12 +149,9 @@ GET http://localhost:5000/api/auth/ping
 POST http://localhost:5000/api/auth/register
 POST http://localhost:5000/api/auth/login
 GET http://localhost:5000/api/auth/me
-<<<<<<< HEAD
-=======
 GET http://localhost:5000/api/members/me
 PUT http://localhost:5000/api/members/me
 GET http://localhost:5000/api/members/me/points
->>>>>>> origin/main
 GET http://localhost:5000/api/books/ping
 GET http://localhost:5000/api/books
 GET http://localhost:5000/api/books/my

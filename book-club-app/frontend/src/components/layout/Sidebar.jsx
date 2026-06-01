@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { classNames } from "../../utils/classNames.js";
 
 const navigationItems = [
@@ -9,7 +9,25 @@ const navigationItems = [
   { label: "Lịch sử điểm", to: "/points/history" },
 ];
 
+function isActiveRoute(itemPath, pathname) {
+  if (itemPath === "/books") {
+    return pathname === "/books";
+  }
+
+  if (itemPath === "/books/add") {
+    return pathname === "/books/add" || pathname === "/books/new";
+  }
+
+  if (itemPath === "/points/history") {
+    return pathname === "/points" || pathname === "/points/history";
+  }
+
+  return pathname === itemPath;
+}
+
 function Sidebar({ isOpen, onClose }) {
+  const location = useLocation();
+
   return (
     <>
       <div
@@ -38,10 +56,12 @@ function Sidebar({ isOpen, onClose }) {
               key={item.to}
               to={item.to}
               onClick={onClose}
-              className={({ isActive }) =>
+              className={() =>
                 classNames(
                   "block whitespace-nowrap rounded-xl px-3.5 py-3 text-[15px] font-bold transition",
-                  isActive ? "bg-[#064834] text-white shadow-soft" : "text-[#64736d] hover:bg-white hover:text-[#082d24]"
+                  isActiveRoute(item.to, location.pathname)
+                    ? "bg-[#064834] text-white shadow-soft"
+                    : "text-[#64736d] hover:bg-white hover:text-[#082d24]"
                 )
               }
             >
