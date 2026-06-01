@@ -1,9 +1,13 @@
 const errorHandler = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
+  const isMulterError = err.name === "MulterError";
+  const statusCode = err.statusCode || (isMulterError ? 400 : 500);
+  const message = err.code === "LIMIT_FILE_SIZE"
+    ? "Ảnh bìa không được vượt quá 5MB"
+    : err.message;
 
   const response = {
     success: false,
-    message: err.message || "Internal Server Error",
+    message: message || "Internal Server Error",
   };
 
   if (process.env.NODE_ENV !== "production") {

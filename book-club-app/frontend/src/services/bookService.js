@@ -1,4 +1,4 @@
-import api, { apiPath } from "./api.js";
+import api, { apiBaseUrl, apiPath } from "./api.js";
 import {
   conditionLabels,
   exchangeTypeLabels,
@@ -43,12 +43,29 @@ function getOwner(rawBook) {
   return rawBook?.owner || rawBook?.member || rawBook?.user || {};
 }
 
+export function resolveCoverUrl(coverUrl = "") {
+  if (!coverUrl) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(coverUrl) || coverUrl.startsWith("data:") || coverUrl.startsWith("blob:")) {
+    return coverUrl;
+  }
+
+  if (coverUrl.startsWith("/uploads")) {
+    return `${apiBaseUrl}${coverUrl}`;
+  }
+
+  return coverUrl;
+}
+
 export function normalizeBook(rawBook = {}) {
   const titleInfo = getNested(rawBook);
   const owner = getOwner(rawBook);
   const condition = rawBook.condition || "good";
   const status = rawBook.status || "available";
   const exchangeType = rawBook.exchange_type || rawBook.exchangeType || "both";
+  const coverUrl = rawBook.cover_url || rawBook.coverUrl || titleInfo.cover_url || titleInfo.coverUrl || "";
 
   return {
     copyId: rawBook.copy_id || rawBook.copyId || rawBook.id || "",
@@ -61,7 +78,7 @@ export function normalizeBook(rawBook = {}) {
     isbn: rawBook.isbn || titleInfo.isbn || "",
     language: normalizeDisplayText(rawBook.language || titleInfo.language, "Tiếng Việt"),
     description: normalizeDisplayText(rawBook.description || titleInfo.description, ""),
-    coverUrl: rawBook.cover_url || rawBook.coverUrl || titleInfo.cover_url || titleInfo.coverUrl || "",
+    coverUrl: resolveCoverUrl(coverUrl),
     condition,
     conditionLabel: getConditionLabel(condition),
     status,
@@ -89,6 +106,29 @@ export function toBookPayload(values) {
     note: values.note?.trim() || undefined,
     cover_url: values.cover_url?.trim() || undefined,
   };
+}
+
+function appendFormValue(formData, key, value) {
+  if (value === undefined || value === null || value === "") {
+    return;
+  }
+
+  formData.append(key, value);
+}
+
+export function toBookFormData(values) {
+  const payload = toBookPayload(values);
+  const formData = new FormData();
+
+  Object.entries(payload).forEach(([key, value]) => {
+    appendFormValue(formData, key, value);
+  });
+
+  if (values.coverFile) {
+    formData.append("cover", values.coverFile);
+  }
+
+  return formData;
 }
 
 export function getBookErrorMessage(error, fallback = "Đã có lỗi xảy ra. Vui lòng thử lại.") {
@@ -135,7 +175,7 @@ export async function getBookById(copyId) {
 }
 
 export async function createBook(payload) {
-  const response = await api.post(apiPath("/books"), toBookPayload(payload));
+  const response = await api.post(apiPath("/books"), toBookFormData(payload));
   return unwrapBook(response);
 }
 

@@ -1,8 +1,14 @@
 import axios from "axios";
 import { getToken } from "../utils/auth.js";
 
+const rawBaseUrl = import.meta.env?.VITE_API_URL || "http://localhost:5000";
+const normalizedBaseUrl = rawBaseUrl.replace(/\/$/, "");
+const apiBaseUrl = normalizedBaseUrl.endsWith("/api")
+  ? normalizedBaseUrl
+  : `${normalizedBaseUrl}/api`;
+
 const apiClient = axios.create({
-  baseURL: import.meta.env?.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: apiBaseUrl,
   headers: {
     "Content-Type": "application/json",
   },

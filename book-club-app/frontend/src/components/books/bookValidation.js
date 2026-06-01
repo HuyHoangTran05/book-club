@@ -27,5 +27,9 @@ export function validateBookValues(values) {
     errors.publication_year = "Năm xuất bản không hợp lệ.";
   }
 
+  if (values.coverFileError) {
+    errors.coverFile = values.coverFileError;
+  }
+
   return errors;
 }
