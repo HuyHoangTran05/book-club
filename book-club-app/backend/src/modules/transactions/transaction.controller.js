@@ -7,38 +7,37 @@ export const pingTransactions = (req, res) => {
 };
 
 export const createTransaction = asyncHandler(async (req, res) => {
-  const bookTransaction = await transactionService.createTransaction(
+  const transaction = await transactionService.createTransaction(
     req.user.member_id,
     req.body,
   );
-  successResponse(res, bookTransaction, "Tạo giao dịch thành công", 201);
-});
-
-export const listMyTransactions = asyncHandler(async (req, res) => {
-  const transactions = await transactionService.getMyTransactions(req.user.member_id);
-  successResponse(res, transactions, "Lấy danh sách giao dịch của tôi thành công");
-});
-
-export const getTransactionById = asyncHandler(async (req, res) => {
-  const bookTransaction = await transactionService.getTransactionById(
-    req.user.member_id,
-    req.params.transactionId,
-  );
-  successResponse(res, bookTransaction, "Lấy chi tiết giao dịch thành công");
+  successResponse(res, transaction, "Transaction created", 201);
 });
 
 export const confirmTransaction = asyncHandler(async (req, res) => {
-  const bookTransaction = await transactionService.confirmTransaction(
+  const transaction = await transactionService.confirmTransaction(
     req.user.member_id,
     req.params.transactionId,
   );
-  successResponse(res, bookTransaction, "Xác nhận giao dịch thành công");
+  successResponse(res, transaction, "Transaction confirmed");
 });
 
 export const cancelTransaction = asyncHandler(async (req, res) => {
-  const bookTransaction = await transactionService.cancelTransaction(
+  const transaction = await transactionService.cancelTransaction(
     req.user.member_id,
     req.params.transactionId,
   );
-  successResponse(res, bookTransaction, "Hủy giao dịch thành công");
+  successResponse(res, transaction, "Transaction cancelled");
+});
+
+export const getMyTransactions = asyncHandler(async (req, res) => {
+  const transactions = await transactionService.listMyTransactions(req.user.member_id);
+  successResponse(res, transactions, "My transactions");
+});
+
+export const getTransactionById = asyncHandler(async (req, res) => {
+  const transaction = await transactionService.getTransactionById(
+    req.params.transactionId,
+  );
+  successResponse(res, transaction, "Transaction detail");
 });

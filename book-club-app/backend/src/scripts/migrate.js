@@ -2,12 +2,17 @@ import dotenv from "dotenv";
 import { DataTypes, QueryTypes, Sequelize } from "sequelize";
 import createCoreTables from "../migrations/202605300001-create-core-tables.js";
 import addUpdatedAtToTransactionPointHistory from "../migrations/202605310001-add-updated-at-to-transaction-point-history.js";
+import addTransactionDay5Indexes from "../migrations/202606010001-add-transaction-day5-indexes.js";
 
 dotenv.config();
 
 const { default: sequelize } = await import("../config/database.js");
 
-const migrations = [createCoreTables, addUpdatedAtToTransactionPointHistory];
+const migrations = [
+  createCoreTables,
+  addUpdatedAtToTransactionPointHistory,
+  addTransactionDay5Indexes,
+];
 const metaTable = "sequelize_migrations";
 
 const ensureMetaTable = async (queryInterface) => {

@@ -61,6 +61,7 @@ function AddBookPage() {
           submitLabel="Lưu sách"
           submittingLabel="Đang lưu..."
           values={formValues}
+          allowCoverUpload
         />
       </Card>
     </div>

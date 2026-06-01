@@ -65,14 +65,6 @@ book-club-app/
           point.routes.js
           point.controller.js
           point.service.js
-<<<<<<< HEAD
-      models/
-        index.js
-        member.model.js
-      migrations/
-      seeders/
-=======
->>>>>>> origin/main
   frontend/
   docs/
   docker-compose.yml
@@ -157,12 +149,9 @@ GET http://localhost:5000/api/auth/ping
 POST http://localhost:5000/api/auth/register
 POST http://localhost:5000/api/auth/login
 GET http://localhost:5000/api/auth/me
-<<<<<<< HEAD
-=======
 GET http://localhost:5000/api/members/me
 PUT http://localhost:5000/api/members/me
 GET http://localhost:5000/api/members/me/points
->>>>>>> origin/main
 GET http://localhost:5000/api/books/ping
 GET http://localhost:5000/api/books
 GET http://localhost:5000/api/books/my
@@ -171,6 +160,11 @@ POST http://localhost:5000/api/books
 PUT http://localhost:5000/api/books/:copyId
 DELETE http://localhost:5000/api/books/:copyId
 GET http://localhost:5000/api/transactions/ping
+POST http://localhost:5000/api/transactions
+GET http://localhost:5000/api/transactions/my
+GET http://localhost:5000/api/transactions/:transactionId
+PUT http://localhost:5000/api/transactions/:transactionId/confirm
+PUT http://localhost:5000/api/transactions/:transactionId/cancel
 GET http://localhost:5000/api/points/ping
 ```
 
@@ -182,6 +176,26 @@ Example login payload:
   "password": "Password123"
 }
 ```
+
+Example create transaction payload:
+
+```json
+{
+  "copy_id": "book-copy-uuid",
+  "transaction_type": "permanent"
+}
+```
+
+Day 5 transaction rules:
+
+- Creating a transaction reserves an available book copy.
+- A member cannot request their own book.
+- Receiver must have enough points: `10` for `permanent`, `5` for `lending`.
+- When giver and receiver both confirm, points are updated atomically and point
+  history rows are written.
+- Completed `permanent` transactions mark the copy as `exchanged`; completed
+  `lending` transactions mark it as `borrowed`.
+- Cancelling a pending transaction restores a reserved book copy to `available`.
 
 Example create book payload:
 

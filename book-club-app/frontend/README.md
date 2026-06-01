@@ -1,6 +1,37 @@
-## Frontend Verification Checklist — Day 1 to Day 4
+# Frontend Verification Checklist — Cộng Đồng Sách
 
-### Day 1 — Frontend Setup & Base UI
+README này dùng để kiểm tra phần frontend từ Day 1 đến Day 5.
+
+> Trạng thái hiện tại: Day 1–5 đã chạy được với API thật.
+> `VITE_USE_MOCK_TRANSACTION=false` là chế độ mặc định để demo.
+
+---
+
+## Environment
+
+Trong `frontend/.env`:
+
+```env
+VITE_API_URL=http://localhost:5000
+VITE_USE_MOCK_TRANSACTION=false
+```
+
+Trong `frontend/.env.example` nên có:
+
+```env
+VITE_API_URL=http://localhost:5000
+VITE_USE_MOCK_TRANSACTION=false
+```
+
+Sau khi sửa `.env`, cần restart frontend:
+
+```bash
+npm run dev
+```
+
+---
+
+## Day 1 — Frontend Setup & Base UI
 
 - [x] Frontend chạy được bằng lệnh:
 
@@ -15,6 +46,8 @@ npm run dev
 http://localhost:5173
 ```
 
+> Nếu Vite đổi port, có thể là `http://localhost:5174`.
+
 - [x] Homepage hiển thị đúng giao diện chính.
 - [x] Login page hiển thị đúng layout.
 - [x] Register page hiển thị đúng layout.
@@ -27,9 +60,9 @@ http://localhost:5173
 
 ---
 
-### Day 2 — Backend/Data Integration Readiness
+## Day 2 — Backend/Data Integration Readiness
 
-- [x] Frontend có thể kết nối backend thông qua biến môi trường:
+- [x] Frontend kết nối backend qua biến môi trường:
 
 ```env
 VITE_API_URL=http://localhost:5000
@@ -53,7 +86,7 @@ GET /api/auth/ping
 
 ---
 
-### Day 3 — Authentication
+## Day 3 — Authentication
 
 - [x] Login page gọi API thật:
 
@@ -82,6 +115,8 @@ POST /api/auth/register
 
 ```text
 an@example.com / Password123
+binh@example.com / Password123
+chi@example.com / Password123
 ```
 
 - [x] Đăng nhập sai mật khẩu hiển thị lỗi phù hợp.
@@ -102,7 +137,7 @@ auth_token
 
 ---
 
-### Day 4 — Book CRUD Frontend
+## Day 4 — Book CRUD Frontend
 
 - [x] Trang danh sách sách hoạt động:
 
@@ -166,103 +201,162 @@ DELETE /api/books/:copyId
 - [x] Form thêm/sửa sách có validation cơ bản.
 - [x] Xóa sách có hộp thoại xác nhận trước khi xóa.
 - [x] Danh sách sách responsive trên desktop và mobile.
+- [x] Sidebar active route hoạt động đúng: vào `/books/new` chỉ active `Thêm sách`, không active đồng thời `Khám phá sách`.
 
 ---
 
-### Day 5 — Transaction Core Frontend
+## Day 5 — Transaction Core Frontend with Real API
 
-> Status: Frontend implemented with mock mode first.
-> Backend transaction API can be integrated later by changing `VITE_USE_MOCK_TRANSACTION=false`.
+> Trạng thái hiện tại: Day 5 đã tích hợp API thật.
+> Mock transaction chỉ còn dùng cho dev khi bật rõ ràng `VITE_USE_MOCK_TRANSACTION=true`.
 
-#### Environment
+### Day 5 API used by frontend
 
-Frontend supports transaction mock mode through:
+Frontend hiện dùng các API thật:
 
-```env
-VITE_USE_MOCK_TRANSACTION=true
+```text
+POST /api/transactions
+GET /api/transactions/my
+GET /api/transactions/:transactionId
+PUT /api/transactions/:transactionId/confirm
+PUT /api/transactions/:transactionId/cancel
+GET /api/points/history
+GET /api/members/me/points
 ```
 
-Use this while backend transaction APIs are not ready.
+### Transaction real API mode
 
-When backend transaction APIs are ready, switch to:
+- [x] `VITE_USE_MOCK_TRANSACTION=false` là chế độ demo thật.
+- [x] `transactionService` dùng strict check:
 
-```env
-VITE_USE_MOCK_TRANSACTION=false
+```js
+import.meta.env.VITE_USE_MOCK_TRANSACTION === "true";
 ```
 
-Then restart frontend:
+- [x] Khi real API mode đang bật, frontend không đọc mock localStorage.
+- [x] Các key mock cũ được bỏ qua hoặc xóa:
 
-```bash
-npm run dev
+```text
+book_club_mock_transactions
+mock_transactions
+mockTransactions
+transaction_mock_data
 ```
 
----
+- [x] Nếu backend trả:
 
-#### Frontend Transaction Scope
+```json
+{
+  "success": true,
+  "data": []
+}
+```
 
-- [x] Transaction page exists:
+thì `/transactions` hiển thị empty state, không hiển thị giao dịch giả.
+
+### Transaction page
+
+- [x] Trang giao dịch tồn tại:
 
 ```text
 /transactions
 ```
 
-- [x] `/transactions` is protected and requires login.
+- [x] `/transactions` là protected route.
+- [x] Trang giao dịch hiển thị tiếng Việt.
+- [x] Có loading, error và empty state.
+- [x] Transaction card hiển thị:
 
-- [x] Transaction page displays Vietnamese UI.
+  - Tên sách
+  - Tác giả
+  - Thể loại
+  - Người cho / chủ sách
+  - Người nhận
+  - Người giao nếu có
+  - Trạng thái giao dịch
+  - Vai trò hiện tại của user
+  - `giver_confirmed`
+  - `receiver_confirmed`
+  - `delivery_confirmed` nếu có deliverer
+  - Ngày tạo
+  - Ngày dự kiến trả nếu là giao dịch mượn
+  - Ngày hoàn thành nếu completed
+  - Điểm cộng/trừ theo vai trò
 
-- [x] Transaction page supports loading, error, and empty states.
+### Create transaction from `/books`
 
-- [x] Transaction cards show:
+- [x] User có thể tạo giao dịch từ `/books`.
+- [x] Sách của chính user hiển thị `Sách của bạn` và không cho tạo giao dịch.
+- [x] Sách không sẵn sàng không cho tạo giao dịch.
+- [x] Modal tạo giao dịch hoạt động.
+- [x] Modal chỉ cho chọn hình thức giao dịch mà sách hỗ trợ:
 
-  - Book title
-  - Author
-  - Category
-  - Transaction type
-  - Transaction status
-  - Current user's role
-  - Confirmation status
-  - Expected return date if lending
-  - Created date
-  - Completed date if completed
-  - Point impact
+  - `lending` -> chỉ cho `Cho mượn`
+  - `permanent` -> chỉ cho `Trao đổi vĩnh viễn`
+  - `both` -> cho cả hai
 
-- [x] User can create a transaction from `/books`.
+- [x] Nếu backend trả lỗi `Book copy does not support this transaction type`, frontend hiển thị:
 
-- [x] Book cards show `Tạo giao dịch` for available books not owned by the current user.
+  - `Cuốn sách này không hỗ trợ hình thức giao dịch đã chọn.`
 
-- [x] Book cards show `Sách của bạn` for books owned by the current user.
+- [x] Nếu backend trả lỗi sách không sẵn sàng, frontend hiển thị:
 
-- [x] Create transaction modal works.
+  - `Sách này hiện không còn sẵn sàng.`
 
-- [x] User can choose transaction type:
+- [x] Nếu backend trả lỗi không đủ điểm, frontend hiển thị:
 
-  - `Cho mượn`
-  - `Trao đổi vĩnh viễn`
+  - `Bạn không đủ điểm để thực hiện giao dịch này.`
 
-- [x] Lending transaction shows expected return date field.
+- [x] Tạo giao dịch thành công gọi API thật:
 
-- [x] Transaction point cost is displayed:
+```text
+POST /api/transactions
+```
 
-  - Lending: `Bạn sẽ dùng 5 điểm cho giao dịch này.`
-  - Permanent: `Bạn sẽ dùng 10 điểm cho giao dịch này.`
+- [x] Sau khi tạo giao dịch thành công, user được chuyển sang `/transactions`.
 
-- [x] User can submit a mock transaction.
+### Confirm transaction
 
-- [x] After creating a transaction, user is redirected to `/transactions`.
+- [x] Người nhận có thể xác nhận giao dịch.
+- [x] Một bên xác nhận thì giao dịch chưa hoàn thành.
+- [x] Chủ sách có thể xác nhận giao dịch.
+- [x] Khi đủ điều kiện xác nhận, giao dịch chuyển sang `completed`.
+- [x] Nếu có người giao, UI hỗ trợ hiển thị và xác nhận `delivery_confirmed`.
+- [x] User không liên quan tới giao dịch không thấy nút xác nhận/hủy.
+- [x] User đã xác nhận không thấy nút xác nhận lần nữa.
 
-- [x] User can confirm a pending transaction.
+### Point history
 
-- [x] User can cancel a pending transaction.
+- [x] PointHistoryPage dùng API thật:
 
-- [x] Mock transaction data is saved in localStorage, so refresh does not immediately lose mock transactions.
+```text
+GET /api/points/history
+```
 
-- [x] `transactionService` can switch between mock mode and real API mode.
+- [x] Không dùng `mockCurrentUser`.
+- [x] Không dùng `mockPointHistory`.
+- [x] Lịch sử điểm hiển thị:
 
-- [x] Existing Day 1–4 features still work.
+  - Thời gian
+  - Giao dịch
+  - Điểm thay đổi
+  - Lý do
+
+- [x] Hiển thị dấu `+` cho điểm dương.
+- [x] Hiển thị dấu `-` cho điểm âm.
+- [x] Card `Điểm hiện tại` hiển thị điểm hiện tại của user.
+- [x] Nếu API không trả trực tiếp `point_balance`, frontend có thể tính điểm hiện tại bằng tổng các `point_change`.
+- [x] Lý do điểm được map sang tiếng Việt:
+
+  - `initial_register` -> `Điểm khởi đầu khi đăng ký`
+  - `permanent_exchange` + điểm dương -> `Trao đổi sách thành công`
+  - `permanent_exchange` + điểm âm -> `Nhận sách qua trao đổi`
+  - `lending` + điểm dương -> `Cho mượn sách thành công`
+  - `lending` + điểm âm -> `Mượn sách thành công`
 
 ---
 
-#### Transaction UI Labels
+## Transaction UI Labels
 
 Transaction type labels:
 
@@ -279,20 +373,32 @@ completed -> Đã hoàn thành
 cancelled -> Đã hủy
 ```
 
+Book status labels after transaction:
+
+```text
+reserved  -> Đang giữ chỗ
+borrowed  -> Đang mượn
+exchanged -> Đã trao đổi
+```
+
 Confirmation labels:
 
 ```text
-giver_confirmed true    -> Người cho đã xác nhận
-giver_confirmed false   -> Người cho chưa xác nhận
-receiver_confirmed true -> Người nhận đã xác nhận
+giver_confirmed true     -> Chủ sách đã xác nhận
+giver_confirmed false    -> Chủ sách chưa xác nhận
+receiver_confirmed true  -> Người nhận đã xác nhận
 receiver_confirmed false -> Người nhận chưa xác nhận
+delivery_confirmed true  -> Người giao đã xác nhận
+delivery_confirmed false -> Người giao chưa xác nhận
+no deliverer             -> Không có người giao
 ```
 
 Current user role labels:
 
 ```text
-giver    -> Bạn là người cho sách
-receiver -> Bạn là người nhận sách
+giver     -> Bạn là chủ sách
+receiver  -> Bạn là người nhận
+deliverer -> Bạn là người giao
 ```
 
 Point impact labels:
@@ -306,419 +412,18 @@ receiver + lending   -> -5 điểm
 
 ---
 
-#### Manual Test Flow — Mock Mode
-
-Before testing, make sure frontend `.env` contains:
-
-```env
-VITE_API_URL=http://localhost:5000
-VITE_USE_MOCK_TRANSACTION=true
-```
-
-Start backend:
-
-```bash
-cd backend
-npm run dev
-```
-
-Start frontend:
-
-```bash
-cd frontend
-npm run dev
-```
-
-Login with seeded account:
-
-```text
-Email: an@example.com
-Password: Password123
-```
-
-Test flow:
-
-1. Open:
-
-```text
-http://localhost:5173/transactions
-```
-
-2. Confirm the page displays correctly.
-3. Open:
-
-```text
-http://localhost:5173/books
-```
-
-4. Find a book not owned by the current user.
-5. Click:
-
-```text
-Tạo giao dịch
-```
-
-6. Select:
-
-```text
-Cho mượn
-```
-
-7. Enter expected return date, for example:
-
-```text
-2026-06-15
-```
-
-8. Click:
-
-```text
-Gửi yêu cầu
-```
-
-9. Confirm the app redirects to:
-
-```text
-/transactions
-```
-
-10. Confirm the new transaction appears with status:
-
-```text
-Đang chờ xác nhận
-```
-
-11. Click:
-
-```text
-Xác nhận hoàn thành
-```
-
-12. Confirm the UI updates to show:
-
-```text
-Bạn đã xác nhận. Đang chờ bên còn lại.
-```
-
-13. Create another pending transaction.
-14. Click:
-
-```text
-Hủy giao dịch
-```
-
-15. Confirm the transaction status becomes:
-
-```text
-Đã hủy
-```
-
-16. Refresh the page.
-17. Confirm mock transactions are still visible.
-
----
-
-#### Backend API Contract Needed for Real Integration
-
-Backend should implement the following endpoints so frontend can switch from mock mode to real API mode.
-
-##### 1. Create transaction
-
-```text
-POST /api/transactions
-```
-
-Request body:
-
-```json
-{
-  "copy_id": 1,
-  "transaction_type": "lending",
-  "expected_return_date": "2026-06-15"
-}
-```
-
-Also acceptable if backend supports camelCase:
-
-```json
-{
-  "copyId": 1,
-  "transactionType": "lending",
-  "expectedReturnDate": "2026-06-15"
-}
-```
-
-Expected behavior:
-
-- Current logged-in user is receiver.
-- Book owner is giver.
-- Receiver cannot create a transaction with their own book.
-- Book copy must be `available`.
-- Receiver must have enough points:
-
-  - `lending`: at least 5 points
-  - `permanent`: at least 10 points
-
-- On success:
-
-  - Create transaction with status `pending`.
-  - Change book copy status from `available` to `reserved`.
-
-Expected response:
-
-```json
-{
-  "success": true,
-  "message": "Tạo giao dịch thành công.",
-  "transaction": {
-    "transaction_id": 1,
-    "copy_id": 1,
-    "transaction_type": "lending",
-    "status": "pending",
-    "giver_confirmed": false,
-    "receiver_confirmed": false,
-    "expected_return_date": "2026-06-15",
-    "created_at": "2026-06-01T10:00:00.000Z"
-  }
-}
-```
-
----
-
-##### 2. Get current user's transactions
-
-```text
-GET /api/transactions/my
-```
-
-Expected behavior:
-
-Return transactions where current user is either giver or receiver.
-
-Expected response shape:
-
-```json
-{
-  "success": true,
-  "transactions": [
-    {
-      "transaction_id": 1,
-      "copy_id": 1,
-      "transaction_type": "lending",
-      "status": "pending",
-      "giver_confirmed": false,
-      "receiver_confirmed": true,
-      "expected_return_date": "2026-06-15",
-      "completed_at": null,
-      "created_at": "2026-06-01T10:00:00.000Z",
-      "book": {
-        "title": "Nhà Giả Kim",
-        "author": "Paulo Coelho",
-        "category": "Tiểu thuyết"
-      },
-      "giver": {
-        "member_id": 1,
-        "full_name": "Nguyễn Văn An",
-        "email": "an@example.com"
-      },
-      "receiver": {
-        "member_id": 2,
-        "full_name": "Trần Bình",
-        "email": "binh@example.com"
-      }
-    }
-  ]
-}
-```
-
----
-
-##### 3. Confirm transaction
-
-```text
-PUT /api/transactions/:transactionId/confirm
-```
-
-Expected behavior:
-
-- Only giver or receiver can confirm.
-- If current user is giver, set `giver_confirmed = true`.
-- If current user is receiver, set `receiver_confirmed = true`.
-- If only one side has confirmed, transaction remains `pending`.
-- If both sides have confirmed, backend completes the transaction atomically.
-
-Completion rules:
-
-For `lending`:
-
-```text
-giver: +5 points
-receiver: -5 points
-book copy status: borrowed
-transaction status: completed
-```
-
-For `permanent`:
-
-```text
-giver: +10 points
-receiver: -10 points
-book copy status: exchanged
-transaction status: completed
-```
-
-Backend must create point history records for both users.
-
-Expected response if waiting for other side:
-
-```json
-{
-  "success": true,
-  "message": "Xác nhận giao dịch thành công. Đang chờ bên còn lại xác nhận.",
-  "transaction": {
-    "transaction_id": 1,
-    "status": "pending",
-    "giver_confirmed": false,
-    "receiver_confirmed": true
-  }
-}
-```
-
-Expected response if completed:
-
-```json
-{
-  "success": true,
-  "message": "Giao dịch đã hoàn tất và điểm đã được cập nhật.",
-  "transaction": {
-    "transaction_id": 1,
-    "status": "completed",
-    "giver_confirmed": true,
-    "receiver_confirmed": true,
-    "completed_at": "2026-06-01T10:30:00.000Z"
-  }
-}
-```
-
----
-
-##### 4. Cancel transaction
-
-```text
-PUT /api/transactions/:transactionId/cancel
-```
-
-Expected behavior:
-
-- Only giver or receiver can cancel.
-- Only pending transactions can be canceled.
-- Set transaction status to `cancelled`.
-- Set book copy status back to `available`.
-- Do not update points.
-
-Expected response:
-
-```json
-{
-  "success": true,
-  "message": "Đã hủy giao dịch.",
-  "transaction": {
-    "transaction_id": 1,
-    "status": "cancelled"
-  }
-}
-```
-
----
-
-##### 5. Point history
-
-Frontend already expects point history from:
-
-```text
-GET /api/members/me/points
-```
-
-After a completed transaction, backend should return new point history records.
-
-Expected point history item:
-
-```json
-{
-  "point_history_id": 1,
-  "member_id": 1,
-  "transaction_id": 1,
-  "point_change": 5,
-  "reason": "Cho mượn sách thành công",
-  "created_at": "2026-06-01T10:30:00.000Z"
-}
-```
-
-Suggested reason values:
-
-```text
-Trao đổi sách thành công
-Nhận sách qua trao đổi
-Cho mượn sách thành công
-Mượn sách thành công
-```
-
----
-
-#### Backend Requirements Summary
-
-Backend needs to implement:
-
-```text
-POST /api/transactions
-GET /api/transactions/my
-GET /api/transactions/:transactionId
-PUT /api/transactions/:transactionId/confirm
-PUT /api/transactions/:transactionId/cancel
-GET /api/members/me/points
-```
-
-Backend should guarantee:
-
-- [ ] Transaction APIs require JWT.
-- [ ] User cannot create transaction with their own book.
-- [ ] Book must be available before creating transaction.
-- [ ] Book status changes `available -> reserved` after transaction creation.
-- [ ] One-sided confirmation does not update points.
-- [ ] Two-sided confirmation updates points.
-- [ ] Point update uses database transaction.
-- [ ] Point history is created for both users.
-- [ ] Lending transaction changes book status to `borrowed`.
-- [ ] Permanent transaction changes book status to `exchanged`.
-- [ ] Canceling pending transaction changes book status back to `available`.
-- [ ] Receiver cannot go below 0 points.
-- [ ] Double confirmation must not create duplicate point history records.
-
----
-
-### Current Status
-
-```text
-Day 1: Passed
-Day 2: Passed
-Day 3: Passed
-Day 4: Passed
-Day 5: Frontend mock mode ready
-```
-
-Frontend Day 5 is ready for backend transaction API integration. Once backend finishes the transaction endpoints, set:
-
-```env
-VITE_USE_MOCK_TRANSACTION=false
-```
-
-Then restart frontend and test the real transaction flow.
-
-### Vietnamese UI Check
+## Vietnamese UI Check
 
 - [x] Tất cả text người dùng nhìn thấy đều là tiếng Việt.
 - [x] Không còn text tiếng Anh không cần thiết trong UI.
-- [x] Các trạng thái sách hiển thị đúng:
+- [x] Không còn hiển thị tên `BookCommunity`.
+- [x] Brand hiển thị là `Cộng Đồng Sách`.
+- [x] Font tiếng Việt hiển thị đúng dấu.
+- [x] Không có lỗi tách chữ hoặc lỗi spacing tiếng Việt.
+
+### Book labels
+
+Trạng thái sách:
 
 ```text
 available   -> Sẵn sàng
@@ -728,7 +433,7 @@ exchanged   -> Đã trao đổi
 unavailable -> Tạm ẩn
 ```
 
-- [x] Tình trạng sách hiển thị đúng:
+Tình trạng sách:
 
 ```text
 new  -> Mới
@@ -737,7 +442,7 @@ fair -> Đã qua sử dụng
 worn -> Hơi cũ
 ```
 
-- [x] Hình thức trao đổi hiển thị đúng:
+Hình thức trao đổi:
 
 ```text
 permanent -> Trao đổi vĩnh viễn
@@ -745,12 +450,18 @@ lending   -> Cho mượn
 both      -> Trao đổi hoặc cho mượn
 ```
 
+### Demo data normalization
+
 - [x] Dữ liệu demo hiển thị đúng dấu tiếng Việt, ví dụ:
 
 ```text
 Tieu thuyet                    -> Tiểu thuyết
 Nha Gia Kim                    -> Nhà Giả Kim
+Dac Nhan Tam                   -> Đắc Nhân Tâm
+Ky nang song                   -> Kỹ năng sống
 Nguyen Van An                  -> Nguyễn Văn An
+Tran Thi Binh                  -> Trần Thị Bình
+Le Minh Chi                    -> Lê Minh Chi
 Con tốt                        -> Còn tốt
 Van hoc Viet Nam               -> Văn học Việt Nam
 Toi Thay Hoa Vang Tren Co Xanh -> Tôi thấy hoa vàng trên cỏ xanh
@@ -760,40 +471,55 @@ Muon toi da 14 ngay            -> Mượn tối đa 14 ngày
 
 ---
 
-### Manual Test Flow
+## Manual Test Flow — Full Demo
 
-Use this flow to verify the frontend manually.
-
-1. Start backend:
+### 1. Start backend
 
 ```bash
 cd backend
+npm run dev
+```
+
+Nếu cần reset database demo:
+
+```bash
 npm run migrate
 npm run seed
 npm run dev
 ```
 
-2. Start frontend:
+### 2. Start frontend
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-3. Open frontend:
+Mở frontend:
 
 ```text
 http://localhost:5173
 ```
 
-4. Login with seeded account:
+hoặc port Vite đang báo, ví dụ:
 
 ```text
-Email: an@example.com
-Password: Password123
+http://localhost:5174
 ```
 
-5. Verify these pages:
+### 3. Login
+
+Dùng tài khoản seed:
+
+```text
+an@example.com / Password123
+binh@example.com / Password123
+chi@example.com / Password123
+```
+
+### 4. Verify base pages
+
+Kiểm tra các route:
 
 ```text
 /
@@ -802,11 +528,16 @@ Password: Password123
 /books
 /my-books
 /books/new
-/points
 /transactions
+/points
+/points/history
 ```
 
-6. Add a new book with sample data:
+### 5. Book CRUD flow
+
+1. Login bằng `an@example.com`.
+2. Vào `/books/new`.
+3. Thêm sách mới với dữ liệu mẫu:
 
 ```text
 Tên sách: Dế Mèn Phiêu Lưu Ký
@@ -821,23 +552,124 @@ Hình thức trao đổi: Cho mượn
 Ghi chú: Sách còn tốt, phù hợp để cho mượn.
 ```
 
-7. Confirm the book appears in `/my-books`.
+4. Kiểm tra sách xuất hiện trong `/my-books`.
+5. Sửa thông tin sách.
+6. Xóa sách.
+7. F5 lại trang và xác nhận sách đã xóa không hiện lại.
 
-8. Edit the book note or condition.
+### 6. Transaction flow — Permanent exchange
 
-9. Delete the book.
+1. Login bằng user nhận sách, ví dụ `an@example.com`.
+2. Vào `/books`.
+3. Chọn sách của user khác có hình thức `Trao đổi vĩnh viễn` hoặc `Trao đổi hoặc cho mượn`.
+4. Bấm `Tạo giao dịch`.
+5. Chọn `Trao đổi vĩnh viễn`.
+6. Bấm `Gửi yêu cầu`.
+7. Vào `/transactions`.
+8. User nhận sách xác nhận giao dịch.
+9. Logout.
+10. Login bằng chủ sách, ví dụ `binh@example.com`.
+11. Vào `/transactions`.
+12. Chủ sách xác nhận giao dịch.
+13. Giao dịch chuyển sang `Đã hoàn thành`.
+14. Vào `/points/history`.
+15. Kiểm tra:
 
-10. Refresh the page and confirm the deleted book does not appear again.
+    - Chủ sách có `+10 điểm`.
+    - Người nhận có `-10 điểm`.
+    - Lý do hiển thị tiếng Việt, không hiển thị raw `permanent_exchange`.
+
+### 7. Transaction flow — Lending
+
+1. Login bằng user nhận sách.
+2. Vào `/books`.
+3. Chọn sách có hình thức `Cho mượn` hoặc `Trao đổi hoặc cho mượn`.
+4. Bấm `Tạo giao dịch`.
+5. Chọn `Cho mượn`.
+6. Nhập ngày dự kiến trả.
+7. Bấm `Gửi yêu cầu`.
+8. User nhận sách xác nhận.
+9. Logout.
+10. Login bằng chủ sách.
+11. Chủ sách xác nhận.
+12. Giao dịch chuyển sang `Đã hoàn thành`.
+13. Vào `/points/history`.
+14. Kiểm tra:
+
+    - Chủ sách có `+5 điểm`.
+    - Người nhận có `-5 điểm`.
 
 ---
 
-### Current Status
+## API Verification with PowerShell
+
+### Login and get token
+
+```powershell
+$loginBody = @{
+  email = "an@example.com"
+  password = "Password123"
+} | ConvertTo-Json
+
+$response = Invoke-RestMethod `
+  -Uri "http://localhost:5000/api/auth/login" `
+  -Method POST `
+  -ContentType "application/json; charset=utf-8" `
+  -Body $loginBody
+
+$token = $response.data.token
+```
+
+### Check transactions
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:5000/api/transactions/my" `
+  -Method GET `
+  -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 10
+```
+
+### Check point history
+
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:5000/api/points/history" `
+  -Method GET `
+  -Headers @{ Authorization = "Bearer $token" } | ConvertTo-Json -Depth 10
+```
+
+---
+
+## Final Verification Checklist
+
+- [x] `npm run build` pass.
+- [x] `VITE_USE_MOCK_TRANSACTION=false`.
+- [x] `/transactions` gọi API thật.
+- [x] `/points/history` gọi API thật.
+- [x] Không còn dùng mock point history.
+- [x] Real API mode không đọc mock transaction localStorage.
+- [x] Tạo giao dịch từ `/books` thành công.
+- [x] `/transactions` hiển thị giao dịch thật.
+- [x] Người nhận xác nhận được.
+- [x] Chủ sách xác nhận được.
+- [x] Giao dịch completed sau khi đủ xác nhận.
+- [x] Point history hiển thị `+10/-10` với permanent exchange.
+- [x] Point history hiển thị `+5/-5` với lending.
+- [x] Card `Điểm hiện tại` hiển thị đúng điểm hiện tại.
+- [x] Dữ liệu demo tiếng Việt hiển thị đúng dấu.
+- [x] Sidebar active route hoạt động đúng.
+- [x] Không còn giao dịch mock/stale localStorage trong real API mode.
+
+---
+
+## Current Status
 
 ```text
 Day 1: Passed
 Day 2: Passed
 Day 3: Passed
 Day 4: Passed
+Day 5: Passed with real API
 ```
 
-The frontend is ready to continue with Day 5: Transaction core, including creating transactions, confirming transactions, updating points, and displaying point history.
+Frontend is ready for the full demo flow: authentication, book CRUD, transaction creation, transaction confirmation, point update, and point history display.

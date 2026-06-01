@@ -7,7 +7,11 @@ export const pingBooks = (req, res) => {
 };
 
 export const createBook = asyncHandler(async (req, res) => {
-  const book = await bookService.createBook(req.user.member_id, req.body);
+  const payload = {
+    ...req.body,
+    ...(req.file ? { cover_url: `/uploads/book-covers/${req.file.filename}` } : {}),
+  };
+  const book = await bookService.createBook(req.user.member_id, payload);
   successResponse(res, book, "Thêm sách thành công", 201);
 });
 
