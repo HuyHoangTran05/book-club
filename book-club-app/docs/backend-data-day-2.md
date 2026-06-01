@@ -27,6 +27,12 @@ This document tracks the Day 2 backend/data scope from the implementation plan.
   - `GET /api/books/:copyId`
   - `PUT /api/books/:copyId`
   - `DELETE /api/books/:copyId`
+- Transaction Day 5 API is available:
+  - `POST /api/transactions`
+  - `GET /api/transactions/my`
+  - `GET /api/transactions/:transactionId`
+  - `PUT /api/transactions/:transactionId/confirm`
+  - `PUT /api/transactions/:transactionId/cancel`
 - Core database migration exists for the 5 MVP tables:
   - `members`
   - `book_titles`
@@ -91,6 +97,10 @@ Latest local verification with Docker PostgreSQL:
 | `PUT /api/books/:copyId` with owner token | Pending re-check after Docker starts |
 | `DELETE /api/books/:copyId` with owner token | Pending re-check after Docker starts |
 | `GET /api/transactions/ping` | Pass |
+| `POST /api/transactions` | Pass |
+| `GET /api/transactions/my` with token | Pass |
+| `PUT /api/transactions/:transactionId/confirm` with giver/receiver tokens | Pass |
+| `PUT /api/transactions/:transactionId/cancel` with participant token | Pass |
 | `GET /api/points/ping` | Pass |
 
 Seeded table counts:
@@ -110,3 +120,20 @@ Seeded table counts:
 - `BookCopy -> BookTitle` uses the canonical Sequelize alias `bookTitle`.
 - `book_transactions.updated_at` is available before Day 5.
 - `point_histories.updated_at` is available before Day 5.
+
+## Day 5 Transaction Rules
+
+- `POST /api/transactions` creates a pending transaction and changes
+  `book_copies.status` from `available` to `reserved`.
+- The requester cannot be the owner of the selected book copy.
+- The requester must have at least 10 points for `permanent` or 5 points for
+  `lending`.
+- `PUT /api/transactions/:transactionId/confirm` infers the confirmer from the
+  JWT token.
+- When both giver and receiver confirm, the backend updates points and book
+  status in one database transaction:
+  - `permanent`: giver `+10`, receiver `-10`, book copy `exchanged`
+  - `lending`: giver `+5`, receiver `-5`, book copy `borrowed`
+- Every point update writes a `point_histories` row.
+- Cancelling a pending transaction changes its status to `cancelled` and restores
+  a reserved book copy to `available`.
