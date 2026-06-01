@@ -4,7 +4,7 @@ const MOCK_STORAGE_KEY = "book_club_mock_transactions";
 const MOCK_DELAY_MS = 250;
 
 export const isMockTransactionMode =
-  String(import.meta.env?.VITE_USE_MOCK_TRANSACTION ?? "true").toLowerCase() === "true";
+  String(import.meta.env?.VITE_USE_MOCK_TRANSACTION ?? "false").toLowerCase() === "true";
 
 const initialMockTransactions = [
   {
@@ -12,8 +12,12 @@ const initialMockTransactions = [
     copy_id: 1,
     transaction_type: "lending",
     status: "pending",
+    giver_id: 1,
+    receiver_id: 2,
+    deliverer_id: null,
     giver_confirmed: false,
     receiver_confirmed: true,
+    delivery_confirmed: false,
     expected_return_date: "2026-06-15",
     completed_at: null,
     created_at: "2026-06-01T10:00:00.000Z",
@@ -32,6 +36,7 @@ const initialMockTransactions = [
       full_name: "Trần Bình",
       email: "binh@example.com",
     },
+    deliverer: null,
   },
 ];
 
@@ -50,8 +55,21 @@ function normalizeId(value) {
   return value === undefined || value === null || value === "" ? "" : String(value);
 }
 
+function firstDefined(...values) {
+  return values.find((value) => value !== undefined && value !== null && value !== "");
+}
+
 function getUserId(user = {}) {
-  return normalizeId(user.id ?? user.member_id ?? user.memberId);
+  return normalizeId(user.member_id ?? user.memberId ?? user.id);
+}
+
+export function getUserDisplayName(user = {}) {
+  return firstDefined(user.full_name, user.fullName, user.name, user.email, "Chưa rõ");
+}
+
+function getBackendMessage(error) {
+  const data = error?.response?.data;
+  return data?.message || data?.error || data?.data?.message || "";
 }
 
 function getStoredMockTransactions() {
@@ -77,10 +95,57 @@ function saveMockTransactions(transactions) {
 }
 
 function normalizePerson(person = {}) {
+  if (!person) {
+    return null;
+  }
+
   return {
-    member_id: person.member_id ?? person.memberId ?? person.id ?? null,
-    full_name: person.full_name ?? person.fullName ?? person.name ?? "Thành viên",
+    member_id: firstDefined(person.member_id, person.memberId, person.id, null),
+    memberId: firstDefined(person.member_id, person.memberId, person.id, null),
+    full_name: getUserDisplayName(person),
+    fullName: getUserDisplayName(person),
     email: person.email ?? "",
+    raw: person,
+  };
+}
+
+function normalizeBookFromTransaction(transaction = {}) {
+  const bookCopy = transaction.bookCopy ?? {};
+  const bookCopyTitle = bookCopy.bookTitle ?? {};
+  const bookCopyBook = bookCopy.book ?? {};
+  const snakeBookCopy = transaction.book_copy ?? {};
+  const snakeBookTitle = snakeBookCopy.book_title ?? {};
+  const bookTitle = transaction.bookTitle ?? {};
+  const book = transaction.book ?? {};
+
+  return {
+    title: firstDefined(
+      bookCopyTitle.title,
+      bookCopyBook.title,
+      snakeBookTitle.title,
+      bookTitle.title,
+      book.title,
+      transaction.title,
+      "Chưa có tên sách"
+    ),
+    author: firstDefined(
+      bookCopyTitle.author,
+      bookCopyBook.author,
+      snakeBookTitle.author,
+      bookTitle.author,
+      book.author,
+      transaction.author,
+      "Chưa rõ tác giả"
+    ),
+    category: firstDefined(
+      bookCopyTitle.category,
+      bookCopyBook.category,
+      snakeBookTitle.category,
+      bookTitle.category,
+      book.category,
+      transaction.category,
+      "Khác"
+    ),
   };
 }
 
@@ -94,43 +159,62 @@ function normalizeBook(book = {}) {
   }
 
   return {
-    title: book.title ?? book.bookTitle ?? book.name ?? "Chưa có tên sách",
-    author: book.author ?? "Chưa rõ tác giả",
-    category: book.category ?? "Khác",
+    title: firstDefined(book.title, book.bookTitle, book.name, "Chưa có tên sách"),
+    author: firstDefined(book.author, "Chưa rõ tác giả"),
+    category: firstDefined(book.category, "Khác"),
   };
 }
 
 export function normalizeTransaction(rawTransaction = {}) {
-  const transactionId = rawTransaction.transaction_id ?? rawTransaction.transactionId ?? rawTransaction.id;
-  const transactionType = rawTransaction.transaction_type ?? rawTransaction.transactionType ?? rawTransaction.type ?? "lending";
-  const expectedReturnDate = rawTransaction.expected_return_date ?? rawTransaction.expectedReturnDate ?? null;
-  const completedAt = rawTransaction.completed_at ?? rawTransaction.completedAt ?? null;
-  const createdAt = rawTransaction.created_at ?? rawTransaction.createdAt ?? new Date().toISOString();
+  const transactionId = firstDefined(rawTransaction.transaction_id, rawTransaction.transactionId, rawTransaction.id);
+  const transactionType = firstDefined(rawTransaction.transaction_type, rawTransaction.transactionType, rawTransaction.type, "lending");
+  const expectedReturnDate = firstDefined(rawTransaction.expected_return_date, rawTransaction.expectedReturnDate, null);
+  const completedAt = firstDefined(rawTransaction.completed_at, rawTransaction.completedAt, null);
+  const createdAt = firstDefined(rawTransaction.created_at, rawTransaction.createdAt, new Date().toISOString());
+  const giver = normalizePerson(firstDefined(rawTransaction.giver, rawTransaction.owner, {}));
+  const receiver = normalizePerson(firstDefined(rawTransaction.receiver, {}));
+  const delivererSource = firstDefined(rawTransaction.deliverer, null);
+  const deliverer = delivererSource ? normalizePerson(delivererSource) : null;
+  const giverId = firstDefined(rawTransaction.giver_id, rawTransaction.giverId, giver?.member_id, null);
+  const receiverId = firstDefined(rawTransaction.receiver_id, rawTransaction.receiverId, receiver?.member_id, null);
+  const delivererId = firstDefined(rawTransaction.deliverer_id, rawTransaction.delivererId, deliverer?.member_id, null);
 
   return {
     transaction_id: transactionId,
     transactionId,
-    copy_id: rawTransaction.copy_id ?? rawTransaction.copyId ?? rawTransaction.book_copy_id ?? rawTransaction.bookCopyId ?? null,
+    copy_id: firstDefined(
+      rawTransaction.copy_id,
+      rawTransaction.copyId,
+      rawTransaction.bookCopy?.copy_id,
+      rawTransaction.bookCopy?.copyId,
+      rawTransaction.book_copy?.copy_id,
+      null
+    ),
     transaction_type: transactionType,
     transactionType,
-    status: rawTransaction.status ?? "pending",
-    giver_confirmed: Boolean(rawTransaction.giver_confirmed ?? rawTransaction.giverConfirmed),
-    giverConfirmed: Boolean(rawTransaction.giver_confirmed ?? rawTransaction.giverConfirmed),
-    receiver_confirmed: Boolean(rawTransaction.receiver_confirmed ?? rawTransaction.receiverConfirmed),
-    receiverConfirmed: Boolean(rawTransaction.receiver_confirmed ?? rawTransaction.receiverConfirmed),
+    status: firstDefined(rawTransaction.status, "pending"),
+    giver_id: giverId,
+    giverId,
+    receiver_id: receiverId,
+    receiverId,
+    deliverer_id: delivererId,
+    delivererId,
+    giver_confirmed: Boolean(firstDefined(rawTransaction.giver_confirmed, rawTransaction.giverConfirmed, false)),
+    giverConfirmed: Boolean(firstDefined(rawTransaction.giver_confirmed, rawTransaction.giverConfirmed, false)),
+    receiver_confirmed: Boolean(firstDefined(rawTransaction.receiver_confirmed, rawTransaction.receiverConfirmed, false)),
+    receiverConfirmed: Boolean(firstDefined(rawTransaction.receiver_confirmed, rawTransaction.receiverConfirmed, false)),
+    delivery_confirmed: Boolean(firstDefined(rawTransaction.delivery_confirmed, rawTransaction.deliveryConfirmed, false)),
+    deliveryConfirmed: Boolean(firstDefined(rawTransaction.delivery_confirmed, rawTransaction.deliveryConfirmed, false)),
     expected_return_date: expectedReturnDate,
     expectedReturnDate,
     completed_at: completedAt,
     completedAt,
     created_at: createdAt,
     createdAt,
-    book: normalizeBook(rawTransaction.book ?? {
-      title: rawTransaction.bookTitle ?? rawTransaction.title,
-      author: rawTransaction.author,
-      category: rawTransaction.category,
-    }),
-    giver: normalizePerson(rawTransaction.giver ?? rawTransaction.owner ?? rawTransaction.fromMember),
-    receiver: normalizePerson(rawTransaction.receiver ?? rawTransaction.borrower ?? rawTransaction.toMember),
+    book: normalizeBookFromTransaction(rawTransaction),
+    giver: giver ?? normalizePerson({}),
+    receiver: receiver ?? normalizePerson({}),
+    deliverer,
     raw: rawTransaction,
   };
 }
@@ -157,8 +241,12 @@ function createMockTransaction(payload = {}) {
     copy_id: payload.copy_id ?? payload.copyId ?? book.copyId ?? book.copy_id ?? book.id,
     transaction_type: payload.transaction_type ?? payload.transactionType ?? "lending",
     status: "pending",
+    giver_id: ownerId,
+    receiver_id: receiverId,
+    deliverer_id: null,
     giver_confirmed: false,
     receiver_confirmed: true,
+    delivery_confirmed: false,
     expected_return_date: payload.expected_return_date ?? payload.expectedReturnDate ?? null,
     completed_at: null,
     created_at: new Date().toISOString(),
@@ -173,6 +261,7 @@ function createMockTransaction(payload = {}) {
       full_name: currentUser.full_name ?? currentUser.fullName ?? currentUser.name ?? "Bạn",
       email: currentUser.email ?? "",
     },
+    deliverer: null,
   };
 
   const nextTransactions = [transaction, ...transactions];
@@ -183,26 +272,33 @@ function createMockTransaction(payload = {}) {
 function getRoleForUser(transaction, currentUser = {}) {
   const userId = getUserId(currentUser);
   const userEmail = currentUser.email;
-  const giver = normalizePerson(transaction.giver);
-  const receiver = normalizePerson(transaction.receiver);
+  const normalizedTransaction = normalizeTransaction(transaction);
 
-  if (userId && normalizeId(giver.member_id) === userId) {
+  if (userId && normalizeId(normalizedTransaction.giver_id) === userId) {
     return "giver";
   }
 
-  if (userId && normalizeId(receiver.member_id) === userId) {
+  if (userId && normalizeId(normalizedTransaction.receiver_id) === userId) {
     return "receiver";
   }
 
-  if (userEmail && giver.email === userEmail) {
+  if (userId && normalizeId(normalizedTransaction.deliverer_id) === userId) {
+    return "deliverer";
+  }
+
+  if (userEmail && normalizedTransaction.giver?.email === userEmail) {
     return "giver";
   }
 
-  if (userEmail && receiver.email === userEmail) {
+  if (userEmail && normalizedTransaction.receiver?.email === userEmail) {
     return "receiver";
   }
 
-  return "receiver";
+  if (userEmail && normalizedTransaction.deliverer?.email === userEmail) {
+    return "deliverer";
+  }
+
+  return null;
 }
 
 function updateMockTransaction(transactionId, updater) {
@@ -262,9 +358,16 @@ async function mockConfirmTransaction(transactionId, currentUser) {
       ...currentTransaction,
       giver_confirmed: role === "giver" ? true : currentTransaction.giver_confirmed,
       receiver_confirmed: role === "receiver" ? true : currentTransaction.receiver_confirmed,
+      delivery_confirmed: role === "deliverer" ? true : currentTransaction.delivery_confirmed,
     };
 
-    if (updatedTransaction.giver_confirmed && updatedTransaction.receiver_confirmed) {
+    const needsDelivery = Boolean(updatedTransaction.deliverer_id || updatedTransaction.deliverer);
+
+    if (
+      updatedTransaction.giver_confirmed &&
+      updatedTransaction.receiver_confirmed &&
+      (!needsDelivery || updatedTransaction.delivery_confirmed)
+    ) {
       updatedTransaction.status = "completed";
       updatedTransaction.completed_at = new Date().toISOString();
     }
@@ -307,7 +410,43 @@ export function getTransactionErrorMessage(error, fallback = "Đã có lỗi x�
     return "Giao dịch không thể thực hiện ở trạng thái hiện tại.";
   }
 
-  return fallback;
+  const backendMessage = getBackendMessage(error);
+  return backendMessage || fallback;
+}
+
+export function getCreateTransactionErrorMessage(error) {
+  console.error("Create transaction failed:", error.response?.data || error.message);
+
+  if (!error.response) {
+    return "Không thể kết nối máy chủ. Vui lòng kiểm tra backend.";
+  }
+
+  const backendMessage = getBackendMessage(error);
+  const normalizedMessage = backendMessage.toLowerCase();
+
+  if (
+    error.response.status === 400 &&
+    (normalizedMessage.includes("điểm") ||
+      normalizedMessage.includes("point") ||
+      normalizedMessage.includes("không đủ") ||
+      normalizedMessage.includes("insufficient"))
+  ) {
+    return "Bạn không đủ điểm để thực hiện giao dịch này.";
+  }
+
+  if (
+    normalizedMessage.includes("own book") ||
+    normalizedMessage.includes("your own book") ||
+    normalizedMessage.includes("chính mình")
+  ) {
+    return "Bạn không thể tạo giao dịch với sách của chính mình.";
+  }
+
+  if (error.response.status === 409) {
+    return "Sách này hiện không còn sẵn sàng.";
+  }
+
+  return backendMessage || "Không thể tạo giao dịch. Vui lòng thử lại.";
 }
 
 export async function getMyTransactions() {

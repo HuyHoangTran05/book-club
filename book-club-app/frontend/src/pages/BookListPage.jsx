@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 import { categoryOptions } from "../components/books/bookOptions.js";
 import { Alert } from "../components/common/index.js";
 import { getBookErrorMessage, getBooks, resolveCoverUrl } from "../services/bookService.js";
-import { createTransaction, getTransactionErrorMessage } from "../services/transactionService.js";
+import { createTransaction, getCreateTransactionErrorMessage } from "../services/transactionService.js";
 import {
   displayAuthorName,
   displayBookTitle,
@@ -236,7 +236,7 @@ function BookListPage() {
       );
       navigate("/transactions", { state: { message: "Tạo giao dịch thành công." } });
     } catch (createError) {
-      setMessage(getTransactionErrorMessage(createError, "Không thể tạo giao dịch. Vui lòng thử lại."));
+      setMessage(getCreateTransactionErrorMessage(createError));
     } finally {
       setIsCreating(false);
     }
@@ -267,7 +267,7 @@ function BookListPage() {
         </div>
       </section>
 
-      {message ? <Alert type={message.includes("Không thể") ? "error" : "success"}>{message}</Alert> : null}
+      {message ? <Alert type={message.includes("thành công") ? "success" : "error"}>{message}</Alert> : null}
 
       <section className="booklist-filter-panel" aria-label="Tìm kiếm và lọc sách">
         <label className="booklist-search-field" htmlFor="booklist-search">

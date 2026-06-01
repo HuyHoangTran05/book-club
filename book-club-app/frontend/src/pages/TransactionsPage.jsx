@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Alert, Badge, Button } from "../components/common/index.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { getCurrentUser as getStoredCurrentUser } from "../utils/auth.js";
 import {
   cancelTransaction,
   confirmTransaction,
@@ -21,39 +22,51 @@ const statusLabels = {
   cancelled: "Đã hủy",
 };
 
+const roleLabels = {
+  giver: "Bạn là chủ sách",
+  receiver: "Bạn là người nhận sách",
+  deliverer: "Bạn là người giao sách",
+};
+
 function normalizeId(value) {
   return value === undefined || value === null || value === "" ? "" : String(value);
 }
 
 function getUserId(user = {}) {
-  return normalizeId(user.id ?? user.member_id ?? user.memberId);
+  return normalizeId(user.member_id ?? user.memberId ?? user.id);
 }
 
-function getPersonId(person = {}) {
-  return normalizeId(person.member_id ?? person.memberId ?? person.id);
+function getRelatedId(transaction, role) {
+  return normalizeId(
+    transaction?.[`${role}_id`] ??
+      transaction?.[`${role}Id`] ??
+      transaction?.[role]?.member_id ??
+      transaction?.[role]?.memberId ??
+      transaction?.[role]?.id
+  );
 }
 
 function getCurrentUserRole(transaction, currentUser) {
-  const userId = getUserId(currentUser);
-  const userEmail = currentUser?.email;
+  const fallbackUser = currentUser || getStoredCurrentUser();
+  const userId = getUserId(fallbackUser);
 
-  if (userId && getPersonId(transaction.giver) === userId) {
+  if (!userId) {
+    return null;
+  }
+
+  if (getRelatedId(transaction, "giver") === userId) {
     return "giver";
   }
 
-  if (userId && getPersonId(transaction.receiver) === userId) {
+  if (getRelatedId(transaction, "receiver") === userId) {
     return "receiver";
   }
 
-  if (userEmail && transaction.giver?.email === userEmail) {
-    return "giver";
+  if (getRelatedId(transaction, "deliverer") === userId) {
+    return "deliverer";
   }
 
-  if (userEmail && transaction.receiver?.email === userEmail) {
-    return "receiver";
-  }
-
-  return "receiver";
+  return null;
 }
 
 function formatDate(value) {
@@ -74,21 +87,59 @@ function formatDate(value) {
   }).format(date);
 }
 
-function getConfirmationText(transaction) {
+function getDisplayName(person) {
+  return person?.full_name || person?.fullName || person?.name || person?.email || "Chưa rõ";
+}
+
+function hasDeliverer(transaction) {
+  return Boolean(transaction.deliverer_id || transaction.delivererId || transaction.deliverer);
+}
+
+function getConfirmationRows(transaction) {
   return [
-    transaction.giver_confirmed ? "Người cho đã xác nhận" : "Người cho chưa xác nhận",
-    transaction.receiver_confirmed ? "Người nhận đã xác nhận" : "Người nhận chưa xác nhận",
+    {
+      label: "Chủ sách",
+      value: transaction.giver_confirmed ? "Đã xác nhận" : "Chưa xác nhận",
+    },
+    {
+      label: "Người nhận",
+      value: transaction.receiver_confirmed ? "Đã xác nhận" : "Chưa xác nhận",
+    },
+    {
+      label: "Người giao",
+      value: hasDeliverer(transaction)
+        ? transaction.delivery_confirmed
+          ? "Đã xác nhận"
+          : "Chưa xác nhận"
+        : "Không có người giao",
+    },
   ];
 }
 
 function getPointImpact(transaction, role) {
+  if (!role) {
+    return "Không áp dụng";
+  }
+
   const amount = transaction.transaction_type === "permanent" ? 10 : 5;
-  const sign = role === "giver" ? "+" : "-";
+  const sign = role === "giver" || role === "deliverer" ? "+" : "-";
   return `${sign}${amount} điểm`;
 }
 
 function getUserConfirmed(transaction, role) {
-  return role === "giver" ? transaction.giver_confirmed : transaction.receiver_confirmed;
+  if (role === "giver") {
+    return transaction.giver_confirmed;
+  }
+
+  if (role === "receiver") {
+    return transaction.receiver_confirmed;
+  }
+
+  if (role === "deliverer") {
+    return transaction.delivery_confirmed;
+  }
+
+  return true;
 }
 
 function TransactionsPage() {
@@ -160,7 +211,7 @@ function TransactionsPage() {
     setError("");
 
     try {
-      const updatedTransaction = await confirmTransaction(transactionId, user);
+      const updatedTransaction = await confirmTransaction(transactionId, user || getStoredCurrentUser());
       replaceTransaction(updatedTransaction);
       setMessage("Xác nhận giao dịch thành công.");
     } catch (confirmError) {
@@ -227,6 +278,7 @@ function TransactionsPage() {
             const transactionId = transaction.transaction_id;
             const isConfirming = actionId === transactionId && actionType === "confirm";
             const isCancelling = actionId === transactionId && actionType === "cancel";
+            const canActOnTransaction = Boolean(role);
 
             return (
               <article className="transaction-card" key={transactionId}>
@@ -249,15 +301,19 @@ function TransactionsPage() {
                 <dl className="transaction-details">
                   <div>
                     <dt>Vai trò của bạn</dt>
-                    <dd>{role === "giver" ? "Bạn là người cho sách" : "Bạn là người nhận sách"}</dd>
+                    <dd>{roleLabels[role] ?? "Bạn không thuộc giao dịch này"}</dd>
                   </div>
                   <div>
-                    <dt>Người cho</dt>
-                    <dd>{transaction.giver.full_name}</dd>
+                    <dt>Chủ sách</dt>
+                    <dd>{getDisplayName(transaction.giver)}</dd>
                   </div>
                   <div>
                     <dt>Người nhận</dt>
-                    <dd>{transaction.receiver.full_name}</dd>
+                    <dd>{getDisplayName(transaction.receiver)}</dd>
+                  </div>
+                  <div>
+                    <dt>Người giao</dt>
+                    <dd>{hasDeliverer(transaction) ? getDisplayName(transaction.deliverer) : "Không có người giao"}</dd>
                   </div>
                   <div>
                     <dt>Ngày tạo</dt>
@@ -278,21 +334,23 @@ function TransactionsPage() {
                 </dl>
 
                 <div className="transaction-confirmations">
-                  {getConfirmationText(transaction).map((item) => (
-                    <span key={item}>{item}</span>
+                  {getConfirmationRows(transaction).map((item) => (
+                    <span key={item.label}>
+                      <strong>{item.label}:</strong> {item.value}
+                    </span>
                   ))}
                 </div>
 
                 <div className="transaction-actions">
-                  {isPending && !userConfirmed ? (
+                  {isPending && canActOnTransaction && !userConfirmed ? (
                     <Button type="button" onClick={() => handleConfirm(transactionId)} disabled={Boolean(actionId)}>
-                      {isConfirming ? "Đang xác nhận..." : "Xác nhận hoàn thành"}
+                      {isConfirming ? "Đang xác nhận..." : "Xác nhận giao dịch"}
                     </Button>
                   ) : null}
-                  {isPending && userConfirmed ? (
+                  {isPending && canActOnTransaction && userConfirmed ? (
                     <p className="transaction-action-note">Bạn đã xác nhận. Đang chờ bên còn lại.</p>
                   ) : null}
-                  {isPending ? (
+                  {isPending && canActOnTransaction ? (
                     <Button
                       type="button"
                       variant="danger"
@@ -301,6 +359,9 @@ function TransactionsPage() {
                     >
                       {isCancelling ? "Đang hủy..." : "Hủy giao dịch"}
                     </Button>
+                  ) : null}
+                  {isPending && !canActOnTransaction ? (
+                    <p className="transaction-action-note">Bạn không có quyền thao tác với giao dịch này.</p>
                   ) : null}
                   {transaction.status === "completed" ? (
                     <p className="transaction-action-note">Giao dịch đã hoàn tất.</p>
