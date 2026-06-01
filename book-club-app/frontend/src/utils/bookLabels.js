@@ -62,13 +62,19 @@ const categoryLabelMap = {
 
 const displayTextMap = {
   "Nha Gia Kim": "Nhà Giả Kim",
+  "Nhà Giả Kim": "Nhà Giả Kim",
   "Toi Thay Hoa Vang Tren Co Xanh": "Tôi thấy hoa vàng trên cỏ xanh",
+  "Tôi thấy hoa vàng trên cỏ xanh": "Tôi thấy hoa vàng trên cỏ xanh",
   "Dac Nhan Tam": "Đắc Nhân Tâm",
+  "Đắc Nhân Tâm": "Đắc Nhân Tâm",
   "Tu Duy Nhanh Va Cham": "Tư Duy Nhanh Và Chậm",
   "Nguyen Nhat Anh": "Nguyễn Nhật Ánh",
   "Nguyen Van An": "Nguyễn Văn An",
+  "Nguyễn Văn An": "Nguyễn Văn An",
   "Tran Thi Binh": "Trần Thị Bình",
+  "Trần Thị Bình": "Trần Thị Bình",
   "Le Minh Chi": "Lê Minh Chi",
+  "Lê Minh Chi": "Lê Minh Chi",
   "NXB Van Hoc": "NXB Văn Học",
   "NXB Tre": "NXB Trẻ",
   "NXB Tong Hop": "NXB Tổng Hợp",
@@ -96,6 +102,30 @@ export function normalizeDisplayText(value, fallback = "") {
   }
 
   return displayTextMap[value] || value;
+}
+
+export function displayBookTitle(value, fallback = "Chưa có tên sách") {
+  return normalizeDisplayText(value, fallback);
+}
+
+export function displayAuthorName(value, fallback = "Chưa rõ tác giả") {
+  return normalizeDisplayText(value, fallback);
+}
+
+export function displayOwnerName(value, fallback = "Chưa rõ") {
+  return normalizeDisplayText(value, fallback);
+}
+
+export function displayCategory(value, fallback = "Khác") {
+  return normalizeCategoryLabel(value, fallback);
+}
+
+export function displayCondition(value, fallback = "Chưa rõ") {
+  return getConditionLabel(value || fallback);
+}
+
+export function displayExchangeType(value, fallback = "Chưa rõ") {
+  return getExchangeTypeLabel(value || fallback);
 }
 
 export function normalizeCategoryLabel(value, fallback = "Chưa phân loại") {

@@ -5,7 +5,17 @@ import { categoryOptions } from "../components/books/bookOptions.js";
 import { Alert } from "../components/common/index.js";
 import { getBookErrorMessage, getBooks } from "../services/bookService.js";
 import { createTransaction, getTransactionErrorMessage } from "../services/transactionService.js";
-import { getStatusLabel, isHiddenBookStatus } from "../utils/bookLabels.js";
+import {
+  displayAuthorName,
+  displayBookTitle,
+  displayCategory,
+  displayCondition,
+  displayExchangeType,
+  displayOwnerName,
+  getStatusLabel,
+  isHiddenBookStatus,
+  normalizeDisplayText,
+} from "../utils/bookLabels.js";
 import "./BookListPage.css";
 
 function normalizeText(value, fallback = "Chưa rõ") {
@@ -26,17 +36,17 @@ function getRawBook(book) {
 
 function getTitle(book) {
   const rawBook = getRawBook(book);
-  return normalizeText(book?.title || rawBook.title || rawBook.bookTitle?.title || rawBook.book?.title, "Chưa có tên sách");
+  return displayBookTitle(book?.title || rawBook.title || rawBook.bookTitle?.title || rawBook.book?.title);
 }
 
 function getAuthor(book) {
   const rawBook = getRawBook(book);
-  return normalizeText(book?.author || rawBook.author || rawBook.bookTitle?.author || rawBook.book?.author, "Chưa rõ tác giả");
+  return displayAuthorName(book?.author || rawBook.author || rawBook.bookTitle?.author || rawBook.book?.author);
 }
 
 function getCategory(book) {
   const rawBook = getRawBook(book);
-  return normalizeText(book?.category || rawBook.category || rawBook.bookTitle?.category || rawBook.book?.category, "Khác");
+  return displayCategory(book?.category || rawBook.category || rawBook.bookTitle?.category || rawBook.book?.category);
 }
 
 function getOwnerName(book) {
@@ -49,7 +59,7 @@ function getOwnerName(book) {
     rawBook.member?.name ||
     book?.ownerName;
 
-  return ownerName && ownerName !== "Thành viên Cộng Đồng Sách" ? ownerName : "Chưa rõ";
+  return ownerName && ownerName !== "Thành viên Cộng Đồng Sách" ? displayOwnerName(ownerName) : "Chưa rõ";
 }
 
 function getDescription(book) {
@@ -61,7 +71,7 @@ function getDescription(book) {
 }
 
 function getExchangeTypeLabel(book) {
-  return normalizeText(book?.exchangeTypeLabel || book?.exchangeType || book?.exchange_type, "Chưa rõ");
+  return displayExchangeType(book?.exchangeType || book?.exchange_type || book?.raw?.exchange_type || book?.exchangeTypeLabel);
 }
 
 function getCoverUrl(book) {
@@ -70,7 +80,7 @@ function getCoverUrl(book) {
 }
 
 function getConditionLabel(book) {
-  return normalizeText(book?.conditionLabel || book?.condition, "Chưa rõ");
+  return displayCondition(book?.condition || book?.raw?.condition || book?.conditionLabel);
 }
 
 function getBookKey(book) {
@@ -87,7 +97,7 @@ function getCurrentUserId(user = {}) {
 }
 
 function getCurrentUserName(user = {}) {
-  return user.full_name ?? user.fullName ?? user.name ?? "";
+  return displayOwnerName(user.full_name ?? user.fullName ?? user.name ?? "");
 }
 
 function bookBelongsToUser(book, user) {
@@ -333,7 +343,9 @@ function BookListPage() {
 
                 <div className="booklist-card-tags">
                   <span>{getCategory(book)}</span>
-                  <span className="booklist-status-tag">{normalizeText(book?.statusLabel || getStatusLabel(book.status), "Không rõ")}</span>
+                  <span className="booklist-status-tag">
+                    {normalizeDisplayText(book?.statusLabel || getStatusLabel(book.status), "Không rõ")}
+                  </span>
                   {isOwnBook ? <span className="booklist-own-tag">Sách của bạn</span> : null}
                 </div>
 
