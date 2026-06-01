@@ -4,8 +4,8 @@ import {
   cancelTransaction,
   confirmTransaction,
   createTransaction,
+  getMyTransactions,
   getTransactionById,
-  listMyTransactions,
   pingTransactions,
 } from "./transaction.controller.js";
 
@@ -13,7 +13,7 @@ const router = Router();
 
 router.get("/ping", pingTransactions);
 router.post("/", protect, createTransaction);
-router.get("/my", protect, listMyTransactions);
+router.get("/my", protect, getMyTransactions);
 router.get("/:transactionId", protect, getTransactionById);
 router.put("/:transactionId/confirm", protect, confirmTransaction);
 router.put("/:transactionId/cancel", protect, cancelTransaction);
