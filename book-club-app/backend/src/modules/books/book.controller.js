@@ -8,22 +8,22 @@ export const pingBooks = (req, res) => {
 
 export const createBook = asyncHandler(async (req, res) => {
   const book = await bookService.createBook(req.user.member_id, req.body);
-  successResponse(res, book, "Book created", 201);
+  successResponse(res, book, "Thêm sách thành công", 201);
 });
 
 export const listBooks = asyncHandler(async (req, res) => {
-  const books = await bookService.listBooks(req.query);
-  successResponse(res, books, "Book list");
+  const books = await bookService.getAvailableBooks(req.query);
+  successResponse(res, books, "Lấy danh sách sách thành công");
 });
 
 export const listMyBooks = asyncHandler(async (req, res) => {
-  const books = await bookService.listMyBooks(req.user.member_id, req.query);
-  successResponse(res, books, "My book list");
+  const books = await bookService.getMyBooks(req.user.member_id);
+  successResponse(res, books, "Lấy danh sách sách của tôi thành công");
 });
 
 export const getBookByCopyId = asyncHandler(async (req, res) => {
-  const book = await bookService.getBookByCopyId(req.params.copyId);
-  successResponse(res, book, "Book detail");
+  const book = await bookService.getBookById(req.params.copyId);
+  successResponse(res, book, "Lấy chi tiết sách thành công");
 });
 
 export const updateBook = asyncHandler(async (req, res) => {
@@ -32,10 +32,10 @@ export const updateBook = asyncHandler(async (req, res) => {
     req.params.copyId,
     req.body,
   );
-  successResponse(res, book, "Book updated");
+  successResponse(res, book, "Cập nhật sách thành công");
 });
 
 export const deleteBook = asyncHandler(async (req, res) => {
   const book = await bookService.deleteBook(req.user.member_id, req.params.copyId);
-  successResponse(res, book, "Book marked as unavailable");
+  successResponse(res, book, "Đã ẩn sách thành công");
 });

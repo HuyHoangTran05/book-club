@@ -1,50 +1,67 @@
 import { useState } from "react";
-import { Alert, Button, Card, FormField } from "../components/common/index.js";
+import { useNavigate } from "react-router-dom";
+import BookForm, { emptyValues } from "../components/books/BookForm.jsx";
+import { validateBookValues } from "../components/books/bookValidation.js";
+import { Alert, Card } from "../components/common/index.js";
+import { createBook, getBookErrorMessage } from "../services/bookService.js";
 
 function AddBookPage() {
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [formValues, setFormValues] = useState(emptyValues);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    console.log("Add book form data", Object.fromEntries(formData.entries()));
-    setShowSuccess(true);
-    event.currentTarget.reset();
+    const nextErrors = validateBookValues(formValues);
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setMessage("");
+
+    try {
+      await createBook(formValues);
+      setMessage("Thêm sách thành công.");
+      window.setTimeout(() => {
+        navigate("/my-books", { replace: true, state: { message: "Thêm sách thành công." } });
+      }, 450);
+    } catch (submitError) {
+      setMessage(getBookErrorMessage(submitError, "Không thể lưu sách. Vui lòng thử lại."));
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-8">
       <div>
-        <p className="text-sm font-bold uppercase tracking-wide text-teal-700">Contribute</p>
-        <h1 className="mt-2 text-3xl font-black text-slate-950">Add Book</h1>
-        <p className="mt-2 text-sm text-slate-500">Create a mock listing now. Backend integration will replace the local submit later.</p>
+        <p className="text-sm font-extrabold text-[#c9ad2e]">Đóng góp vào thư viện</p>
+        <h1 className="mt-2 font-serif text-4xl font-extrabold leading-tight text-[#033b2a] md:text-5xl">
+          Thêm sách mới
+        </h1>
+        <p className="mt-3 max-w-2xl text-base leading-7 text-[#64736d]">
+          Chia sẻ cuốn sách của bạn để các thành viên khác có thể tìm thấy.
+        </p>
       </div>
 
-      {showSuccess ? <Alert type="success">Book added successfully.</Alert> : null}
+      {message ? <Alert type={message.includes("thành công") ? "success" : "error"}>{message}</Alert> : null}
 
       <Card>
-        <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-          <FormField label="Book title" name="title" type="text" placeholder="Book title" required />
-          <FormField label="Author" name="author" type="text" placeholder="Author name" required />
-          <FormField label="Category" name="category" type="text" placeholder="Fiction, Design, Business" required />
-          <FormField label="Publisher" name="publisher" type="text" placeholder="Publisher" />
-          <FormField label="Publication year" name="publicationYear" type="number" placeholder="2024" min="1000" max="2100" />
-          <FormField label="ISBN" name="isbn" type="text" placeholder="978-0-000000-0-0" />
-          <FormField label="Condition" name="condition" as="select" defaultValue="Good" required>
-            <option>Like new</option>
-            <option>Very good</option>
-            <option>Good</option>
-            <option>Acceptable</option>
-          </FormField>
-          <FormField label="Exchange type" name="exchangeType" as="select" defaultValue="Lending" required>
-            <option>Lending</option>
-            <option>Permanent exchange</option>
-          </FormField>
-          <FormField label="Note" name="note" as="textarea" className="md:col-span-2" placeholder="Add pickup details or book notes" />
-          <div className="md:col-span-2">
-            <Button type="submit">Add Book</Button>
-          </div>
-        </form>
+        <BookForm
+          errors={errors}
+          isSubmitting={isSubmitting}
+          onCancel={() => navigate("/books")}
+          onChange={setFormValues}
+          onSubmit={handleSubmit}
+          submitLabel="Lưu sách"
+          submittingLabel="Đang lưu..."
+          values={formValues}
+        />
       </Card>
     </div>
   );

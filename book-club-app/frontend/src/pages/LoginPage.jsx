@@ -1,13 +1,27 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import loginHero from "../assets/login-hero.png";
+import { useAuth } from "../contexts/AuthContext.jsx";
 import "./LoginPage.css";
 
 function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+  const redirectTimerRef = useRef(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
 
   function validateForm() {
     if (!email.trim()) {
@@ -28,17 +42,34 @@ function LoginPage() {
 
     if (validationError) {
       setError(validationError);
+      setSuccess("");
       return;
     }
 
     setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
-      const formData = new FormData(event.currentTarget);
-      console.log("Login form data", Object.fromEntries(formData.entries()));
+      const result = await login({
+        email: email.trim(),
+        password,
+      });
+
+      if (result.token) {
+        localStorage.setItem("token", result.token);
+      }
+
+      if (result.user) {
+        localStorage.setItem("user", JSON.stringify(result.user));
+      }
+
+      setSuccess("Đăng nhập thành công!");
+      redirectTimerRef.current = setTimeout(() => {
+        navigate(location.state?.from?.pathname || "/", { replace: true });
+      }, 500);
     } catch (submitError) {
-      setError(submitError.message || "Đăng nhập thất bại. Vui lòng thử lại.");
+      setError(submitError.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
     } finally {
       setLoading(false);
     }
@@ -88,6 +119,12 @@ function LoginPage() {
           </div>
 
           <form className="login-form" onSubmit={handleSubmit} noValidate>
+            {success ? (
+              <div className="login-success-message" role="status">
+                {success}
+              </div>
+            ) : null}
+
             {error ? (
               <div className="login-error-message" role="alert">
                 {error}
@@ -104,7 +141,7 @@ function LoginPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
+                disabled={loading || Boolean(success)}
                 required
               />
             </div>
@@ -119,13 +156,13 @@ function LoginPage() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
+                disabled={loading || Boolean(success)}
                 required
               />
             </div>
 
-            <button className="login-submit-button" type="submit" disabled={loading}>
-              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+            <button className="login-submit-button" type="submit" disabled={loading || Boolean(success)}>
+              {loading ? "Đang đăng nhập..." : success ? "Đang chuyển về trang chủ..." : "Đăng nhập"}
             </button>
           </form>
 

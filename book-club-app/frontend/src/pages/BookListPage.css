@@ -1,0 +1,570 @@
+/* ================= STITCH BOOKLIST CSS PASTE ZONE START ================= */
+/* Dán CSS từ Stitch vào đây, nhớ đổi class cho khớp JSX */
+
+.booklist-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1360px;
+  gap: 28px;
+  margin: 0 auto;
+  color: #082d24;
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Roboto", "Arial", sans-serif;
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+
+.booklist-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 28px;
+  align-items: end;
+}
+
+.booklist-eyebrow {
+  margin: 0 0 10px;
+  color: #8b7118;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.booklist-hero h1 {
+  margin: 0;
+  color: #033b2a;
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Roboto", "Arial", sans-serif;
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  line-height: 1;
+  letter-spacing: normal;
+  word-spacing: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+.booklist-description {
+  max-width: 680px;
+  margin: 14px 0 0;
+  color: #43534e;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.booklist-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(130px, 1fr));
+  gap: 14px;
+}
+
+.booklist-summary-card {
+  min-width: 150px;
+  border: 1px solid #d9e2d8;
+  border-radius: 16px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12px 28px rgba(8, 45, 36, 0.12);
+}
+
+.booklist-summary-card strong {
+  display: block;
+  color: #033b2a;
+  font-size: 1.45rem;
+  line-height: 1.2;
+}
+
+.booklist-summary-card p {
+  margin: 6px 0 0;
+  color: #43534e;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.booklist-summary-icon {
+  float: right;
+  color: #064834;
+  font-size: 1.25rem;
+}
+
+.booklist-filter-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px) 140px;
+  gap: 16px;
+  align-items: end;
+  border: 1px solid #d9e2d8;
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 12px 30px rgba(8, 45, 36, 0.1);
+}
+
+.booklist-search-field,
+.booklist-category-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.booklist-search-field span,
+.booklist-category-field span {
+  color: #082d24;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.booklist-search-field input,
+.booklist-category-field select {
+  min-height: 48px;
+  width: 100%;
+  border: 1px solid #c8d5cc;
+  border-radius: 12px;
+  padding: 0 14px;
+  background: #fffef8;
+  color: #082d24;
+  font: inherit;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.booklist-search-field input:focus,
+.booklist-category-field select:focus {
+  border-color: #064834;
+  box-shadow: 0 0 0 4px rgba(6, 72, 52, 0.12);
+}
+
+.booklist-search-button,
+.booklist-contact-button,
+.booklist-transaction-button,
+.booklist-state-card button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 12px;
+  padding: 0 18px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.booklist-search-button,
+.booklist-transaction-button {
+  background: linear-gradient(135deg, #064834, #006144);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(6, 72, 52, 0.22);
+}
+
+.booklist-contact-button,
+.booklist-state-card button {
+  border: 1px solid #064834;
+  background: #fffef8;
+  color: #064834;
+}
+
+.booklist-search-button:hover,
+.booklist-contact-button:hover,
+.booklist-transaction-button:hover,
+.booklist-state-card button:hover {
+  transform: translateY(-1px);
+}
+
+.booklist-state-card {
+  border: 1px solid #d9e2d8;
+  border-radius: 18px;
+  padding: 28px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #43534e;
+  text-align: center;
+  box-shadow: 0 10px 24px rgba(8, 45, 36, 0.08);
+}
+
+.booklist-state-card h2 {
+  margin: 0;
+  color: #033b2a;
+  font-size: 1.35rem;
+}
+
+.booklist-state-card p {
+  margin: 10px auto 0;
+  max-width: 520px;
+  line-height: 1.6;
+}
+
+.booklist-state-card button {
+  margin-top: 18px;
+}
+
+.booklist-state-card-error {
+  border-color: #f2b8b5;
+  background: #fff6f5;
+}
+
+.booklist-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.booklist-card {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  border: 1px solid #d9e2d8;
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 12px 30px rgba(8, 45, 36, 0.12);
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Roboto", "Arial", sans-serif;
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+
+.booklist-cover-wrap {
+  display: flex;
+  justify-content: center;
+  border-radius: 14px;
+  padding: 16px;
+  background: linear-gradient(180deg, #fffef8, #eef5e7);
+}
+
+.booklist-cover,
+.booklist-cover-placeholder {
+  width: 120px;
+  height: 156px;
+  border-radius: 10px;
+}
+
+.booklist-cover {
+  object-fit: cover;
+  box-shadow: 0 14px 24px rgba(8, 45, 36, 0.18);
+}
+
+.booklist-cover-placeholder {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #dcebd5, #0b684a);
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 2.4rem;
+  box-shadow: 0 14px 24px rgba(8, 45, 36, 0.18);
+}
+
+.booklist-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.booklist-card-tags span {
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #d9e2d8;
+  color: #082d24;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: normal;
+  word-spacing: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+.booklist-card-tags .booklist-status-tag {
+  background: #8ce99a;
+  color: #033b2a;
+}
+
+.booklist-card-tags .booklist-own-tag {
+  background: #f0e7b7;
+  color: #7c5c00;
+}
+
+.booklist-card h2 {
+  margin: 14px 0 0;
+  color: #033b2a;
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Roboto", "Arial", sans-serif;
+  font-size: 1.45rem;
+  line-height: 1.25;
+  letter-spacing: normal;
+  word-spacing: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+  text-transform: none;
+}
+
+.booklist-author {
+  margin: 6px 0 0;
+  color: #082d24;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: normal;
+  word-spacing: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+.booklist-card-description {
+  margin: 14px 0 0;
+  color: #43534e;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.booklist-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+}
+
+.booklist-meta div {
+  border-radius: 12px;
+  padding: 10px;
+  background: #fbfaf3;
+}
+
+.booklist-meta dt {
+  color: #64736d;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+
+.booklist-meta dd {
+  margin: 5px 0 0;
+  color: #082d24;
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: normal;
+  word-spacing: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+.booklist-owner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.booklist-owner-avatar {
+  display: grid;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid #064834;
+  border-radius: 999px;
+  color: #064834;
+  font-weight: 900;
+}
+
+.booklist-owner p {
+  margin: 0;
+  color: #082d24;
+  font-size: 0.92rem;
+  letter-spacing: normal;
+  word-spacing: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+.booklist-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.booklist-card-actions-single {
+  grid-template-columns: 1fr;
+}
+
+.booklist-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  background: rgba(8, 45, 36, 0.45);
+  padding: 24px 16px;
+}
+
+.booklist-transaction-modal {
+  width: min(100%, 560px);
+  border: 1px solid #d9e2d8;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(6, 72, 52, 0.18);
+  padding: 24px;
+}
+
+.booklist-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.booklist-modal-header p {
+  margin: 0 0 6px;
+  color: #8b7118;
+  font-size: 0.85rem;
+  font-weight: 850;
+}
+
+.booklist-modal-header h2 {
+  margin: 0;
+  color: #033b2a;
+  font-size: 1.65rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.booklist-modal-header button {
+  align-self: flex-start;
+  border: 0;
+  border-radius: 12px;
+  background: #e7f1e8;
+  color: #064834;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 850;
+  padding: 9px 12px;
+}
+
+.booklist-modal-book {
+  margin-top: 20px;
+  border-radius: 18px;
+  background: #fbfaf3;
+  padding: 16px;
+}
+
+.booklist-modal-book h3 {
+  margin: 0;
+  color: #033b2a;
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Roboto", "Arial", sans-serif;
+  font-size: 1.35rem;
+  line-height: 1.25;
+  letter-spacing: normal;
+  word-spacing: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+
+.booklist-modal-book p {
+  margin: 6px 0 0;
+  color: #64736d;
+  font-weight: 750;
+}
+
+.booklist-modal-book span,
+.booklist-point-notice {
+  display: inline-flex;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: #f0e7b7;
+  color: #7c5c00;
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  font-weight: 850;
+}
+
+.booklist-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.booklist-modal-field span {
+  color: #082d24;
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.booklist-modal-field select,
+.booklist-modal-field input {
+  min-height: 48px;
+  border: 1px solid #c8d5cc;
+  border-radius: 14px;
+  background: #fffef8;
+  color: #082d24;
+  font: inherit;
+  outline: none;
+  padding: 0 14px;
+}
+
+.booklist-modal-field select:focus,
+.booklist-modal-field input:focus {
+  border-color: #064834;
+  box-shadow: 0 0 0 4px rgba(6, 72, 52, 0.12);
+}
+
+.booklist-point-notice {
+  display: flex;
+  margin-bottom: 0;
+}
+
+.booklist-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+@media (max-width: 1120px) {
+  .booklist-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .booklist-hero,
+  .booklist-filter-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .booklist-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .booklist-search-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .booklist-grid,
+  .booklist-summary,
+  .booklist-card-actions,
+  .booklist-modal-actions,
+  .booklist-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .booklist-card {
+    padding: 14px;
+  }
+
+  .booklist-modal-actions {
+    flex-direction: column;
+  }
+
+  .booklist-modal-actions button {
+    width: 100%;
+  }
+}
+
+/* ================= STITCH BOOKLIST CSS PASTE ZONE END ================= */
