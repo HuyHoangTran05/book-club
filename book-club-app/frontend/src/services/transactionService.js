@@ -2,9 +2,26 @@ import api, { apiPath } from "./api.js";
 
 const MOCK_STORAGE_KEY = "book_club_mock_transactions";
 const MOCK_DELAY_MS = 250;
+const STALE_MOCK_STORAGE_KEYS = [
+  "book_club_mock_transactions",
+  "mock_transactions",
+  "mockTransactions",
+  "transaction_mock_data",
+];
 
-export const isMockTransactionMode =
-  String(import.meta.env?.VITE_USE_MOCK_TRANSACTION ?? "false").toLowerCase() === "true";
+const USE_MOCK_TRANSACTION = import.meta.env.VITE_USE_MOCK_TRANSACTION === "true";
+
+export const isMockTransactionMode = USE_MOCK_TRANSACTION;
+
+if (import.meta.env.DEV) {
+  console.log("Transaction mock mode:", USE_MOCK_TRANSACTION);
+}
+
+if (!USE_MOCK_TRANSACTION && typeof localStorage !== "undefined") {
+  STALE_MOCK_STORAGE_KEYS.forEach((key) => {
+    localStorage.removeItem(key);
+  });
+}
 
 const initialMockTransactions = [
   {
@@ -450,18 +467,24 @@ export function getCreateTransactionErrorMessage(error) {
 }
 
 export async function getMyTransactions() {
-  if (isMockTransactionMode) {
+  if (USE_MOCK_TRANSACTION) {
     return mockGetMyTransactions();
   }
 
   const response = await api.get(apiPath("/transactions/my"));
   const payload = unwrapResponse(response);
   const transactions = payload?.items ?? payload?.transactions ?? payload;
-  return Array.isArray(transactions) ? transactions.map(normalizeTransaction) : [];
+  const normalizedTransactions = Array.isArray(transactions) ? transactions.map(normalizeTransaction) : [];
+
+  if (import.meta.env.DEV) {
+    console.log("Transactions from real API:", normalizedTransactions);
+  }
+
+  return normalizedTransactions;
 }
 
 export async function createTransaction(payload) {
-  if (isMockTransactionMode) {
+  if (USE_MOCK_TRANSACTION) {
     return mockCreateTransaction(payload);
   }
 
@@ -470,7 +493,7 @@ export async function createTransaction(payload) {
 }
 
 export async function confirmTransaction(transactionId, currentUser) {
-  if (isMockTransactionMode) {
+  if (USE_MOCK_TRANSACTION) {
     return mockConfirmTransaction(transactionId, currentUser);
   }
 
@@ -479,7 +502,7 @@ export async function confirmTransaction(transactionId, currentUser) {
 }
 
 export async function cancelTransaction(transactionId) {
-  if (isMockTransactionMode) {
+  if (USE_MOCK_TRANSACTION) {
     return mockCancelTransaction(transactionId);
   }
 
@@ -488,7 +511,7 @@ export async function cancelTransaction(transactionId) {
 }
 
 export async function getTransactionById(transactionId) {
-  if (isMockTransactionMode) {
+  if (USE_MOCK_TRANSACTION) {
     return mockGetTransactionById(transactionId);
   }
 
