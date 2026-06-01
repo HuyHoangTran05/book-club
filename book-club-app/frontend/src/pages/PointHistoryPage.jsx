@@ -26,6 +26,93 @@ function formatPointChange(pointChange) {
   return String(numericPointChange);
 }
 
+function hasVietnameseText(value) {
+  return /[À-ỹĐđ]/.test(value) || String(value).includes(" ");
+}
+
+function formatPointReason(reason, pointChange) {
+  const rawReason = String(reason || "").trim();
+  const numericPointChange = Number(pointChange);
+
+  if (!rawReason) {
+    return "Lý do giao dịch";
+  }
+
+  if (hasVietnameseText(rawReason)) {
+    return rawReason;
+  }
+
+  if (rawReason === "initial_register") {
+    return "Điểm khởi đầu khi đăng ký";
+  }
+
+  if (rawReason === "permanent_exchange") {
+    if (numericPointChange > 0) {
+      return "Trao đổi sách thành công";
+    }
+
+    if (numericPointChange < 0) {
+      return "Nhận sách qua trao đổi";
+    }
+
+    return "Trao đổi sách";
+  }
+
+  if (rawReason === "lending") {
+    if (numericPointChange > 0) {
+      return "Cho mượn sách thành công";
+    }
+
+    if (numericPointChange < 0) {
+      return "Mượn sách thành công";
+    }
+
+    return "Giao dịch mượn sách";
+  }
+
+  if (rawReason === "lending_borrow") {
+    return "Mượn sách thành công";
+  }
+
+  if (rawReason === "lending_lend") {
+    return "Cho mượn sách thành công";
+  }
+
+  if (rawReason === "book_lending") {
+    if (numericPointChange > 0) {
+      return "Cho mượn sách thành công";
+    }
+
+    if (numericPointChange < 0) {
+      return "Mượn sách thành công";
+    }
+
+    return "Giao dịch mượn sách";
+  }
+
+  if (rawReason === "book_exchange") {
+    if (numericPointChange > 0) {
+      return "Trao đổi sách thành công";
+    }
+
+    if (numericPointChange < 0) {
+      return "Nhận sách qua trao đổi";
+    }
+
+    return "Trao đổi sách";
+  }
+
+  return rawReason.includes("_") ? "Lý do giao dịch" : rawReason;
+}
+
+function formatTransactionLabel(transactionId) {
+  if (!transactionId) {
+    return "Không gắn giao dịch";
+  }
+
+  return `Giao dịch #${String(transactionId).slice(0, 8)}`;
+}
+
 function formatDate(value) {
   if (!value) {
     return "Chưa rõ";
@@ -156,9 +243,7 @@ function PointHistoryPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-[#64736d] md:hidden">Giao dịch</p>
-                  <p className="font-bold text-[#082d24]">
-                    {item.transaction_id ? `Giao dịch #${item.transaction_id}` : "Không gắn giao dịch"}
-                  </p>
+                  <p className="font-bold text-[#082d24]">{formatTransactionLabel(item.transaction_id)}</p>
                 </div>
                 <div>
                   <p className="mb-1 font-semibold text-[#64736d] md:hidden">Thay đổi</p>
@@ -166,7 +251,7 @@ function PointHistoryPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-[#64736d] md:hidden">Lý do</p>
-                  <p className="leading-6 text-[#64736d]">{item.reason}</p>
+                  <p className="leading-6 text-[#64736d]">{formatPointReason(item.reason, item.point_change)}</p>
                 </div>
               </div>
             ))}
