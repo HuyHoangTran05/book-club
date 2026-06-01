@@ -190,6 +190,7 @@ function BookListPage() {
   const [transactionValues, setTransactionValues] = useState({
     transaction_type: "lending",
     expected_return_date: getInitialReturnDate(),
+    deliverer_id: "",
   });
 
   const fetchBooks = useCallback(async () => {
@@ -237,6 +238,7 @@ function BookListPage() {
     setTransactionValues({
       transaction_type: allowedTypes[0]?.value || "",
       expected_return_date: getInitialReturnDate(),
+      deliverer_id: "",
     });
   }
 
@@ -279,6 +281,10 @@ function BookListPage() {
       _book: selectedBook,
       _currentUser: user,
     };
+
+    if (transactionValues.deliverer_id) {
+      payload.deliverer_id = transactionValues.deliverer_id;
+    }
 
     try {
       await createTransaction(payload);
@@ -505,6 +511,26 @@ function BookListPage() {
                 />
               </label>
             ) : null}
+
+            <label className="booklist-modal-field" htmlFor="deliverer-id">
+              <span>Người giao sách (tùy chọn)</span>
+              <select
+                id="deliverer-id"
+                value={transactionValues.deliverer_id}
+                disabled
+                onChange={(event) =>
+                  setTransactionValues((currentValues) => ({
+                    ...currentValues,
+                    deliverer_id: event.target.value,
+                  }))
+                }
+              >
+                <option value="">Không chọn người giao sách</option>
+              </select>
+            </label>
+            <p className="booklist-point-notice">
+              Chưa có API danh sách người giao sách, nên giao dịch hiện sẽ tạo không kèm người giao.
+            </p>
 
             {hasValidTransactionType ? (
               <p className="booklist-point-notice">
