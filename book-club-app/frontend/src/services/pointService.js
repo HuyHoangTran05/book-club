@@ -44,6 +44,14 @@ function normalizePointHistoryResponse(response) {
 }
 
 export async function getPointHistory() {
-  const response = await api.get(apiPath("/points/history"));
+  const response = await api.get(apiPath("/points/history"), {
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+    },
+    params: {
+      _t: Date.now(),
+    },
+  });
   return normalizePointHistoryResponse(response);
 }

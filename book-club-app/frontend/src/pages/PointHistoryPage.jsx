@@ -57,7 +57,38 @@ function formatDate(value) {
 
 function getUserPoints(user) {
   const fallbackUser = user || getStoredCurrentUser();
-  return fallbackUser?.points ?? fallbackUser?.pointBalance ?? fallbackUser?.point_balance ?? null;
+  return fallbackUser?.point_balance ?? fallbackUser?.pointBalance ?? null;
+}
+
+function sumPointChanges(historyItems = []) {
+  return historyItems.reduce((total, item) => {
+    const pointChange = Number(item.point_change ?? item.pointChange ?? 0);
+    return Number.isFinite(pointChange) ? total + pointChange : total;
+  }, 0);
+}
+
+function resolveCurrentPoints(apiCurrentPoints, historyItems, currentUser) {
+  if (apiCurrentPoints !== null && apiCurrentPoints !== undefined && apiCurrentPoints !== "") {
+    return Number(apiCurrentPoints);
+  }
+
+  const authUserPoints = getUserPoints(currentUser);
+
+  if (authUserPoints !== null && authUserPoints !== undefined && authUserPoints !== "") {
+    return Number(authUserPoints);
+  }
+
+  const storedUserPoints = getUserPoints(getStoredCurrentUser());
+
+  if (storedUserPoints !== null && storedUserPoints !== undefined && storedUserPoints !== "") {
+    return Number(storedUserPoints);
+  }
+
+  if (historyItems.length > 0) {
+    return sumPointChanges(historyItems);
+  }
+
+  return null;
 }
 
 function PointHistoryPage() {
@@ -79,7 +110,7 @@ function PointHistoryPage() {
 
         if (isMounted) {
           setItems(result.items);
-          setCurrentPoints(result.currentPoints ?? getUserPoints(user));
+          setCurrentPoints(resolveCurrentPoints(result.currentPoints, result.items, user));
         }
       } catch (loadError) {
         console.error("Point history error:", loadError.response?.data || loadError.message);
@@ -108,7 +139,7 @@ function PointHistoryPage() {
     });
   }, [items]);
 
-  const currentPointsText = currentPoints === null || currentPoints === undefined ? "-- điểm" : `${currentPoints}`;
+  const currentPointsText = currentPoints === null || currentPoints === undefined ? "-- điểm" : `${currentPoints} điểm`;
 
   return (
     <div className="space-y-8">
@@ -125,7 +156,7 @@ function PointHistoryPage() {
         <Card className="bg-[#064834] text-white">
           <p className="text-sm font-semibold text-[#d9f2e4]">Điểm hiện tại</p>
           <p className="mt-2 text-5xl font-black">{currentPointsText}</p>
-          <p className="mt-2 text-sm text-[#d9f2e4]">điểm có thể dùng cho giao dịch mới</p>
+          <p className="mt-2 text-sm text-[#d9f2e4]">có thể dùng cho giao dịch mới</p>
         </Card>
       </div>
 
