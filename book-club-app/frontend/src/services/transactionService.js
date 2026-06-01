@@ -237,11 +237,19 @@ export function normalizeTransaction(rawTransaction = {}) {
 }
 
 function toApiPayload(payload = {}) {
-  return {
+  const apiPayload = {
     copy_id: payload.copy_id ?? payload.copyId ?? payload.id,
     transaction_type: payload.transaction_type ?? payload.transactionType ?? "lending",
     expected_return_date: payload.expected_return_date ?? payload.expectedReturnDate ?? null,
   };
+
+  const delivererId = payload.deliverer_id ?? payload.delivererId;
+
+  if (delivererId) {
+    apiPayload.deliverer_id = delivererId;
+  }
+
+  return apiPayload;
 }
 
 function createMockTransaction(payload = {}) {
@@ -464,6 +472,14 @@ export function getCreateTransactionErrorMessage(error) {
   }
 
   if (error.response.status === 409) {
+    return "Sách này hiện không còn sẵn sàng.";
+  }
+
+  if (
+    normalizedMessage.includes("not available") ||
+    normalizedMessage.includes("không còn sẵn") ||
+    normalizedMessage.includes("không sẵn sàng")
+  ) {
     return "Sách này hiện không còn sẵn sàng.";
   }
 

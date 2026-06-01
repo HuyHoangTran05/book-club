@@ -127,8 +127,12 @@ function getPointImpact(transaction, role) {
     return "Không áp dụng";
   }
 
+  if (role === "deliverer") {
+    return "+2 điểm";
+  }
+
   const amount = transaction.transaction_type === "permanent" ? 10 : 5;
-  const sign = role === "giver" || role === "deliverer" ? "+" : "-";
+  const sign = role === "giver" ? "+" : "-";
   return `${sign}${amount} điểm`;
 }
 
