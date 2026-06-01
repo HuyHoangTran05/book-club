@@ -240,8 +240,13 @@ function toApiPayload(payload = {}) {
   const apiPayload = {
     copy_id: payload.copy_id ?? payload.copyId ?? payload.id,
     transaction_type: payload.transaction_type ?? payload.transactionType ?? "lending",
-    expected_return_date: payload.expected_return_date ?? payload.expectedReturnDate ?? null,
   };
+
+  const expectedReturnDate = payload.expected_return_date ?? payload.expectedReturnDate;
+
+  if (expectedReturnDate) {
+    apiPayload.expected_return_date = expectedReturnDate;
+  }
 
   const delivererId = payload.deliverer_id ?? payload.delivererId;
 
