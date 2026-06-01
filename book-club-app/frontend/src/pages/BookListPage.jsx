@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { categoryOptions } from "../components/books/bookOptions.js";
 import { Alert } from "../components/common/index.js";
-import { getBookErrorMessage, getBooks } from "../services/bookService.js";
+import { getBookErrorMessage, getBooks, resolveCoverUrl } from "../services/bookService.js";
 import { createTransaction, getTransactionErrorMessage } from "../services/transactionService.js";
 import {
   displayAuthorName,
@@ -76,7 +76,7 @@ function getExchangeTypeLabel(book) {
 
 function getCoverUrl(book) {
   const rawBook = getRawBook(book);
-  return book?.coverUrl || rawBook.cover_url || rawBook.coverUrl || rawBook.bookTitle?.cover_url || rawBook.book?.cover_url || "";
+  return resolveCoverUrl(book?.coverUrl || rawBook.cover_url || rawBook.coverUrl || rawBook.bookTitle?.cover_url || rawBook.book?.cover_url || "");
 }
 
 function getConditionLabel(book) {

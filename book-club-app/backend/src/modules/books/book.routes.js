@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { protect } from "../../middlewares/authMiddleware.js";
+import { uploadBookCover } from "../../middlewares/upload.middleware.js";
 import {
   createBook,
   deleteBook,
@@ -16,7 +17,7 @@ router.get("/ping", pingBooks);
 router.get("/", listBooks);
 router.get("/my", protect, listMyBooks);
 router.get("/:copyId", getBookByCopyId);
-router.post("/", protect, createBook);
+router.post("/", protect, uploadBookCover.single("cover"), createBook);
 router.put("/:copyId", protect, updateBook);
 router.delete("/:copyId", protect, deleteBook);
 

@@ -1,5 +1,10 @@
+import { useEffect, useState } from "react";
 import { Button, FormField } from "../common/index.js";
 import { categoryOptions, conditionOptions, exchangeTypeOptions } from "./bookOptions.js";
+import { resolveCoverUrl } from "../../services/bookService.js";
+
+const allowedCoverTypes = ["image/jpeg", "image/png", "image/webp"];
+const maxCoverSize = 5 * 1024 * 1024;
 
 const emptyValues = {
   title: "",
@@ -13,6 +18,8 @@ const emptyValues = {
   exchange_type: "",
   note: "",
   cover_url: "",
+  coverFile: null,
+  coverFileError: "",
 };
 
 function valuesFromBook(book) {
@@ -32,6 +39,8 @@ function valuesFromBook(book) {
     exchange_type: book.exchangeType || "",
     note: book.note || "",
     cover_url: book.coverUrl || "",
+    coverFile: null,
+    coverFileError: "",
   };
 }
 
@@ -45,13 +54,63 @@ function BookForm({
   submitLabel = "Lưu sách",
   submittingLabel = "Đang lưu...",
   values,
+  allowCoverUpload = false,
 }) {
   const currentValues = values || valuesFromBook(initialBook);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState("");
+
+  useEffect(() => {
+    if (!currentValues.coverFile) {
+      setCoverPreviewUrl("");
+      return undefined;
+    }
+
+    const objectUrl = URL.createObjectURL(currentValues.coverFile);
+    setCoverPreviewUrl(objectUrl);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [currentValues.coverFile]);
 
   function handleChange(event) {
     const { name, value } = event.target;
     onChange({ ...currentValues, [name]: value });
   }
+
+  function handleCoverFileChange(event) {
+    const file = event.target.files?.[0] || null;
+
+    if (!file) {
+      onChange({ ...currentValues, coverFile: null, coverFileError: "" });
+      return;
+    }
+
+    if (!allowedCoverTypes.includes(file.type)) {
+      onChange({
+        ...currentValues,
+        coverFile: null,
+        coverFileError: "Ảnh bìa chỉ hỗ trợ JPG, PNG hoặc WEBP.",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > maxCoverSize) {
+      onChange({
+        ...currentValues,
+        coverFile: null,
+        coverFileError: "Ảnh bìa không được vượt quá 5MB.",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    onChange({ ...currentValues, coverFile: file, coverFileError: "" });
+  }
+
+  const linkPreviewUrl = currentValues.cover_url ? resolveCoverUrl(currentValues.cover_url) : "";
+  const previewUrl = coverPreviewUrl || linkPreviewUrl;
 
   return (
     <form className="grid gap-5 md:grid-cols-2" onSubmit={onSubmit} noValidate>
@@ -165,8 +224,45 @@ function BookForm({
           </option>
         ))}
       </FormField>
+      {allowCoverUpload ? (
+        <div className="md:col-span-2">
+          <label className="block" htmlFor="cover">
+            <span className="mb-2 block text-sm font-bold text-[#082d24]">Ảnh bìa</span>
+            <input
+              id="cover"
+              name="cover"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleCoverFileChange}
+              disabled={isSubmitting}
+              className="min-h-12 w-full rounded-2xl border border-dashed border-[#b7c6bb] bg-[#fbfaf3] px-4 py-3 text-sm font-semibold text-[#082d24] shadow-sm outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-[#064834] file:px-4 file:py-2 file:text-sm file:font-bold file:text-white hover:border-[#064834] focus:border-[#064834] focus:ring-2 focus:ring-[#e7f1e8]"
+            />
+          </label>
+          <p className="mt-2 text-xs text-[#64736d]">Hỗ trợ JPG, PNG, WEBP. Tối đa 5MB.</p>
+          {currentValues.coverFileError || errors.coverFile ? (
+            <span className="mt-1.5 block text-xs font-medium text-rose-600">
+              {currentValues.coverFileError || errors.coverFile}
+            </span>
+          ) : null}
+          {previewUrl ? (
+            <div className="mt-4 flex items-center gap-4 rounded-2xl border border-[#d9e2d8] bg-white p-4">
+              <img
+                src={previewUrl}
+                alt="Xem trước ảnh bìa"
+                className="h-28 w-24 rounded-xl object-cover shadow-sm"
+              />
+              <div>
+                <p className="text-sm font-extrabold text-[#082d24]">Xem trước ảnh bìa</p>
+                <p className="mt-1 text-xs text-[#64736d]">
+                  {currentValues.coverFile ? currentValues.coverFile.name : "Đang dùng link ảnh bìa"}
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <FormField
-        label="Link ảnh bìa"
+        label={allowCoverUpload ? "Link ảnh bìa nếu có" : "Link ảnh bìa"}
         name="cover_url"
         type="url"
         placeholder="Dán liên kết ảnh bìa nếu có"

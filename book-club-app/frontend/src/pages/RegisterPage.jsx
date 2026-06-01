@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import apiClient from "../services/apiClient.js";
+import { getAuthErrorMessage, register as registerUser } from "../services/authService.js";
 import "./RegisterPage.css";
 
 const heroImages = import.meta.glob("../assets/*-hero.png", {
@@ -66,7 +66,7 @@ function RegisterPage() {
     setLoading(true);
 
     try {
-      await apiClient.post("/auth/register", {
+      await registerUser({
         full_name: fullName.trim(),
         email: email.trim(),
         phone: phoneNumber.trim(),
@@ -78,7 +78,7 @@ function RegisterPage() {
         navigate("/login");
       }, 1800);
     } catch (submitError) {
-      setError(submitError.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại.");
+      setError(getAuthErrorMessage(submitError, "Đăng ký thất bại. Vui lòng thử lại.", "register"));
     } finally {
       setLoading(false);
     }
