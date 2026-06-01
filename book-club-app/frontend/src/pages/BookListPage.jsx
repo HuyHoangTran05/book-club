@@ -74,6 +74,48 @@ function getExchangeTypeLabel(book) {
   return displayExchangeType(book?.exchangeType || book?.exchange_type || book?.raw?.exchange_type || book?.exchangeTypeLabel);
 }
 
+function normalizeExchangeType(value) {
+  const normalizedValue = String(value || "").trim().toLowerCase();
+
+  if (normalizedValue === "lending" || normalizedValue === "cho mượn") {
+    return "lending";
+  }
+
+  if (normalizedValue === "permanent" || normalizedValue === "trao đổi vĩnh viễn") {
+    return "permanent";
+  }
+
+  if (normalizedValue === "both" || normalizedValue === "trao đổi hoặc cho mượn") {
+    return "both";
+  }
+
+  return "";
+}
+
+function getAllowedTransactionTypes(book) {
+  const rawBook = getRawBook(book);
+  const exchangeType = normalizeExchangeType(
+    book?.exchange_type || book?.exchangeType || rawBook.exchange_type || rawBook.exchangeType || book?.exchangeTypeLabel
+  );
+
+  if (exchangeType === "lending") {
+    return [{ value: "lending", label: "Cho mượn" }];
+  }
+
+  if (exchangeType === "permanent") {
+    return [{ value: "permanent", label: "Trao đổi vĩnh viễn" }];
+  }
+
+  if (exchangeType === "both") {
+    return [
+      { value: "lending", label: "Cho mượn" },
+      { value: "permanent", label: "Trao đổi vĩnh viễn" },
+    ];
+  }
+
+  return [];
+}
+
 function getCoverUrl(book) {
   const rawBook = getRawBook(book);
   return resolveCoverUrl(book?.coverUrl || rawBook.cover_url || rawBook.coverUrl || rawBook.bookTitle?.cover_url || rawBook.book?.cover_url || "");
@@ -184,11 +226,16 @@ function BookListPage() {
     });
   }, [books, categoryFilter, searchTerm]);
 
+  const allowedTransactionTypes = useMemo(() => getAllowedTransactionTypes(selectedBook), [selectedBook]);
+  const hasValidTransactionType = allowedTransactionTypes.length > 0;
+
   function openTransactionModal(book) {
+    const allowedTypes = getAllowedTransactionTypes(book);
+
     setSelectedBook(book);
     setMessage("");
     setTransactionValues({
-      transaction_type: "lending",
+      transaction_type: allowedTypes[0]?.value || "",
       expected_return_date: getInitialReturnDate(),
     });
   }
@@ -210,6 +257,14 @@ function BookListPage() {
     event.preventDefault();
 
     if (!selectedBook) {
+      return;
+    }
+
+    const allowedTypes = getAllowedTransactionTypes(selectedBook);
+    const isSupportedTransactionType = allowedTypes.some((type) => type.value === transactionValues.transaction_type);
+
+    if (!isSupportedTransactionType) {
+      setMessage("Cuốn sách này chưa có hình thức giao dịch hợp lệ.");
       return;
     }
 
@@ -413,6 +468,7 @@ function BookListPage() {
               <select
                 id="transaction-type"
                 value={transactionValues.transaction_type}
+                disabled={!hasValidTransactionType || isCreating}
                 onChange={(event) =>
                   setTransactionValues((currentValues) => ({
                     ...currentValues,
@@ -420,10 +476,17 @@ function BookListPage() {
                   }))
                 }
               >
-                <option value="lending">Cho mượn</option>
-                <option value="permanent">Trao đổi vĩnh viễn</option>
+                {allowedTransactionTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
               </select>
             </label>
+
+            {!hasValidTransactionType ? (
+              <p className="booklist-point-notice">Cuốn sách này chưa có hình thức giao dịch hợp lệ.</p>
+            ) : null}
 
             {transactionValues.transaction_type === "lending" ? (
               <label className="booklist-modal-field" htmlFor="expected-return-date">
@@ -443,17 +506,19 @@ function BookListPage() {
               </label>
             ) : null}
 
-            <p className="booklist-point-notice">
-              {transactionValues.transaction_type === "lending"
-                ? "Bạn sẽ dùng 5 điểm cho giao dịch này."
-                : "Bạn sẽ dùng 10 điểm cho giao dịch này."}
-            </p>
+            {hasValidTransactionType ? (
+              <p className="booklist-point-notice">
+                {transactionValues.transaction_type === "lending"
+                  ? "Bạn sẽ dùng 5 điểm cho giao dịch này."
+                  : "Bạn sẽ dùng 10 điểm cho giao dịch này."}
+              </p>
+            ) : null}
 
             <div className="booklist-modal-actions">
               <button type="button" className="booklist-contact-button" onClick={closeTransactionModal} disabled={isCreating}>
                 Hủy
               </button>
-              <button type="submit" className="booklist-transaction-button" disabled={isCreating}>
+              <button type="submit" className="booklist-transaction-button" disabled={isCreating || !hasValidTransactionType}>
                 {isCreating ? "Đang gửi..." : "Gửi yêu cầu"}
               </button>
             </div>

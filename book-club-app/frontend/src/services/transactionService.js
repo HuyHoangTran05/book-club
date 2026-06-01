@@ -441,6 +441,10 @@ export function getCreateTransactionErrorMessage(error) {
   const backendMessage = getBackendMessage(error);
   const normalizedMessage = backendMessage.toLowerCase();
 
+  if (normalizedMessage.includes("does not support this transaction type")) {
+    return "Cuốn sách này không hỗ trợ hình thức giao dịch đã chọn.";
+  }
+
   if (
     error.response.status === 400 &&
     (normalizedMessage.includes("điểm") ||
