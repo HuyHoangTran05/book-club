@@ -3,6 +3,7 @@ import { Badge, Card } from "../components/common/index.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { getPointHistory } from "../services/pointService.js";
 import { getCurrentUser as getStoredCurrentUser } from "../utils/auth.js";
+import { displayReason } from "../utils/vietnameseDisplay.js";
 
 function getPointBadgeStatus(pointChange) {
   if (pointChange > 0) {
@@ -24,85 +25,6 @@ function formatPointChange(pointChange) {
   }
 
   return String(numericPointChange);
-}
-
-function hasVietnameseText(value) {
-  return /[À-ỹĐđ]/.test(value) || String(value).includes(" ");
-}
-
-function formatPointReason(reason, pointChange) {
-  const rawReason = String(reason || "").trim();
-  const numericPointChange = Number(pointChange);
-
-  if (!rawReason) {
-    return "Lý do giao dịch";
-  }
-
-  if (hasVietnameseText(rawReason)) {
-    return rawReason;
-  }
-
-  if (rawReason === "initial_register") {
-    return "Điểm khởi đầu khi đăng ký";
-  }
-
-  if (rawReason === "permanent_exchange") {
-    if (numericPointChange > 0) {
-      return "Trao đổi sách thành công";
-    }
-
-    if (numericPointChange < 0) {
-      return "Nhận sách qua trao đổi";
-    }
-
-    return "Trao đổi sách";
-  }
-
-  if (rawReason === "lending") {
-    if (numericPointChange > 0) {
-      return "Cho mượn sách thành công";
-    }
-
-    if (numericPointChange < 0) {
-      return "Mượn sách thành công";
-    }
-
-    return "Giao dịch mượn sách";
-  }
-
-  if (rawReason === "lending_borrow") {
-    return "Mượn sách thành công";
-  }
-
-  if (rawReason === "lending_lend") {
-    return "Cho mượn sách thành công";
-  }
-
-  if (rawReason === "book_lending") {
-    if (numericPointChange > 0) {
-      return "Cho mượn sách thành công";
-    }
-
-    if (numericPointChange < 0) {
-      return "Mượn sách thành công";
-    }
-
-    return "Giao dịch mượn sách";
-  }
-
-  if (rawReason === "book_exchange") {
-    if (numericPointChange > 0) {
-      return "Trao đổi sách thành công";
-    }
-
-    if (numericPointChange < 0) {
-      return "Nhận sách qua trao đổi";
-    }
-
-    return "Trao đổi sách";
-  }
-
-  return rawReason.includes("_") ? "Lý do giao dịch" : rawReason;
 }
 
 function formatTransactionLabel(transactionId) {
@@ -251,7 +173,7 @@ function PointHistoryPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-[#64736d] md:hidden">Lý do</p>
-                  <p className="leading-6 text-[#64736d]">{formatPointReason(item.reason, item.point_change)}</p>
+                  <p className="leading-6 text-[#64736d]">{displayReason(item.reason, item.point_change)}</p>
                 </div>
               </div>
             ))}

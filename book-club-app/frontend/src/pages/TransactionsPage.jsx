@@ -4,6 +4,12 @@ import { Alert, Badge, Button } from "../components/common/index.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { getCurrentUser as getStoredCurrentUser } from "../utils/auth.js";
 import {
+  displayAuthorName,
+  displayBookTitle,
+  displayCategory,
+  displayPersonName,
+} from "../utils/vietnameseDisplay.js";
+import {
   cancelTransaction,
   confirmTransaction,
   getMyTransactions,
@@ -88,7 +94,7 @@ function formatDate(value) {
 }
 
 function getDisplayName(person) {
-  return person?.full_name || person?.fullName || person?.name || person?.email || "Chưa rõ";
+  return displayPersonName(person?.full_name || person?.fullName || person?.name || person?.email, "Chưa rõ");
 }
 
 function hasDeliverer(transaction) {
@@ -290,9 +296,9 @@ function TransactionsPage() {
                         {transactionTypeLabels[transaction.transaction_type] ?? transaction.transaction_type}
                       </Badge>
                     </div>
-                    <h2>{transaction.book.title}</h2>
+                    <h2>{displayBookTitle(transaction.book?.title)}</h2>
                     <p className="transaction-book-meta">
-                      {transaction.book.author} · {transaction.book.category}
+                      {displayAuthorName(transaction.book?.author)} · {displayCategory(transaction.book?.category)}
                     </p>
                   </div>
                   <div className="transaction-points">{getPointImpact(transaction, role)}</div>
