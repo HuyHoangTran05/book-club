@@ -1,0 +1,233 @@
+.transactions-page {
+  display: flex;
+  width: 100%;
+  max-width: 1360px;
+  flex-direction: column;
+  gap: 24px;
+  margin: 0 auto;
+  color: #082d24;
+}
+
+.transactions-header p {
+  margin: 0 0 10px;
+  color: #8b7118;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.transactions-header h1 {
+  margin: 0;
+  color: #033b2a;
+  font-family: "Noto Serif", Georgia, "Times New Roman", serif;
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  line-height: 1.08;
+  letter-spacing: normal;
+}
+
+.transactions-header span {
+  display: block;
+  max-width: 720px;
+  margin-top: 14px;
+  color: #64736d;
+  line-height: 1.65;
+}
+
+.transactions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.transaction-card,
+.transactions-state {
+  border: 1px solid #d9e2d8;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 35px rgba(8, 45, 36, 0.1);
+}
+
+.transaction-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.transaction-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.transaction-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.transaction-card h2 {
+  margin: 12px 0 0;
+  color: #033b2a;
+  font-family: "Noto Serif", Georgia, "Times New Roman", serif;
+  font-size: 1.55rem;
+  line-height: 1.25;
+}
+
+.transaction-book-meta {
+  margin: 6px 0 0;
+  color: #64736d;
+  font-weight: 650;
+}
+
+.transaction-points {
+  align-self: flex-start;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: #f0e7b7;
+  color: #7c5c00;
+  padding: 8px 12px;
+  font-weight: 900;
+}
+
+.transaction-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.transaction-details div {
+  border-radius: 16px;
+  background: #fbfaf3;
+  padding: 12px;
+}
+
+.transaction-details dt {
+  color: #64736d;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.transaction-details dd {
+  margin: 5px 0 0;
+  color: #082d24;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.transaction-confirmations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.transaction-confirmations span {
+  border-radius: 999px;
+  border: 1px solid #d9e2d8;
+  background: #fffef8;
+  color: #43534e;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.transaction-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  border-top: 1px solid #d9e2d8;
+  padding-top: 16px;
+}
+
+.transaction-action-note {
+  margin: 0;
+  color: #64736d;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.transactions-state {
+  padding: 30px;
+  text-align: center;
+  color: #64736d;
+  font-weight: 750;
+}
+
+.transactions-state h2 {
+  margin: 0;
+  color: #033b2a;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.transactions-state p {
+  max-width: 560px;
+  margin: 10px auto 0;
+  font-weight: 600;
+  line-height: 1.65;
+}
+
+.transaction-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 45, 36, 0.45);
+  padding: 24px 16px;
+}
+
+.transaction-dialog {
+  width: min(100%, 460px);
+  border: 1px solid #d9e2d8;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(6, 72, 52, 0.18);
+  padding: 24px;
+}
+
+.transaction-dialog h2 {
+  margin: 0;
+  color: #033b2a;
+  font-size: 1.55rem;
+  font-weight: 900;
+}
+
+.transaction-dialog p {
+  margin: 12px 0 0;
+  color: #64736d;
+  line-height: 1.6;
+}
+
+.transaction-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+@media (max-width: 980px) {
+  .transactions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .transaction-card-top,
+  .transaction-dialog-actions {
+    flex-direction: column;
+  }
+
+  .transaction-details {
+    grid-template-columns: 1fr;
+  }
+
+  .transaction-actions button,
+  .transaction-dialog-actions button {
+    width: 100%;
+  }
+}

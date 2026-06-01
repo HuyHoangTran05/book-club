@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getBookErrorMessage, getBooks } from "../services/bookService.js";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext.jsx";
 import { categoryOptions } from "../components/books/bookOptions.js";
-import { isHiddenBookStatus } from "../utils/bookLabels.js";
+import { Alert } from "../components/common/index.js";
+import { getBookErrorMessage, getBooks } from "../services/bookService.js";
+import { createTransaction, getTransactionErrorMessage } from "../services/transactionService.js";
+import { getStatusLabel, isHiddenBookStatus } from "../utils/bookLabels.js";
 import "./BookListPage.css";
 
 function normalizeText(value, fallback = "Chưa rõ") {
@@ -10,6 +14,10 @@ function normalizeText(value, fallback = "Chưa rõ") {
   }
 
   return String(value);
+}
+
+function normalizeId(value) {
+  return value === undefined || value === null || value === "" ? "" : String(value);
 }
 
 function getRawBook(book) {
@@ -35,6 +43,7 @@ function getOwnerName(book) {
   const rawBook = getRawBook(book);
   const ownerName =
     rawBook.owner?.full_name ||
+    rawBook.owner?.fullName ||
     rawBook.owner?.name ||
     rawBook.member?.full_name ||
     rawBook.member?.name ||
@@ -49,10 +58,6 @@ function getDescription(book) {
     book?.description || book?.note || rawBook.description || rawBook.note || rawBook.bookTitle?.description || rawBook.book?.description,
     "Chưa có mô tả cho cuốn sách này."
   );
-}
-
-function getStatusLabel(book) {
-  return normalizeText(book?.statusLabel || book?.status, "Không rõ");
 }
 
 function getExchangeTypeLabel(book) {
@@ -72,12 +77,68 @@ function getBookKey(book) {
   return book?.copyId || book?.bookId || getRawBook(book).copy_id || getTitle(book);
 }
 
+function getCopyId(book) {
+  const rawBook = getRawBook(book);
+  return book?.copyId || book?.copy_id || rawBook.copy_id || rawBook.copyId || rawBook.id || book?.id;
+}
+
+function getCurrentUserId(user = {}) {
+  return normalizeId(user.id ?? user.member_id ?? user.memberId);
+}
+
+function getCurrentUserName(user = {}) {
+  return user.full_name ?? user.fullName ?? user.name ?? "";
+}
+
+function bookBelongsToUser(book, user) {
+  const rawBook = getRawBook(book);
+  const userId = getCurrentUserId(user);
+  const ownerId = normalizeId(
+    book?.ownerId ??
+      book?.owner_id ??
+      rawBook.owner_id ??
+      rawBook.ownerId ??
+      rawBook.owner?.member_id ??
+      rawBook.owner?.memberId ??
+      rawBook.owner?.id ??
+      rawBook.member?.member_id ??
+      rawBook.member?.id
+  );
+  const ownerEmail = rawBook.owner?.email || rawBook.member?.email || book?.ownerEmail;
+  const userName = getCurrentUserName(user);
+
+  if (userId && ownerId && userId === ownerId) {
+    return true;
+  }
+
+  if (user?.email && ownerEmail && user.email === ownerEmail) {
+    return true;
+  }
+
+  return Boolean(userName && getOwnerName(book) === userName);
+}
+
+function getInitialReturnDate() {
+  const date = new Date();
+  date.setDate(date.getDate() + 14);
+  return date.toISOString().slice(0, 10);
+}
+
 function BookListPage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [books, setBooks] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [error, setError] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [transactionValues, setTransactionValues] = useState({
+    transaction_type: "lending",
+    expected_return_date: getInitialReturnDate(),
+  });
 
   const fetchBooks = useCallback(async () => {
     setLoading(true);
@@ -113,22 +174,66 @@ function BookListPage() {
     });
   }, [books, categoryFilter, searchTerm]);
 
+  function openTransactionModal(book) {
+    setSelectedBook(book);
+    setMessage("");
+    setTransactionValues({
+      transaction_type: "lending",
+      expected_return_date: getInitialReturnDate(),
+    });
+  }
+
+  function closeTransactionModal() {
+    if (isCreating) {
+      return;
+    }
+
+    setSelectedBook(null);
+  }
+
   function handleContactOwner(book) {
     const ownerName = getOwnerName(book);
     alert(`Bạn muốn liên hệ với chủ sách: ${ownerName}`);
   }
 
+  async function handleCreateTransaction(event) {
+    event.preventDefault();
+
+    if (!selectedBook) {
+      return;
+    }
+
+    setIsCreating(true);
+    setMessage("");
+
+    const payload = {
+      copy_id: getCopyId(selectedBook),
+      transaction_type: transactionValues.transaction_type,
+      expected_return_date:
+        transactionValues.transaction_type === "lending" ? transactionValues.expected_return_date : null,
+      _book: selectedBook,
+      _currentUser: user,
+    };
+
+    try {
+      await createTransaction(payload);
+      setBooks((currentBooks) =>
+        currentBooks.map((book) =>
+          normalizeId(getCopyId(book)) === normalizeId(getCopyId(selectedBook))
+            ? { ...book, status: "reserved", statusLabel: getStatusLabel("reserved") }
+            : book
+        )
+      );
+      navigate("/transactions", { state: { message: "Tạo giao dịch thành công." } });
+    } catch (createError) {
+      setMessage(getTransactionErrorMessage(createError, "Không thể tạo giao dịch. Vui lòng thử lại."));
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
   return (
     <div className="booklist-page">
-      {/* ================= STITCH BOOKLIST HTML PASTE ZONE START =================
-          Dán HTML từ Stitch cho BookListPage vào đây.
-          Lưu ý:
-          - Đổi class thành className
-          - Đổi for thành htmlFor
-          - Không dán thẻ html/body
-          - Giữ logic map books từ API
-          - Giữ button Liên hệ chủ sách
-      */}
       <section className="booklist-hero">
         <div>
           <p className="booklist-eyebrow">Thư viện cộng đồng</p>
@@ -140,17 +245,19 @@ function BookListPage() {
 
         <div className="booklist-summary">
           <article className="booklist-summary-card">
-            <span className="booklist-summary-icon">▥</span>
+            <span className="booklist-summary-icon">□</span>
             <strong>{filteredBooks.length} sách</strong>
             <p>Đang hiển thị</p>
           </article>
           <article className="booklist-summary-card">
-            <span className="booklist-summary-icon">◷</span>
+            <span className="booklist-summary-icon">◇</span>
             <strong>{books.length} sách mới</strong>
             <p>Trong thư viện</p>
           </article>
         </div>
       </section>
+
+      {message ? <Alert type={message.includes("Không thể") ? "error" : "success"}>{message}</Alert> : null}
 
       <section className="booklist-filter-panel" aria-label="Tìm kiếm và lọc sách">
         <label className="booklist-search-field" htmlFor="booklist-search">
@@ -209,6 +316,8 @@ function BookListPage() {
           {filteredBooks.map((book) => {
             const ownerName = getOwnerName(book);
             const coverUrl = getCoverUrl(book);
+            const isOwnBook = bookBelongsToUser(book, user);
+            const canCreateTransaction = book.status === "available" && !isOwnBook;
 
             return (
               <article className="booklist-card" key={getBookKey(book)}>
@@ -217,14 +326,15 @@ function BookListPage() {
                     <img className="booklist-cover" src={coverUrl} alt={`Bìa sách ${getTitle(book)}`} loading="lazy" />
                   ) : (
                     <div className="booklist-cover-placeholder" aria-hidden="true">
-                      <span>▱</span>
+                      <span>□</span>
                     </div>
                   )}
                 </div>
 
                 <div className="booklist-card-tags">
                   <span>{getCategory(book)}</span>
-                  <span className="booklist-status-tag">{getStatusLabel(book)}</span>
+                  <span className="booklist-status-tag">{normalizeText(book?.statusLabel || getStatusLabel(book.status), "Không rõ")}</span>
+                  {isOwnBook ? <span className="booklist-own-tag">Sách của bạn</span> : null}
                 </div>
 
                 <h2>{getTitle(book)}</h2>
@@ -251,20 +361,93 @@ function BookListPage() {
                   </p>
                 </div>
 
-                <div className="booklist-card-actions">
+                <div className={canCreateTransaction ? "booklist-card-actions" : "booklist-card-actions booklist-card-actions-single"}>
                   <button className="booklist-contact-button" type="button" onClick={() => handleContactOwner(book)}>
                     Liên hệ chủ sách
                   </button>
-                  <button className="booklist-transaction-button" type="button">
-                    Tạo giao dịch
-                  </button>
+                  {canCreateTransaction ? (
+                    <button className="booklist-transaction-button" type="button" onClick={() => openTransactionModal(book)}>
+                      Tạo giao dịch
+                    </button>
+                  ) : null}
                 </div>
               </article>
             );
           })}
         </section>
       ) : null}
-      {/* ================= STITCH BOOKLIST HTML PASTE ZONE END ================= */}
+
+      {selectedBook ? (
+        <div className="booklist-modal-backdrop">
+          <form className="booklist-transaction-modal" onSubmit={handleCreateTransaction}>
+            <div className="booklist-modal-header">
+              <div>
+                <p>Tạo yêu cầu mới</p>
+                <h2>Tạo giao dịch sách</h2>
+              </div>
+              <button type="button" onClick={closeTransactionModal} disabled={isCreating}>
+                Đóng
+              </button>
+            </div>
+
+            <div className="booklist-modal-book">
+              <h3>{getTitle(selectedBook)}</h3>
+              <p>{getAuthor(selectedBook)}</p>
+              <span>{getCategory(selectedBook)}</span>
+            </div>
+
+            <label className="booklist-modal-field" htmlFor="transaction-type">
+              <span>Hình thức giao dịch</span>
+              <select
+                id="transaction-type"
+                value={transactionValues.transaction_type}
+                onChange={(event) =>
+                  setTransactionValues((currentValues) => ({
+                    ...currentValues,
+                    transaction_type: event.target.value,
+                  }))
+                }
+              >
+                <option value="lending">Cho mượn</option>
+                <option value="permanent">Trao đổi vĩnh viễn</option>
+              </select>
+            </label>
+
+            {transactionValues.transaction_type === "lending" ? (
+              <label className="booklist-modal-field" htmlFor="expected-return-date">
+                <span>Ngày dự kiến trả</span>
+                <input
+                  id="expected-return-date"
+                  type="date"
+                  value={transactionValues.expected_return_date}
+                  onChange={(event) =>
+                    setTransactionValues((currentValues) => ({
+                      ...currentValues,
+                      expected_return_date: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </label>
+            ) : null}
+
+            <p className="booklist-point-notice">
+              {transactionValues.transaction_type === "lending"
+                ? "Bạn sẽ dùng 5 điểm cho giao dịch này."
+                : "Bạn sẽ dùng 10 điểm cho giao dịch này."}
+            </p>
+
+            <div className="booklist-modal-actions">
+              <button type="button" className="booklist-contact-button" onClick={closeTransactionModal} disabled={isCreating}>
+                Hủy
+              </button>
+              <button type="submit" className="booklist-transaction-button" disabled={isCreating}>
+                {isCreating ? "Đang gửi..." : "Gửi yêu cầu"}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </div>
   );
 }

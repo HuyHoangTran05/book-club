@@ -9,7 +9,7 @@ import MyBooksPage from "../pages/MyBooksPage.jsx";
 import PointHistoryPage from "../pages/PointHistoryPage.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
-import TransactionPage from "../pages/TransactionPage.jsx";
+import TransactionsPage from "../pages/TransactionsPage.jsx";
 
 function AppRoutes() {
   return (
@@ -43,7 +43,7 @@ function AppRoutes() {
         <Route path="/books/new" element={<AddBookPage />} />
         <Route path="/books/add" element={<AddBookPage />} />
         <Route path="/my-books" element={<MyBooksPage />} />
-        <Route path="/transactions" element={<TransactionPage />} />
+        <Route path="/transactions" element={<TransactionsPage />} />
         <Route path="/points" element={<Navigate to="/points/history" replace />} />
         <Route path="/points/history" element={<PointHistoryPage />} />
       </Route>

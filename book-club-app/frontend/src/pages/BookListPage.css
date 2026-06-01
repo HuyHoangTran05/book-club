@@ -260,6 +260,11 @@
   color: #033b2a;
 }
 
+.booklist-card-tags .booklist-own-tag {
+  background: #f0e7b7;
+  color: #7c5c00;
+}
+
 .booklist-card h2 {
   margin: 14px 0 0;
   color: #033b2a;
@@ -341,6 +346,139 @@
   margin-top: 16px;
 }
 
+.booklist-card-actions-single {
+  grid-template-columns: 1fr;
+}
+
+.booklist-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  background: rgba(8, 45, 36, 0.45);
+  padding: 24px 16px;
+}
+
+.booklist-transaction-modal {
+  width: min(100%, 560px);
+  border: 1px solid #d9e2d8;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(6, 72, 52, 0.18);
+  padding: 24px;
+}
+
+.booklist-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.booklist-modal-header p {
+  margin: 0 0 6px;
+  color: #8b7118;
+  font-size: 0.85rem;
+  font-weight: 850;
+}
+
+.booklist-modal-header h2 {
+  margin: 0;
+  color: #033b2a;
+  font-size: 1.65rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.booklist-modal-header button {
+  align-self: flex-start;
+  border: 0;
+  border-radius: 12px;
+  background: #e7f1e8;
+  color: #064834;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 850;
+  padding: 9px 12px;
+}
+
+.booklist-modal-book {
+  margin-top: 20px;
+  border-radius: 18px;
+  background: #fbfaf3;
+  padding: 16px;
+}
+
+.booklist-modal-book h3 {
+  margin: 0;
+  color: #033b2a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+}
+
+.booklist-modal-book p {
+  margin: 6px 0 0;
+  color: #64736d;
+  font-weight: 750;
+}
+
+.booklist-modal-book span,
+.booklist-point-notice {
+  display: inline-flex;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: #f0e7b7;
+  color: #7c5c00;
+  padding: 7px 10px;
+  font-size: 0.85rem;
+  font-weight: 850;
+}
+
+.booklist-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.booklist-modal-field span {
+  color: #082d24;
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.booklist-modal-field select,
+.booklist-modal-field input {
+  min-height: 48px;
+  border: 1px solid #c8d5cc;
+  border-radius: 14px;
+  background: #fffef8;
+  color: #082d24;
+  font: inherit;
+  outline: none;
+  padding: 0 14px;
+}
+
+.booklist-modal-field select:focus,
+.booklist-modal-field input:focus {
+  border-color: #064834;
+  box-shadow: 0 0 0 4px rgba(6, 72, 52, 0.12);
+}
+
+.booklist-point-notice {
+  display: flex;
+  margin-bottom: 0;
+}
+
+.booklist-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
 @media (max-width: 1120px) {
   .booklist-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -366,12 +504,21 @@
   .booklist-grid,
   .booklist-summary,
   .booklist-card-actions,
+  .booklist-modal-actions,
   .booklist-meta {
     grid-template-columns: 1fr;
   }
 
   .booklist-card {
     padding: 14px;
+  }
+
+  .booklist-modal-actions {
+    flex-direction: column;
+  }
+
+  .booklist-modal-actions button {
+    width: 100%;
   }
 }
 

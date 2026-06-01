@@ -5,7 +5,7 @@ const navigationItems = [
   { label: "Khám phá sách", to: "/books" },
   { label: "Thêm sách", to: "/books/add" },
   { label: "Sách của tôi", to: "/my-books" },
-  { label: "Giao dịch của tôi", to: "/transactions" },
+  { label: "Giao dịch", to: "/transactions" },
   { label: "Lịch sử điểm", to: "/points/history" },
 ];
 
