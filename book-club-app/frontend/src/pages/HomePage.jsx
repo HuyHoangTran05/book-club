@@ -1,13 +1,57 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import homeLibrary from "../assets/home-library.png";
+import { useAuth } from "../contexts/AuthContext.jsx";
 import { homepageContent } from "../data/homepageContent.js";
 import "./HomePage.css";
 
 function HomePage() {
+  const navigate = useNavigate();
+  const { isAuthenticated, logout, user } = useAuth();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [heroImageError, setHeroImageError] = useState(false);
   const content = homepageContent;
+  const userName = user?.full_name || user?.fullName || user?.name || "Thành viên";
+  const userPoints = user?.point_balance ?? user?.pointBalance ?? user?.points ?? 20;
+  const primaryActionPath = isAuthenticated ? "/books" : "/register";
+  const primaryActionLabel = isAuthenticated ? "Tiếp tục khám phá sách" : content.actions.primary;
+
+  const navItems = content.navItems.map((item) => {
+    if (item.label === "Khám phá") {
+      return { ...item, href: isAuthenticated ? "/books" : "#explore" };
+    }
+
+    if (item.label === "Cộng đồng") {
+      return { ...item, href: isAuthenticated ? "/transactions" : "/register" };
+    }
+
+    if (item.label === "Thư viện") {
+      return { ...item, href: isAuthenticated ? "/books" : "/login" };
+    }
+
+    return item;
+  });
+
+  function handleLogout() {
+    logout();
+    navigate("/", { replace: true });
+  }
+
+  function renderNavItem(item) {
+    if (item.href.startsWith("/")) {
+      return (
+        <Link to={item.href} key={item.label}>
+          {item.label}
+        </Link>
+      );
+    }
+
+    return (
+      <a href={item.href} key={item.label}>
+        {item.label}
+      </a>
+    );
+  }
 
   return (
     <div className={`home-page${isDarkMode ? " is-dark" : ""}`}>
@@ -20,11 +64,7 @@ function HomePage() {
         </Link>
 
         <nav className="home-nav" aria-label="Điều hướng trang chủ">
-          {content.navItems.map((item) => (
-            <a href={item.href} key={item.href}>
-              {item.label}
-            </a>
-          ))}
+          {navItems.map(renderNavItem)}
         </nav>
 
         <div className="home-actions">
@@ -36,12 +76,29 @@ function HomePage() {
           >
             {isDarkMode ? "☼" : "●"}
           </button>
-          <Link className="home-login-btn" to="/login">
-            {content.actions.login}
-          </Link>
-          <Link className="home-join-btn" to="/register">
-            {content.actions.join}
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <div className="home-user-summary" aria-label="Thông tin thành viên">
+                <strong>{userName}</strong>
+                <span>{userPoints} điểm</span>
+              </div>
+              <Link className="home-dashboard-btn" to="/books">
+                Vào thư viện
+              </Link>
+              <button className="home-logout-btn" type="button" onClick={handleLogout}>
+                Đăng xuất
+              </button>
+            </>
+          ) : (
+            <>
+              <Link className="home-login-btn" to="/login">
+                {content.actions.login}
+              </Link>
+              <Link className="home-join-btn" to="/register">
+                {content.actions.join}
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
@@ -56,8 +113,8 @@ function HomePage() {
             <p className="home-description">{content.hero.description}</p>
 
             <div className="home-hero-actions">
-              <Link to="/register" className="home-primary-btn">
-                <span>{content.actions.primary}</span>
+              <Link to={primaryActionPath} className="home-primary-btn">
+                <span>{primaryActionLabel}</span>
                 <span className="home-primary-arrow" aria-hidden="true">
                   →
                 </span>

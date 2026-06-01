@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import loginHero from "../assets/login-hero.png";
-import apiClient from "../services/apiClient.js";
+import { useAuth } from "../contexts/AuthContext.jsx";
 import "./LoginPage.css";
 
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
   const redirectTimerRef = useRef(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,25 +51,22 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await apiClient.post("/auth/login", {
+      const result = await login({
         email: email.trim(),
         password,
       });
-      const responseData = response.data?.data || response.data || {};
-      const token = responseData.token || responseData.accessToken || responseData.access_token;
-      const user = responseData.user || responseData.member || responseData.customer;
 
-      if (token) {
-        localStorage.setItem("token", token);
+      if (result.token) {
+        localStorage.setItem("token", result.token);
       }
 
-      if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
+      if (result.user) {
+        localStorage.setItem("user", JSON.stringify(result.user));
       }
 
       setSuccess("Đăng nhập thành công!");
       redirectTimerRef.current = setTimeout(() => {
-        navigate("/");
+        navigate(location.state?.from?.pathname || "/", { replace: true });
       }, 500);
     } catch (submitError) {
       setError(submitError.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");

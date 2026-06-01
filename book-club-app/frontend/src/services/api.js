@@ -1,25 +1,27 @@
 import axios from "axios";
+import { logout as clearStoredAuth } from "../utils/auth.js";
 
 export const AUTH_TOKEN_KEY = "auth_token";
 
-const rawBaseUrl = import.meta.env?.VITE_API_URL || "http://localhost:3000";
+const rawBaseUrl = import.meta.env?.VITE_API_URL || "http://localhost:5000";
 export const apiBaseUrl = rawBaseUrl.replace(/\/$/, "");
 
 export function getAuthToken() {
-  return localStorage.getItem(AUTH_TOKEN_KEY);
+  return localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem("token");
 }
 
 export function setAuthToken(token) {
   if (token) {
     localStorage.setItem(AUTH_TOKEN_KEY, token);
+    localStorage.setItem("token", token);
     return;
   }
 
-  localStorage.removeItem(AUTH_TOKEN_KEY);
+  clearStoredAuth();
 }
 
 export function clearAuthToken() {
-  localStorage.removeItem(AUTH_TOKEN_KEY);
+  clearStoredAuth();
 }
 
 export function apiPath(path) {

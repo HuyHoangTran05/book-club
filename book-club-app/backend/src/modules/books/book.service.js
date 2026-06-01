@@ -2,7 +2,7 @@ import { Op } from "sequelize";
 import { sequelize, BookCopy, BookTitle, Member } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
 
-const BOOK_TITLE_ALIAS = "book";
+const BOOK_TITLE_ALIAS = "bookTitle";
 const OWNER_ALIAS = "owner";
 
 const validConditions = ["new", "good", "fair", "worn"];

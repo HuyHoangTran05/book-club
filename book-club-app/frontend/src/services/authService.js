@@ -73,13 +73,7 @@ function normalizeRegisterPayload(payload) {
 
 export async function register(payload) {
   const response = await api.post(apiPath("/auth/register"), normalizeRegisterPayload(payload));
-  const result = normalizeAuthResult(response);
-
-  if (result.token) {
-    setAuthToken(result.token);
-  }
-
-  return result;
+  return normalizeAuthResult(response);
 }
 
 export async function login(payload) {
