@@ -185,6 +185,7 @@ function BookListPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("error");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBook, setSelectedBook] = useState(null);
   const [transactionValues, setTransactionValues] = useState({
@@ -235,6 +236,7 @@ function BookListPage() {
 
     setSelectedBook(book);
     setMessage("");
+    setMessageType("error");
     setTransactionValues({
       transaction_type: allowedTypes[0]?.value || "",
       expected_return_date: getInitialReturnDate(),
@@ -252,7 +254,8 @@ function BookListPage() {
 
   function handleContactOwner(book) {
     const ownerName = getOwnerName(book);
-    alert(`Bạn muốn liên hệ với chủ sách: ${ownerName}`);
+    setMessageType("success");
+    setMessage(`Chủ sách: ${ownerName}. Vui lòng liên hệ qua thông tin thành viên nếu có.`);
   }
 
   async function handleCreateTransaction(event) {
@@ -266,7 +269,14 @@ function BookListPage() {
     const isSupportedTransactionType = allowedTypes.some((type) => type.value === transactionValues.transaction_type);
 
     if (!isSupportedTransactionType) {
+      setMessageType("error");
       setMessage("Cuốn sách này chưa có hình thức giao dịch hợp lệ.");
+      return;
+    }
+
+    if (transactionValues.transaction_type === "lending" && !transactionValues.expected_return_date) {
+      setMessageType("error");
+      setMessage("Vui lòng chọn ngày dự kiến trả.");
       return;
     }
 
@@ -297,6 +307,7 @@ function BookListPage() {
       );
       navigate("/transactions", { state: { message: "Tạo giao dịch thành công." } });
     } catch (createError) {
+      setMessageType("error");
       setMessage(getCreateTransactionErrorMessage(createError));
     } finally {
       setIsCreating(false);
@@ -328,7 +339,7 @@ function BookListPage() {
         </div>
       </section>
 
-      {message ? <Alert type={message.includes("thành công") ? "success" : "error"}>{message}</Alert> : null}
+      {message ? <Alert type={messageType}>{message}</Alert> : null}
 
       <section className="booklist-filter-panel" aria-label="Tìm kiếm và lọc sách">
         <label className="booklist-search-field" htmlFor="booklist-search">
@@ -545,7 +556,7 @@ function BookListPage() {
                 Hủy
               </button>
               <button type="submit" className="booklist-transaction-button" disabled={isCreating || !hasValidTransactionType}>
-                {isCreating ? "Đang gửi..." : "Gửi yêu cầu"}
+                {isCreating ? "Đang tạo giao dịch..." : "Gửi yêu cầu"}
               </button>
             </div>
           </form>

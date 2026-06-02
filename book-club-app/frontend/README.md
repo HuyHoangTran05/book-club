@@ -640,6 +640,20 @@ Invoke-RestMethod `
 
 ---
 
+## Day 6 — Test, Fix Bug, Edge Case, UI Polish
+
+- [x] Loading, error, and success messages are present.
+- [x] PointHistoryPage displays real API data.
+- [x] Current point card displays correct points.
+- [x] TransactionsPage ignores mock localStorage in real mode.
+- [x] Create transaction modal restricts invalid transaction type.
+- [x] Vietnamese display normalization works.
+- [x] Sidebar active route is correct.
+- [x] End-to-end demo flow passes.
+- [x] `npm run build` passes.
+
+---
+
 ## Final Verification Checklist
 
 - [x] `npm run build` pass.

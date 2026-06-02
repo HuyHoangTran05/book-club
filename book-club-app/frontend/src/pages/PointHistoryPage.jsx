@@ -197,6 +197,7 @@ function PointHistoryPage() {
       {!isLoading && !error && sortedItems.length === 0 ? (
         <Card className="text-center">
           <h2 className="text-xl font-extrabold text-[#033b2a]">Chưa có lịch sử điểm.</h2>
+          <p className="mt-2 text-[#64736d]">Khi bạn hoàn tất giao dịch, lịch sử điểm sẽ hiển thị tại đây.</p>
         </Card>
       ) : null}
 
