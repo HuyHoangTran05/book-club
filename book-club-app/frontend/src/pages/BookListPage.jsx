@@ -339,7 +339,7 @@ function BookListPage() {
     setMessage("");
 
     try {
-      const conversation = await createOrGetConversation(ownerId);
+      const conversation = await createOrGetConversation(ownerId, getCurrentUserId(user));
       const conversationId = getConversationId(conversation);
 
       if (!conversationId) {

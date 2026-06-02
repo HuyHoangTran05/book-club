@@ -1,9 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Alert, Card } from "../components/common/index.js";
-import { getConversationErrorMessage, getConversations } from "../services/conversationService.js";
+import { useAuth } from "../contexts/AuthContext.jsx";
+import {
+  getConversationErrorMessage,
+  getConversationMessages,
+  getConversations,
+} from "../services/conversationService.js";
+import { getCurrentUser as getStoredCurrentUser } from "../utils/auth.js";
 import { displayPersonName } from "../utils/vietnameseDisplay.js";
 import "./ConversationsPage.css";
+
+function normalizeId(value) {
+  return value === undefined || value === null || value === "" ? "" : String(value);
+}
+
+function getUserId(user = {}) {
+  return normalizeId(user.member_id ?? user.memberId ?? user.id);
+}
 
 function formatDate(value) {
   if (!value) {
@@ -26,13 +40,55 @@ function formatDate(value) {
 }
 
 function getParticipantName(conversation) {
-  return displayPersonName(conversation.otherParticipant?.full_name, conversation.otherParticipant?.email || "Thành viên");
+  const otherUser = conversation.otherUser || conversation.otherParticipant || {};
+  return displayPersonName(otherUser.full_name || otherUser.fullName || otherUser.name, otherUser.email || "Thành viên");
+}
+
+function getParticipantContact(conversation) {
+  const otherUser = conversation.otherUser || conversation.otherParticipant || {};
+  return otherUser.email || otherUser.phone || "Chưa có thông tin liên hệ";
+}
+
+function getPreviewText(conversation) {
+  return conversation.lastMessage?.content || conversation.last_message || "Chưa có tin nhắn";
+}
+
+function getPreviewTime(conversation) {
+  return conversation.lastMessage?.created_at || conversation.updated_at || conversation.created_at;
+}
+
+function getAvatarText(conversation) {
+  const otherUser = conversation.otherUser || conversation.otherParticipant || {};
+  const name = getParticipantName(conversation);
+  const source = name !== "Thành viên" ? name : otherUser.email || "TV";
+  const words = source.trim().split(/\s+/).filter(Boolean);
+
+  if (words.length >= 2) {
+    return `${words[words.length - 2][0]}${words[words.length - 1][0]}`.toUpperCase();
+  }
+
+  return source.slice(0, 2).toUpperCase();
+}
+
+function getLatestMessage(messages = []) {
+  if (!messages.length) {
+    return null;
+  }
+
+  return [...messages].sort((first, second) => {
+    const firstTime = new Date(first.created_at || 0).getTime();
+    const secondTime = new Date(second.created_at || 0).getTime();
+
+    return secondTime - firstTime;
+  })[0];
 }
 
 function ConversationsPage() {
+  const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const currentUserId = getUserId(user || getStoredCurrentUser());
 
   useEffect(() => {
     let isMounted = true;
@@ -42,10 +98,36 @@ function ConversationsPage() {
       setError("");
 
       try {
-        const result = await getConversations();
+        const result = await getConversations(currentUserId);
+
+        // Backend currently does not return lastMessage in GET /api/conversations,
+        // so we fetch messages per conversation to build the preview.
+        const conversationsWithPreview = await Promise.all(
+          result.map(async (conversation) => {
+            if (conversation.lastMessage || !conversation.conversation_id) {
+              return conversation;
+            }
+
+            try {
+              const messages = await getConversationMessages(conversation.conversation_id);
+              const latestMessage = getLatestMessage(messages);
+
+              return latestMessage
+                ? {
+                    ...conversation,
+                    lastMessage: latestMessage,
+                    last_message: latestMessage.content || "",
+                  }
+                : conversation;
+            } catch (messageError) {
+              console.error("Conversation preview error:", messageError.response?.data || messageError.message);
+              return conversation;
+            }
+          })
+        );
 
         if (isMounted) {
-          setConversations(result);
+          setConversations(conversationsWithPreview);
         }
       } catch (loadError) {
         if (isMounted) {
@@ -63,7 +145,7 @@ function ConversationsPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [currentUserId]);
 
   const sortedConversations = useMemo(() => {
     return [...conversations].sort((first, second) => {
@@ -103,14 +185,16 @@ function ConversationsPage() {
               to={`/conversations/${conversation.conversation_id}`}
             >
               <div className="conversation-avatar" aria-hidden="true">
-                {getParticipantName(conversation).slice(0, 2).toUpperCase()}
+                {getAvatarText(conversation)}
               </div>
               <div>
                 <h2>{getParticipantName(conversation)}</h2>
-                <p>{conversation.otherParticipant?.email || conversation.otherParticipant?.phone || "Chưa có thông tin liên hệ"}</p>
-                <span>{conversation.last_message || "Chưa có tin nhắn"}</span>
+                <p>{getParticipantContact(conversation)}</p>
+                <span className="conversation-preview" title={getPreviewText(conversation)}>
+                  {getPreviewText(conversation)}
+                </span>
               </div>
-              <time>{formatDate(conversation.updated_at)}</time>
+              <time>{formatDate(getPreviewTime(conversation))}</time>
             </Link>
           ))}
         </section>

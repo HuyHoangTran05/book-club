@@ -91,11 +91,16 @@
   margin: 4px 0;
 }
 
-.conversation-item span {
-  display: block;
+.conversation-item .conversation-preview {
+  display: -webkit-box;
+  max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: #64736d;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .conversation-item time {

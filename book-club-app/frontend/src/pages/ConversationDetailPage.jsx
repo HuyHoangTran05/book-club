@@ -49,7 +49,7 @@ function formatDate(value) {
 function ConversationDetailPage() {
   const { conversationId } = useParams();
   const { user } = useAuth();
-  const currentUserId = getUserId(user || getStoredCurrentUser());
+  const currentUserId = normalizeId(getUserId(user || getStoredCurrentUser()));
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -136,7 +136,7 @@ function ConversationDetailPage() {
 
               return (
                 <article className={isMine ? "message-bubble message-bubble-mine" : "message-bubble"} key={message.message_id}>
-                  <p>{message.content}</p>
+                  <p>{message.content || "Tin nhắn trống"}</p>
                   <span>
                     {isMine ? "Bạn" : getSenderName(message)} · {formatDate(message.created_at)}
                   </span>
