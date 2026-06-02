@@ -662,6 +662,18 @@ Invoke-RestMethod `
 
 ---
 
+## Backend database migration note
+
+After pulling new backend code, especially when new features such as conversations, ratings, or deliverer registration are added, run database migrations before testing frontend:
+
+````bash
+cd backend
+npm install
+npm run db:migrate
+npm run dev
+
+---
+
 ## Final Verification Checklist
 
 - [x] `npm run build` pass.
@@ -692,6 +704,6 @@ Day 2: Passed
 Day 3: Passed
 Day 4: Passed
 Day 5: Passed with real API
-```
+````
 
 Frontend is ready for the full demo flow: authentication, book CRUD, transaction creation, transaction confirmation, point update, and point history display.
