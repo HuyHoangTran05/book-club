@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Alert, Card } from "../components/common/index.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
-import { getConversationErrorMessage, getConversations } from "../services/conversationService.js";
+import {
+  getConversationErrorMessage,
+  getConversationMessages,
+  getConversations,
+} from "../services/conversationService.js";
 import { getCurrentUser as getStoredCurrentUser } from "../utils/auth.js";
 import { displayPersonName } from "../utils/vietnameseDisplay.js";
 import "./ConversationsPage.css";
@@ -50,7 +54,7 @@ function getPreviewText(conversation) {
 }
 
 function getPreviewTime(conversation) {
-  return conversation.lastMessage?.created_at || conversation.updated_at;
+  return conversation.lastMessage?.created_at || conversation.updated_at || conversation.created_at;
 }
 
 function getAvatarText(conversation) {
@@ -64,6 +68,19 @@ function getAvatarText(conversation) {
   }
 
   return source.slice(0, 2).toUpperCase();
+}
+
+function getLatestMessage(messages = []) {
+  if (!messages.length) {
+    return null;
+  }
+
+  return [...messages].sort((first, second) => {
+    const firstTime = new Date(first.created_at || 0).getTime();
+    const secondTime = new Date(second.created_at || 0).getTime();
+
+    return secondTime - firstTime;
+  })[0];
 }
 
 function ConversationsPage() {
@@ -83,8 +100,34 @@ function ConversationsPage() {
       try {
         const result = await getConversations(currentUserId);
 
+        // Backend currently does not return lastMessage in GET /api/conversations,
+        // so we fetch messages per conversation to build the preview.
+        const conversationsWithPreview = await Promise.all(
+          result.map(async (conversation) => {
+            if (conversation.lastMessage || !conversation.conversation_id) {
+              return conversation;
+            }
+
+            try {
+              const messages = await getConversationMessages(conversation.conversation_id);
+              const latestMessage = getLatestMessage(messages);
+
+              return latestMessage
+                ? {
+                    ...conversation,
+                    lastMessage: latestMessage,
+                    last_message: latestMessage.content || "",
+                  }
+                : conversation;
+            } catch (messageError) {
+              console.error("Conversation preview error:", messageError.response?.data || messageError.message);
+              return conversation;
+            }
+          })
+        );
+
         if (isMounted) {
-          setConversations(result);
+          setConversations(conversationsWithPreview);
         }
       } catch (loadError) {
         if (isMounted) {
@@ -147,7 +190,9 @@ function ConversationsPage() {
               <div>
                 <h2>{getParticipantName(conversation)}</h2>
                 <p>{getParticipantContact(conversation)}</p>
-                <span>{getPreviewText(conversation)}</span>
+                <span className="conversation-preview" title={getPreviewText(conversation)}>
+                  {getPreviewText(conversation)}
+                </span>
               </div>
               <time>{formatDate(getPreviewTime(conversation))}</time>
             </Link>
