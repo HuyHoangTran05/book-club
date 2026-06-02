@@ -115,15 +115,38 @@ const getMyProfile = async (memberId) => withDatabaseGuard(async () => {
   return plainMember;
 });
 
-const upsertMyProfile = async (memberId, payload = {}, { defaultActive = true } = {}) => withDatabaseGuard(async () => {
+const upsertMyProfile = async (
+  memberId,
+  payload = {},
+  { defaultActive = true, requireProfileFields = true } = {},
+) => withDatabaseGuard(async () => {
   const serviceArea = normalizeText(payload.service_area ?? payload.serviceArea);
   const availableHours = normalizeText(payload.available_hours ?? payload.availableHours);
 
-  if (!serviceArea) {
+  if (requireProfileFields && !serviceArea) {
     throw createHttpError("service_area is required", 400);
   }
 
-  if (!availableHours) {
+  if (requireProfileFields && !availableHours) {
+    throw createHttpError("available_hours is required", 400);
+  }
+
+  const hasServiceArea = Object.prototype.hasOwnProperty.call(payload, "service_area") ||
+    Object.prototype.hasOwnProperty.call(payload, "serviceArea");
+  const hasAvailableHours = Object.prototype.hasOwnProperty.call(payload, "available_hours") ||
+    Object.prototype.hasOwnProperty.call(payload, "availableHours");
+  const hasIsActive = Object.prototype.hasOwnProperty.call(payload, "is_active") ||
+    Object.prototype.hasOwnProperty.call(payload, "isActive");
+
+  if (!requireProfileFields && !hasServiceArea && !hasAvailableHours && !hasIsActive) {
+    throw createHttpError("No valid deliverer profile fields to update", 400);
+  }
+
+  if (hasServiceArea && !serviceArea) {
+    throw createHttpError("service_area is required", 400);
+  }
+
+  if (hasAvailableHours && !availableHours) {
     throw createHttpError("available_hours is required", 400);
   }
 
@@ -152,15 +175,33 @@ const upsertMyProfile = async (memberId, payload = {}, { defaultActive = true } 
     });
 
     if (existingProfile) {
+      const updates = {};
+
+      if (hasServiceArea) {
+        updates.service_area = serviceArea;
+      }
+
+      if (hasAvailableHours) {
+        updates.available_hours = availableHours;
+      }
+
+      if (hasIsActive) {
+        updates.is_active = isActive;
+      }
+
       await existingProfile.update(
-        {
-          service_area: serviceArea,
-          available_hours: availableHours,
-          is_active: isActive,
-        },
+        updates,
         { transaction },
       );
       return;
+    }
+
+    if (!serviceArea) {
+      throw createHttpError("service_area is required", 400);
+    }
+
+    if (!availableHours) {
+      throw createHttpError("available_hours is required", 400);
     }
 
     await DelivererProfile.create(
