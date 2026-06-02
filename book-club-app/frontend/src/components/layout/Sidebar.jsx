@@ -8,6 +8,7 @@ const navigationItems = [
   { label: "Giao dịch", to: "/transactions" },
   { label: "Đăng ký giao sách", to: "/deliverer-profile" },
   { label: "Lịch sử điểm", to: "/points/history" },
+  { label: "Hồ sơ cá nhân", to: "/profile" },
 ];
 
 function isActiveRoute(itemPath, pathname) {
@@ -21,6 +22,10 @@ function isActiveRoute(itemPath, pathname) {
 
   if (itemPath === "/points/history") {
     return pathname === "/points" || pathname === "/points/history";
+  }
+
+  if (itemPath === "/profile") {
+    return pathname === "/profile";
   }
 
   return pathname === itemPath;
