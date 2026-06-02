@@ -86,7 +86,7 @@
 
 .booklist-filter-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px) 140px;
+  grid-template-columns: minmax(220px, 1.2fr) repeat(4, minmax(150px, 0.8fr)) 140px;
   gap: 16px;
   align-items: end;
   border: 1px solid #d9e2d8;
@@ -170,6 +170,14 @@
   transform: translateY(-1px);
 }
 
+.booklist-search-button:disabled,
+.booklist-contact-button:disabled,
+.booklist-transaction-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+  transform: none;
+}
+
 .booklist-state-card {
   border: 1px solid #d9e2d8;
   border-radius: 18px;
@@ -205,6 +213,36 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 28px;
+}
+
+.booklist-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.booklist-pagination button {
+  min-height: 44px;
+  border: 1px solid #064834;
+  border-radius: 12px;
+  background: #fffef8;
+  color: #064834;
+  cursor: pointer;
+  padding: 0 16px;
+  font: inherit;
+  font-weight: 900;
+}
+
+.booklist-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.booklist-pagination span {
+  color: #43534e;
+  font-weight: 900;
 }
 
 .booklist-card {

@@ -4,6 +4,11 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 import { categoryOptions } from "../components/books/bookOptions.js";
 import { Alert } from "../components/common/index.js";
 import { getBookErrorMessage, getBooks, resolveCoverUrl } from "../services/bookService.js";
+import {
+  createOrGetConversation,
+  getConversationErrorMessage,
+  getConversationId,
+} from "../services/conversationService.js";
 import { getDeliverers } from "../services/delivererService.js";
 import { createTransaction, getCreateTransactionErrorMessage } from "../services/transactionService.js";
 import {
@@ -135,6 +140,22 @@ function getCopyId(book) {
   return book?.copyId || book?.copy_id || rawBook.copy_id || rawBook.copyId || rawBook.id || book?.id;
 }
 
+function getOwnerId(book) {
+  const rawBook = getRawBook(book);
+  return normalizeId(
+    book?.ownerId ??
+      book?.owner_id ??
+      rawBook.owner_id ??
+      rawBook.ownerId ??
+      rawBook.owner?.member_id ??
+      rawBook.owner?.memberId ??
+      rawBook.owner?.id ??
+      rawBook.member?.member_id ??
+      rawBook.member?.memberId ??
+      rawBook.member?.id
+  );
+}
+
 function getCurrentUserId(user = {}) {
   return normalizeId(user.id ?? user.member_id ?? user.memberId);
 }
@@ -190,15 +211,27 @@ function BookListPage() {
   const { user } = useAuth();
   const [books, setBooks] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [contactingOwnerId, setContactingOwnerId] = useState("");
   const [delivererError, setDelivererError] = useState("");
   const [delivererLoading, setDelivererLoading] = useState(false);
   const [deliverers, setDeliverers] = useState([]);
   const [error, setError] = useState("");
+  const [authorFilter, setAuthorFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [limit, setLimit] = useState(20);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("error");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [appliedFilters, setAppliedFilters] = useState({
+    keyword: "",
+    category: "all",
+    author: "",
+    year: "",
+  });
   const [selectedBook, setSelectedBook] = useState(null);
   const [transactionValues, setTransactionValues] = useState({
     transaction_type: "lending",
@@ -211,14 +244,24 @@ function BookListPage() {
     setError("");
 
     try {
-      const result = await getBooks({ limit: 100 });
+      const params = {
+        page,
+        limit,
+        keyword: appliedFilters.keyword || undefined,
+        category: appliedFilters.category === "all" ? undefined : appliedFilters.category,
+        author: appliedFilters.author || undefined,
+        year: appliedFilters.year || undefined,
+        publication_year: appliedFilters.year || undefined,
+      };
+      const result = await getBooks(params);
       setBooks(result.items);
+      setPagination(result.pagination);
     } catch (loadError) {
       setError(getBookErrorMessage(loadError, "Không thể tải danh sách sách. Vui lòng thử lại."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [appliedFilters, limit, page]);
 
   useEffect(() => {
     fetchBooks();
@@ -240,21 +283,11 @@ function BookListPage() {
     }
   }, []);
 
-  const filteredBooks = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-
-    return books.filter((book) => {
-      if (isHiddenBookStatus(book.status)) {
-        return false;
-      }
-
-      const searchText = `${getTitle(book)} ${getAuthor(book)} ${getCategory(book)}`.toLowerCase();
-      const matchesSearch = !normalizedSearch || searchText.includes(normalizedSearch);
-      const matchesCategory = categoryFilter === "all" || getCategory(book) === categoryFilter;
-
-      return matchesSearch && matchesCategory;
-    });
-  }, [books, categoryFilter, searchTerm]);
+  const filteredBooks = useMemo(() => books.filter((book) => !isHiddenBookStatus(book.status)), [books]);
+  const totalPages = Number(
+    pagination?.totalPages ?? pagination?.total_pages ?? pagination?.pages ?? pagination?.lastPage ?? 1
+  );
+  const safeTotalPages = Number.isFinite(totalPages) && totalPages > 0 ? totalPages : 1;
 
   const allowedTransactionTypes = useMemo(() => getAllowedTransactionTypes(selectedBook), [selectedBook]);
   const hasValidTransactionType = allowedTransactionTypes.length > 0;
@@ -285,10 +318,55 @@ function BookListPage() {
     setSelectedBook(null);
   }
 
-  function handleContactOwner(book) {
+  async function handleContactOwner(book) {
+    const ownerId = getOwnerId(book);
     const ownerName = getOwnerName(book);
-    setMessageType("success");
-    setMessage(`Chủ sách: ${ownerName}. Vui lòng liên hệ qua thông tin thành viên nếu có.`);
+
+    if (!ownerId) {
+      setMessageType("error");
+      setMessage("Không tìm thấy thông tin chủ sách để tạo cuộc trò chuyện.");
+      return;
+    }
+
+    if (ownerId === getCurrentUserId(user)) {
+      setMessageType("error");
+      setMessage("Bạn không thể tự tạo cuộc trò chuyện với chính mình.");
+      return;
+    }
+
+    setContactingOwnerId(ownerId);
+    setMessage("");
+
+    try {
+      const conversation = await createOrGetConversation(ownerId);
+      const conversationId = getConversationId(conversation);
+
+      if (!conversationId) {
+        setMessageType("error");
+        setMessage("Không thể mở cuộc trò chuyện với chủ sách.");
+        return;
+      }
+
+      navigate(`/conversations/${conversationId}`, {
+        state: { message: `Đã mở cuộc trò chuyện với ${ownerName}.` },
+      });
+    } catch (contactError) {
+      setMessageType("error");
+      setMessage(getConversationErrorMessage(contactError, "Không thể liên hệ chủ sách. Vui lòng thử lại."));
+    } finally {
+      setContactingOwnerId("");
+    }
+  }
+
+  function handleSearchSubmit(event) {
+    event.preventDefault();
+    setPage(1);
+    setAppliedFilters({
+      keyword: searchTerm.trim(),
+      category: categoryFilter,
+      author: authorFilter.trim(),
+      year: yearFilter.trim(),
+    });
   }
 
   async function handleCreateTransaction(event) {
@@ -374,7 +452,7 @@ function BookListPage() {
 
       {message ? <Alert type={messageType}>{message}</Alert> : null}
 
-      <section className="booklist-filter-panel" aria-label="Tìm kiếm và lọc sách">
+      <form className="booklist-filter-panel" aria-label="Tìm kiếm và lọc sách" onSubmit={handleSearchSubmit}>
         <label className="booklist-search-field" htmlFor="booklist-search">
           <span>Tìm kiếm</span>
           <input
@@ -398,10 +476,47 @@ function BookListPage() {
           </select>
         </label>
 
-        <button className="booklist-search-button" type="button">
+        <label className="booklist-search-field" htmlFor="booklist-author">
+          <span>Tác giả</span>
+          <input
+            id="booklist-author"
+            value={authorFilter}
+            onChange={(event) => setAuthorFilter(event.target.value)}
+            placeholder="Nhập tên tác giả"
+          />
+        </label>
+
+        <label className="booklist-search-field" htmlFor="booklist-year">
+          <span>Năm xuất bản</span>
+          <input
+            id="booklist-year"
+            value={yearFilter}
+            onChange={(event) => setYearFilter(event.target.value)}
+            inputMode="numeric"
+            placeholder="1941"
+          />
+        </label>
+
+        <label className="booklist-category-field" htmlFor="booklist-limit">
+          <span>Số sách mỗi trang</span>
+          <select
+            id="booklist-limit"
+            value={limit}
+            onChange={(event) => {
+              setLimit(Number(event.target.value));
+              setPage(1);
+            }}
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={40}>40</option>
+          </select>
+        </label>
+
+        <button className="booklist-search-button" type="submit">
           Tìm kiếm
         </button>
-      </section>
+      </form>
 
       {loading ? (
         <section className="booklist-state-card" aria-live="polite">
@@ -427,8 +542,9 @@ function BookListPage() {
       ) : null}
 
       {!loading && !error && filteredBooks.length > 0 ? (
-        <section className="booklist-grid" aria-label="Danh sách sách">
-          {filteredBooks.map((book) => {
+        <>
+          <section className="booklist-grid" aria-label="Danh sách sách">
+            {filteredBooks.map((book) => {
             const ownerName = getOwnerName(book);
             const coverUrl = getCoverUrl(book);
             const isOwnBook = bookBelongsToUser(book, user);
@@ -479,8 +595,13 @@ function BookListPage() {
                 </div>
 
                 <div className={canCreateTransaction ? "booklist-card-actions" : "booklist-card-actions booklist-card-actions-single"}>
-                  <button className="booklist-contact-button" type="button" onClick={() => handleContactOwner(book)}>
-                    Liên hệ chủ sách
+                  <button
+                    className="booklist-contact-button"
+                    type="button"
+                    onClick={() => handleContactOwner(book)}
+                    disabled={contactingOwnerId === getOwnerId(book)}
+                  >
+                    {contactingOwnerId === getOwnerId(book) ? "Đang mở..." : "Liên hệ chủ sách"}
                   </button>
                   {canCreateTransaction ? (
                     <button className="booklist-transaction-button" type="button" onClick={() => openTransactionModal(book)}>
@@ -490,8 +611,24 @@ function BookListPage() {
                 </div>
               </article>
             );
-          })}
-        </section>
+            })}
+          </section>
+          <nav className="booklist-pagination" aria-label="Phân trang sách">
+            <button type="button" onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))} disabled={page <= 1 || loading}>
+              Trang trước
+            </button>
+            <span>
+              Trang {page} / {safeTotalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage((currentPage) => Math.min(safeTotalPages, currentPage + 1))}
+              disabled={page >= safeTotalPages || loading}
+            >
+              Trang sau
+            </button>
+          </nav>
+        </>
       ) : null}
 
       {selectedBook ? (

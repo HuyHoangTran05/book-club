@@ -210,6 +210,48 @@
   margin-top: 22px;
 }
 
+.transaction-rating-dialog {
+  display: grid;
+  gap: 14px;
+}
+
+.transaction-rating-field {
+  display: grid;
+  gap: 8px;
+}
+
+.transaction-rating-field span {
+  color: #082d24;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.transaction-rating-field select,
+.transaction-rating-field textarea {
+  width: 100%;
+  border: 1px solid #c9d8ce;
+  border-radius: 16px;
+  background: #fbfaf3;
+  color: #082d24;
+  font: inherit;
+  outline: none;
+  padding: 12px 14px;
+}
+
+.transaction-rating-field select {
+  min-height: 48px;
+}
+
+.transaction-rating-field textarea {
+  resize: vertical;
+}
+
+.transaction-rating-field select:focus,
+.transaction-rating-field textarea:focus {
+  border-color: #064834;
+  box-shadow: 0 0 0 3px rgba(6, 72, 52, 0.12);
+}
+
 @media (max-width: 980px) {
   .transactions-grid {
     grid-template-columns: 1fr;

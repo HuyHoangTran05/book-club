@@ -15,6 +15,7 @@ import {
   getMyTransactions,
   getTransactionErrorMessage,
 } from "../services/transactionService.js";
+import { createRating, getRatingErrorMessage } from "../services/ratingService.js";
 import "./TransactionsPage.css";
 
 const transactionTypeLabels = {
@@ -152,6 +153,27 @@ function getUserConfirmed(transaction, role) {
   return true;
 }
 
+function getMemberId(person = {}) {
+  return normalizeId(person.member_id ?? person.memberId ?? person.id);
+}
+
+function getRatingCandidates(transaction, currentUser) {
+  const currentUserId = getUserId(currentUser || getStoredCurrentUser());
+  const candidates = [
+    { role: "giver", label: "Chủ sách", person: transaction.giver },
+    { role: "receiver", label: "Người nhận", person: transaction.receiver },
+    ...(hasDeliverer(transaction) ? [{ role: "deliverer", label: "Người giao", person: transaction.deliverer }] : []),
+  ];
+
+  return candidates
+    .map((candidate) => ({
+      ...candidate,
+      memberId: getMemberId(candidate.person),
+      name: getDisplayName(candidate.person),
+    }))
+    .filter((candidate) => candidate.memberId && candidate.memberId !== currentUserId);
+}
+
 function TransactionsPage() {
   const location = useLocation();
   const { user } = useAuth();
@@ -161,6 +183,14 @@ function TransactionsPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [ratingError, setRatingError] = useState("");
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [ratingTarget, setRatingTarget] = useState(null);
+  const [ratingValues, setRatingValues] = useState({
+    rated_member_id: "",
+    score: 5,
+    comment: "",
+  });
   const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
@@ -255,6 +285,56 @@ function TransactionsPage() {
     }
   }
 
+  function openRatingModal(transaction) {
+    const candidates = getRatingCandidates(transaction, user);
+
+    setRatingTarget(transaction);
+    setRatingError("");
+    setRatingValues({
+      rated_member_id: candidates[0]?.memberId || "",
+      score: 5,
+      comment: "",
+    });
+  }
+
+  function closeRatingModal() {
+    if (ratingSubmitting) {
+      return;
+    }
+
+    setRatingTarget(null);
+    setRatingError("");
+  }
+
+  async function handleSubmitRating(event) {
+    event.preventDefault();
+
+    if (!ratingTarget || !ratingValues.rated_member_id) {
+      setRatingError("Vui lòng chọn thành viên cần đánh giá.");
+      return;
+    }
+
+    setRatingSubmitting(true);
+    setRatingError("");
+    setError("");
+    setMessage("");
+
+    try {
+      await createRating({
+        transaction_id: ratingTarget.transaction_id,
+        rated_member_id: ratingValues.rated_member_id,
+        score: ratingValues.score,
+        comment: ratingValues.comment.trim(),
+      });
+      setMessage("Đánh giá thành công.");
+      setRatingTarget(null);
+    } catch (submitError) {
+      setRatingError(getRatingErrorMessage(submitError));
+    } finally {
+      setRatingSubmitting(false);
+    }
+  }
+
   return (
     <div className="transactions-page">
       <header className="transactions-header">
@@ -289,6 +369,7 @@ function TransactionsPage() {
             const isConfirming = actionId === transactionId && actionType === "confirm";
             const isCancelling = actionId === transactionId && actionType === "cancel";
             const canActOnTransaction = Boolean(role);
+            const ratingCandidates = getRatingCandidates(transaction, user);
 
             return (
               <article className="transaction-card" key={transactionId}>
@@ -376,6 +457,11 @@ function TransactionsPage() {
                   {transaction.status === "completed" ? (
                     <p className="transaction-action-note">Giao dịch đã hoàn tất.</p>
                   ) : null}
+                  {transaction.status === "completed" && canActOnTransaction && ratingCandidates.length > 0 ? (
+                    <Button type="button" variant="secondary" onClick={() => openRatingModal(transaction)}>
+                      Đánh giá người dùng
+                    </Button>
+                  ) : null}
                   {transaction.status === "cancelled" ? (
                     <p className="transaction-action-note">Giao dịch đã bị hủy.</p>
                   ) : null}
@@ -400,6 +486,85 @@ function TransactionsPage() {
               </Button>
             </div>
           </div>
+        </div>
+      ) : null}
+
+      {ratingTarget ? (
+        <div className="transaction-dialog-backdrop">
+          <form className="transaction-dialog transaction-rating-dialog" onSubmit={handleSubmitRating}>
+            <h2>Đánh giá người dùng</h2>
+            <p>Chọn thành viên trong giao dịch và gửi đánh giá sau khi giao dịch hoàn tất.</p>
+
+            {ratingError ? <Alert type="error">{ratingError}</Alert> : null}
+
+            <label className="transaction-rating-field" htmlFor="rated-member-id">
+              <span>Thành viên cần đánh giá</span>
+              <select
+                id="rated-member-id"
+                value={ratingValues.rated_member_id}
+                onChange={(event) =>
+                  setRatingValues((currentValues) => ({
+                    ...currentValues,
+                    rated_member_id: event.target.value,
+                  }))
+                }
+                disabled={ratingSubmitting}
+              >
+                {getRatingCandidates(ratingTarget, user).map((candidate) => (
+                  <option key={candidate.memberId} value={candidate.memberId}>
+                    {candidate.label}: {candidate.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="transaction-rating-field" htmlFor="rating-score">
+              <span>Điểm đánh giá</span>
+              <select
+                id="rating-score"
+                value={ratingValues.score}
+                onChange={(event) =>
+                  setRatingValues((currentValues) => ({
+                    ...currentValues,
+                    score: Number(event.target.value),
+                  }))
+                }
+                disabled={ratingSubmitting}
+              >
+                {[5, 4, 3, 2, 1].map((score) => (
+                  <option key={score} value={score}>
+                    {score} sao
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="transaction-rating-field" htmlFor="rating-comment">
+              <span>Nhận xét</span>
+              <textarea
+                id="rating-comment"
+                value={ratingValues.comment}
+                onChange={(event) =>
+                  setRatingValues((currentValues) => ({
+                    ...currentValues,
+                    comment: event.target.value,
+                  }))
+                }
+                disabled={ratingSubmitting}
+                rows={4}
+                placeholder="Nhập nhận xét về giao dịch..."
+              />
+            </label>
+
+            <div className="transaction-dialog-actions">
+              <Button type="button" variant="secondary" onClick={closeRatingModal} disabled={ratingSubmitting}>
+                Hủy
+              </Button>
+              <Button type="submit" disabled={ratingSubmitting}>
+                {ratingSubmitting ? "Đang gửi..." : "Gửi đánh giá"}
+              </Button>
+            </div>
+          </form>
         </div>
       ) : null}
     </div>

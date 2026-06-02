@@ -242,18 +242,10 @@ export function normalizeTransaction(rawTransaction = {}) {
     completedAt,
     created_at: createdAt,
     createdAt,
-<<<<<<< HEAD
-    delivery_confirmed: Boolean(rawTransaction.delivery_confirmed ?? rawTransaction.deliveryConfirmed),
-    deliveryConfirmed: Boolean(rawTransaction.delivery_confirmed ?? rawTransaction.deliveryConfirmed),
-    book: normalizeBook(getTransactionBook(rawTransaction)),
-    giver: normalizePerson(rawTransaction.giver ?? rawTransaction.owner ?? rawTransaction.fromMember),
-    receiver: normalizePerson(rawTransaction.receiver ?? rawTransaction.borrower ?? rawTransaction.toMember),
-=======
     book: normalizeBookFromTransaction(rawTransaction),
     giver: giver ?? normalizePerson({}),
     receiver: receiver ?? normalizePerson({}),
     deliverer,
->>>>>>> b86729fa19f3247762b376c4cf29fe281ea4f5cf
     raw: rawTransaction,
   };
 }

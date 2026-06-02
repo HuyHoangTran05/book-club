@@ -7,7 +7,7 @@ import {
   getPasswordErrorMessage,
   getProfileErrorMessage,
   updateMyProfile,
-} from "../services/profileService.js";
+} from "../services/memberService.js";
 import { displayPersonName } from "../utils/vietnameseDisplay.js";
 import "./ProfilePage.css";
 
@@ -15,6 +15,7 @@ const initialInfoValues = {
   full_name: "",
   email: "",
   phone: "",
+  address: "",
 };
 
 const initialPasswordValues = {
@@ -149,6 +150,7 @@ function mergeStoredUser(profile) {
       ...profile,
       fullName: profile.full_name,
       pointBalance: profile.point_balance,
+      address: profile.address,
     })
   );
 }
@@ -176,6 +178,7 @@ function ProfilePage() {
   const profileName = getProfileName(displayProfile);
   const profileEmail = getProfileValue(displayProfile, "email") || "Chưa có email";
   const profilePhone = getProfileValue(displayProfile, "phone", "phone_number", "phoneNumber") || "Chưa cập nhật";
+  const profileAddress = getProfileValue(displayProfile, "address") || "Chưa cập nhật";
   const profilePoints = getProfilePoints(displayProfile);
   const pointsText = profilePoints === null ? "-- điểm" : `${profilePoints} điểm`;
 
@@ -201,6 +204,7 @@ function ProfilePage() {
         full_name: getProfileName(result, ""),
         email: result.email || "",
         phone: result.phone || "",
+        address: result.address || "",
       });
       mergeStoredUser(result);
     } catch (error) {
@@ -254,8 +258,8 @@ function ProfilePage() {
 
     if (!passwordValues.new_password) {
       nextErrors.new_password = "Vui lòng nhập mật khẩu mới.";
-    } else if (passwordValues.new_password.length < 8) {
-      nextErrors.new_password = "Mật khẩu mới phải có ít nhất 8 ký tự.";
+    } else if (passwordValues.new_password.length < 6) {
+      nextErrors.new_password = "Mật khẩu mới phải có ít nhất 6 ký tự.";
     }
 
     if (!passwordValues.confirm_password) {
@@ -292,12 +296,14 @@ function ProfilePage() {
       const updatedProfile = await updateMyProfile({
         full_name: infoValues.full_name.trim(),
         phone: infoValues.phone.trim(),
+        address: infoValues.address.trim(),
       });
       setProfile(updatedProfile);
       setInfoValues({
         full_name: getProfileName(updatedProfile, ""),
         email: updatedProfile.email || infoValues.email,
         phone: updatedProfile.phone || "",
+        address: updatedProfile.address || "",
       });
       mergeStoredUser(updatedProfile);
       setMessageType("success");
@@ -415,6 +421,10 @@ function ProfilePage() {
                   <dt>Số điện thoại</dt>
                   <dd>{profilePhone}</dd>
                 </div>
+                <div>
+                  <dt>Địa chỉ</dt>
+                  <dd>{profileAddress}</dd>
+                </div>
                 {accountDetails.map((item) => (
                   <div key={item.label}>
                     <dt>{item.label}</dt>
@@ -467,9 +477,22 @@ function ProfilePage() {
                   {errors.phone ? <small>{errors.phone}</small> : null}
                 </label>
 
+                <label className="profile-field" htmlFor="profile-address">
+                  <span>Địa chỉ</span>
+                  <input
+                    id="profile-address"
+                    name="address"
+                    value={infoValues.address}
+                    onChange={handleInfoChange}
+                    disabled={isSavingProfile}
+                    placeholder="Quận Cầu Giấy, Hà Nội"
+                    autoComplete="street-address"
+                  />
+                </label>
+
                 <div className="profile-actions">
                   <Button type="submit" disabled={isSavingProfile}>
-                    {isSavingProfile ? "Đang lưu..." : "Lưu thay đổi"}
+                    {isSavingProfile ? "Đang lưu..." : "Cập nhật hồ sơ"}
                   </Button>
                 </div>
               </form>
