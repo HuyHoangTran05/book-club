@@ -9,6 +9,9 @@ const validConditions = ["new", "good", "fair", "worn"];
 const validExchangeTypes = ["permanent", "lending", "both"];
 const updatableCopyFields = ["condition", "exchange_type", "note", "status"];
 const validUpdateStatuses = ["available", "unavailable"];
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 50;
 
 const normalizeText = (value) => {
   if (value === undefined || value === null) {
@@ -66,9 +69,39 @@ const bookInclude = [
   },
 ];
 
-const hasWhereConditions = (where) => (
-  Object.keys(where).length > 0 || Object.getOwnPropertySymbols(where).length > 0
-);
+const normalizePositiveInteger = (value, fallback) => {
+  if (value === undefined || value === null || value === "") {
+    return fallback;
+  }
+
+  const number = Number(value);
+
+  if (!Number.isInteger(number) || number < 1) {
+    return fallback;
+  }
+
+  return number;
+};
+
+const normalizeLimit = (value) => {
+  return Math.min(normalizePositiveInteger(value, DEFAULT_LIMIT), MAX_LIMIT);
+};
+
+const normalizeYearFilter = (query = {}) => {
+  const rawYear = normalizeText(query.year ?? query.publication_year);
+
+  if (!rawYear) {
+    return null;
+  }
+
+  const year = Number(rawYear);
+
+  if (!Number.isInteger(year)) {
+    throw createHttpError("year phải là số nguyên", 400);
+  }
+
+  return year;
+};
 
 const sanitizeBookCopy = (bookCopy) => {
   if (!bookCopy) {
@@ -157,24 +190,50 @@ const findOrCreateBookTitle = async (dto, transaction = null) => {
 };
 
 const getAvailableBooks = async (query = {}) => {
-  const bookWhere = {};
+  const bookTitleConditions = [];
+  const page = normalizePositiveInteger(query.page, DEFAULT_PAGE);
+  const limit = normalizeLimit(query.limit);
+  const offset = (page - 1) * limit;
   const keyword = normalizeText(query.keyword ?? query.q);
   const category = normalizeText(query.category);
+  const author = normalizeText(query.author);
+  const year = normalizeYearFilter(query);
 
   if (keyword) {
-    bookWhere[Op.or] = [
-      { title: { [Op.iLike]: `%${keyword}%` } },
-      { author: { [Op.iLike]: `%${keyword}%` } },
-      { category: { [Op.iLike]: `%${keyword}%` } },
-      { isbn: { [Op.iLike]: `%${keyword}%` } },
-    ];
+    bookTitleConditions.push({
+      [Op.or]: [
+        { title: { [Op.iLike]: `%${keyword}%` } },
+        { author: { [Op.iLike]: `%${keyword}%` } },
+        { category: { [Op.iLike]: `%${keyword}%` } },
+        { description: { [Op.iLike]: `%${keyword}%` } },
+        { isbn: { [Op.iLike]: `%${keyword}%` } },
+      ],
+    });
   }
 
   if (category) {
-    bookWhere.category = { [Op.iLike]: `%${category}%` };
+    bookTitleConditions.push({
+      category: { [Op.iLike]: `%${category}%` },
+    });
   }
 
-  const books = await BookCopy.findAll({
+  if (author) {
+    bookTitleConditions.push({
+      author: { [Op.iLike]: `%${author}%` },
+    });
+  }
+
+  if (year !== null) {
+    bookTitleConditions.push({
+      publication_year: year,
+    });
+  }
+
+  const bookTitleWhere = bookTitleConditions.length > 0
+    ? { [Op.and]: bookTitleConditions }
+    : undefined;
+
+  const { count, rows } = await BookCopy.findAndCountAll({
     where: {
       status: "available",
     },
@@ -182,14 +241,30 @@ const getAvailableBooks = async (query = {}) => {
       {
         model: BookTitle,
         as: BOOK_TITLE_ALIAS,
-        where: hasWhereConditions(bookWhere) ? bookWhere : undefined,
+        where: bookTitleWhere,
       },
       bookInclude[1],
     ],
+    distinct: true,
+    limit,
+    offset,
     order: [["created_at", "DESC"]],
   });
 
-  return books.map(sanitizeBookCopy);
+  const items = rows.map(sanitizeBookCopy);
+  const total = Array.isArray(count) ? count.length : count;
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    items,
+    books: items,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+    },
+  };
 };
 
 const getMyBooks = async (memberId) => {

@@ -38,6 +38,7 @@ export const getMyTransactions = asyncHandler(async (req, res) => {
 export const getTransactionById = asyncHandler(async (req, res) => {
   const transaction = await transactionService.getTransactionById(
     req.params.transactionId,
+    req.user.member_id,
   );
   successResponse(res, transaction, "Transaction detail");
 });

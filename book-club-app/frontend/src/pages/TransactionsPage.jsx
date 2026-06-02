@@ -117,7 +117,7 @@ function getConfirmationRows(transaction) {
         ? transaction.delivery_confirmed
           ? "Đã xác nhận"
           : "Chưa xác nhận"
-        : "Không có người giao",
+        : "Không yêu cầu",
     },
   ];
 }
@@ -127,8 +127,12 @@ function getPointImpact(transaction, role) {
     return "Không áp dụng";
   }
 
+  if (role === "deliverer") {
+    return "+2 điểm";
+  }
+
   const amount = transaction.transaction_type === "permanent" ? 10 : 5;
-  const sign = role === "giver" || role === "deliverer" ? "+" : "-";
+  const sign = role === "giver" ? "+" : "-";
   return `${sign}${amount} điểm`;
 }
 
@@ -210,7 +214,7 @@ function TransactionsPage() {
     );
   }
 
-  async function handleConfirm(transactionId) {
+  async function handleConfirm(transactionId, role) {
     setActionId(transactionId);
     setActionType("confirm");
     setMessage("");
@@ -219,7 +223,7 @@ function TransactionsPage() {
     try {
       const updatedTransaction = await confirmTransaction(transactionId, user || getStoredCurrentUser());
       replaceTransaction(updatedTransaction);
-      setMessage("Xác nhận giao dịch thành công.");
+      setMessage(role === "deliverer" ? "Xác nhận giao sách thành công." : "Xác nhận giao dịch thành công.");
     } catch (confirmError) {
       setError(getTransactionErrorMessage(confirmError));
     } finally {
@@ -349,8 +353,8 @@ function TransactionsPage() {
 
                 <div className="transaction-actions">
                   {isPending && canActOnTransaction && !userConfirmed ? (
-                    <Button type="button" onClick={() => handleConfirm(transactionId)} disabled={Boolean(actionId)}>
-                      {isConfirming ? "Đang xác nhận..." : "Xác nhận giao dịch"}
+                    <Button type="button" onClick={() => handleConfirm(transactionId, role)} disabled={Boolean(actionId)}>
+                      {isConfirming ? "Đang xác nhận..." : role === "deliverer" ? "Xác nhận giao sách" : "Xác nhận giao dịch"}
                     </Button>
                   ) : null}
                   {isPending && canActOnTransaction && userConfirmed ? (

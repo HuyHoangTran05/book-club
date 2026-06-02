@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Card } from "../components/common/index.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { getCurrentUser as fetchCurrentUser } from "../services/authService.js";
 import { getPointHistory } from "../services/pointService.js";
 import { getCurrentUser as getStoredCurrentUser } from "../utils/auth.js";
 import { displayReason } from "../utils/vietnameseDisplay.js";
@@ -119,10 +120,17 @@ function PointHistoryPage() {
 
       try {
         const result = await getPointHistory();
+        let latestUser = user;
+
+        try {
+          latestUser = await fetchCurrentUser();
+        } catch (profileError) {
+          console.error("Current user refresh error:", profileError.response?.data || profileError.message);
+        }
 
         if (isMounted) {
           setItems(result.items);
-          setCurrentPoints(resolveCurrentPoints(result.currentPoints, result.items, user));
+          setCurrentPoints(resolveCurrentPoints(result.currentPoints, result.items, latestUser));
         }
       } catch (loadError) {
         console.error("Point history error:", loadError.response?.data || loadError.message);
@@ -189,6 +197,7 @@ function PointHistoryPage() {
       {!isLoading && !error && sortedItems.length === 0 ? (
         <Card className="text-center">
           <h2 className="text-xl font-extrabold text-[#033b2a]">Chưa có lịch sử điểm.</h2>
+          <p className="mt-2 text-[#64736d]">Khi bạn hoàn tất giao dịch, lịch sử điểm sẽ hiển thị tại đây.</p>
         </Card>
       ) : null}
 

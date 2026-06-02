@@ -5,6 +5,7 @@ import {
   BookCopy,
   BookTitle,
   BookTransaction,
+  DelivererProfile,
   PointHistory,
 } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
@@ -91,6 +92,22 @@ const sanitizeTransaction = (transaction) => {
   return plain;
 };
 
+const assertTransactionParticipant = (transaction, memberId) => {
+  if (!memberId) {
+    return;
+  }
+
+  const participantIds = [
+    transaction.giver_id,
+    transaction.receiver_id,
+    transaction.deliverer_id,
+  ].filter(Boolean);
+
+  if (!participantIds.includes(memberId)) {
+    throw createHttpError("You are not allowed to view this transaction", 403);
+  }
+};
+
 const getCost = (transactionType) => {
   const cost = TRANSACTION_COST[transactionType];
 
@@ -111,7 +128,7 @@ const assertBookSupportsTransactionType = (bookCopy, transactionType) => {
   }
 };
 
-const getTransactionById = async (transactionId) => {
+const getTransactionById = async (transactionId, memberId = null) => {
   const transaction = await BookTransaction.findByPk(transactionId, {
     include: transactionInclude,
   });
@@ -119,6 +136,8 @@ const getTransactionById = async (transactionId) => {
   if (!transaction) {
     throw createHttpError("Transaction not found", 404);
   }
+
+  assertTransactionParticipant(transaction, memberId);
 
   return sanitizeTransaction(transaction);
 };
@@ -184,6 +203,10 @@ const createTransaction = async (memberId, payload) => {
     }
 
     if (delivererId) {
+      if (delivererId === memberId) {
+        throw createHttpError("Deliverer cannot be the transaction receiver", 400);
+      }
+
       const deliverer = await Member.findByPk(delivererId, {
         transaction: dbTransaction,
         lock: Transaction.LOCK.UPDATE,
@@ -191,6 +214,21 @@ const createTransaction = async (memberId, payload) => {
 
       if (!deliverer || deliverer.account_status !== "active") {
         throw createHttpError("Deliverer account is not active", 403);
+      }
+
+      if (!deliverer.is_deliverer) {
+        throw createHttpError("Selected member is not a deliverer", 400);
+      }
+
+      const delivererProfile = await DelivererProfile.findOne({
+        where: {
+          member_id: delivererId,
+        },
+        transaction: dbTransaction,
+      });
+
+      if (delivererProfile && !delivererProfile.is_active) {
+        throw createHttpError("Deliverer is not active", 400);
       }
     }
 
@@ -222,6 +260,10 @@ const createTransaction = async (memberId, payload) => {
 
 const completeTransactionIfReady = async (transaction, dbTransaction) => {
   if (!transaction.giver_confirmed || !transaction.receiver_confirmed) {
+    return transaction;
+  }
+
+  if (transaction.deliverer_id && !transaction.delivery_confirmed) {
     return transaction;
   }
 
@@ -290,6 +332,13 @@ const completeTransactionIfReady = async (transaction, dbTransaction) => {
     if (deliverer) {
       await deliverer.increment("point_balance", {
         by: 2,
+        transaction: dbTransaction,
+      });
+      await DelivererProfile.increment("total_deliveries", {
+        by: 1,
+        where: {
+          member_id: deliverer.member_id,
+        },
         transaction: dbTransaction,
       });
       await PointHistory.create(

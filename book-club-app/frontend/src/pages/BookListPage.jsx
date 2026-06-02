@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 import { categoryOptions } from "../components/books/bookOptions.js";
 import { Alert } from "../components/common/index.js";
 import { getBookErrorMessage, getBooks, resolveCoverUrl } from "../services/bookService.js";
+import { getDeliverers } from "../services/delivererService.js";
 import { createTransaction, getCreateTransactionErrorMessage } from "../services/transactionService.js";
 import {
   displayAuthorName,
@@ -176,20 +177,33 @@ function getInitialReturnDate() {
   return date.toISOString().slice(0, 10);
 }
 
+function getDelivererId(deliverer = {}) {
+  return normalizeId(deliverer.member_id ?? deliverer.memberId ?? deliverer.id);
+}
+
+function getDelivererLabel(deliverer = {}) {
+  return deliverer.full_name || deliverer.fullName || deliverer.name || deliverer.email || "Người giao sách";
+}
+
 function BookListPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [books, setBooks] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [delivererError, setDelivererError] = useState("");
+  const [delivererLoading, setDelivererLoading] = useState(false);
+  const [deliverers, setDeliverers] = useState([]);
   const [error, setError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("error");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBook, setSelectedBook] = useState(null);
   const [transactionValues, setTransactionValues] = useState({
     transaction_type: "lending",
     expected_return_date: getInitialReturnDate(),
+    deliverer_id: "",
   });
 
   const fetchBooks = useCallback(async () => {
@@ -210,6 +224,22 @@ function BookListPage() {
     fetchBooks();
   }, [fetchBooks]);
 
+  const fetchDeliverers = useCallback(async () => {
+    setDelivererLoading(true);
+    setDelivererError("");
+
+    try {
+      const result = await getDeliverers();
+      setDeliverers(result);
+    } catch (loadError) {
+      console.error("Deliverer load error:", loadError.response?.data || loadError.message);
+      setDelivererError("Không tải được danh sách người giao, bạn vẫn có thể tạo giao dịch không cần người giao.");
+      setDeliverers([]);
+    } finally {
+      setDelivererLoading(false);
+    }
+  }, []);
+
   const filteredBooks = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
@@ -228,16 +258,23 @@ function BookListPage() {
 
   const allowedTransactionTypes = useMemo(() => getAllowedTransactionTypes(selectedBook), [selectedBook]);
   const hasValidTransactionType = allowedTransactionTypes.length > 0;
+  const availableDeliverers = useMemo(() => {
+    const currentUserId = getCurrentUserId(user);
+    return deliverers.filter((deliverer) => getDelivererId(deliverer) && getDelivererId(deliverer) !== currentUserId);
+  }, [deliverers, user]);
 
   function openTransactionModal(book) {
     const allowedTypes = getAllowedTransactionTypes(book);
 
     setSelectedBook(book);
     setMessage("");
+    setMessageType("error");
     setTransactionValues({
       transaction_type: allowedTypes[0]?.value || "",
       expected_return_date: getInitialReturnDate(),
+      deliverer_id: "",
     });
+    fetchDeliverers();
   }
 
   function closeTransactionModal() {
@@ -250,7 +287,8 @@ function BookListPage() {
 
   function handleContactOwner(book) {
     const ownerName = getOwnerName(book);
-    alert(`Bạn muốn liên hệ với chủ sách: ${ownerName}`);
+    setMessageType("success");
+    setMessage(`Chủ sách: ${ownerName}. Vui lòng liên hệ qua thông tin thành viên nếu có.`);
   }
 
   async function handleCreateTransaction(event) {
@@ -264,7 +302,14 @@ function BookListPage() {
     const isSupportedTransactionType = allowedTypes.some((type) => type.value === transactionValues.transaction_type);
 
     if (!isSupportedTransactionType) {
+      setMessageType("error");
       setMessage("Cuốn sách này chưa có hình thức giao dịch hợp lệ.");
+      return;
+    }
+
+    if (transactionValues.transaction_type === "lending" && !transactionValues.expected_return_date) {
+      setMessageType("error");
+      setMessage("Vui lòng chọn ngày dự kiến trả.");
       return;
     }
 
@@ -280,6 +325,10 @@ function BookListPage() {
       _currentUser: user,
     };
 
+    if (transactionValues.deliverer_id) {
+      payload.deliverer_id = transactionValues.deliverer_id;
+    }
+
     try {
       await createTransaction(payload);
       setBooks((currentBooks) =>
@@ -291,6 +340,7 @@ function BookListPage() {
       );
       navigate("/transactions", { state: { message: "Tạo giao dịch thành công." } });
     } catch (createError) {
+      setMessageType("error");
       setMessage(getCreateTransactionErrorMessage(createError));
     } finally {
       setIsCreating(false);
@@ -322,7 +372,7 @@ function BookListPage() {
         </div>
       </section>
 
-      {message ? <Alert type={message.includes("thành công") ? "success" : "error"}>{message}</Alert> : null}
+      {message ? <Alert type={messageType}>{message}</Alert> : null}
 
       <section className="booklist-filter-panel" aria-label="Tìm kiếm và lọc sách">
         <label className="booklist-search-field" htmlFor="booklist-search">
@@ -506,6 +556,34 @@ function BookListPage() {
               </label>
             ) : null}
 
+            <label className="booklist-modal-field" htmlFor="deliverer-id">
+              <span>Người giao sách (tuỳ chọn)</span>
+              <select
+                id="deliverer-id"
+                value={transactionValues.deliverer_id}
+                disabled={isCreating || delivererLoading}
+                onChange={(event) =>
+                  setTransactionValues((currentValues) => ({
+                    ...currentValues,
+                    deliverer_id: event.target.value,
+                  }))
+                }
+              >
+                <option value="">Không chọn người giao sách</option>
+                {delivererLoading ? <option disabled>Đang tải người giao sách...</option> : null}
+                {availableDeliverers.map((deliverer) => (
+                  <option key={getDelivererId(deliverer)} value={getDelivererId(deliverer)}>
+                    {getDelivererLabel(deliverer)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {delivererLoading ? <p className="booklist-point-notice">Đang tải người giao sách...</p> : null}
+            {!delivererLoading && delivererError ? <p className="booklist-point-notice">{delivererError}</p> : null}
+            {!delivererLoading && !delivererError && availableDeliverers.length === 0 ? (
+              <p className="booklist-point-notice">Hiện chưa có người giao sách sẵn sàng. Bạn vẫn có thể tạo giao dịch không cần người giao.</p>
+            ) : null}
+
             {hasValidTransactionType ? (
               <p className="booklist-point-notice">
                 {transactionValues.transaction_type === "lending"
@@ -519,7 +597,7 @@ function BookListPage() {
                 Hủy
               </button>
               <button type="submit" className="booklist-transaction-button" disabled={isCreating || !hasValidTransactionType}>
-                {isCreating ? "Đang gửi..." : "Gửi yêu cầu"}
+                {isCreating ? "Đang tạo giao dịch..." : "Gửi yêu cầu"}
               </button>
             </div>
           </form>

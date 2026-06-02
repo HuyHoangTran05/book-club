@@ -8,7 +8,7 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT) || 5432,
     dialect: process.env.DB_DIALECT || "postgres",
-    logging: process.env.NODE_ENV === "development" ? console.log : false,
+    logging: process.env.DB_LOGGING === "true" ? console.log : false,
     pool: {
       max: 5,
       min: 0,

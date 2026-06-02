@@ -3,6 +3,9 @@ import Member from "./member.model.js";
 import BookTitle from "./bookTitle.model.js";
 import BookCopy from "./bookCopy.model.js";
 import BookTransaction from "./bookTransaction.model.js";
+import Conversation from "./conversation.model.js";
+import DelivererProfile from "./delivererProfile.model.js";
+import Message from "./message.model.js";
 import PointHistory from "./pointHistory.model.js";
 
 BookTitle.hasMany(BookCopy, {
@@ -77,11 +80,59 @@ PointHistory.belongsTo(BookTransaction, {
   as: "transaction",
 });
 
+Member.hasOne(DelivererProfile, {
+  foreignKey: "member_id",
+  as: "delivererProfile",
+});
+DelivererProfile.belongsTo(Member, {
+  foreignKey: "member_id",
+  as: "member",
+});
+
+Member.hasMany(Conversation, {
+  foreignKey: "member1_id",
+  as: "member1Conversations",
+});
+Conversation.belongsTo(Member, {
+  foreignKey: "member1_id",
+  as: "member1",
+});
+
+Member.hasMany(Conversation, {
+  foreignKey: "member2_id",
+  as: "member2Conversations",
+});
+Conversation.belongsTo(Member, {
+  foreignKey: "member2_id",
+  as: "member2",
+});
+
+Conversation.hasMany(Message, {
+  foreignKey: "conversation_id",
+  as: "messages",
+});
+Message.belongsTo(Conversation, {
+  foreignKey: "conversation_id",
+  as: "conversation",
+});
+
+Member.hasMany(Message, {
+  foreignKey: "sender_id",
+  as: "sentMessages",
+});
+Message.belongsTo(Member, {
+  foreignKey: "sender_id",
+  as: "sender",
+});
+
 export {
   sequelize,
   Member,
   BookTitle,
   BookCopy,
   BookTransaction,
+  Conversation,
+  DelivererProfile,
+  Message,
   PointHistory,
 };
