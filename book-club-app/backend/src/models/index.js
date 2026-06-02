@@ -3,6 +3,7 @@ import Member from "./member.model.js";
 import BookTitle from "./bookTitle.model.js";
 import BookCopy from "./bookCopy.model.js";
 import BookTransaction from "./bookTransaction.model.js";
+import DelivererProfile from "./delivererProfile.model.js";
 import PointHistory from "./pointHistory.model.js";
 
 BookTitle.hasMany(BookCopy, {
@@ -77,11 +78,21 @@ PointHistory.belongsTo(BookTransaction, {
   as: "transaction",
 });
 
+Member.hasOne(DelivererProfile, {
+  foreignKey: "member_id",
+  as: "delivererProfile",
+});
+DelivererProfile.belongsTo(Member, {
+  foreignKey: "member_id",
+  as: "member",
+});
+
 export {
   sequelize,
   Member,
   BookTitle,
   BookCopy,
   BookTransaction,
+  DelivererProfile,
   PointHistory,
 };

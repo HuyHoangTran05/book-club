@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 import { categoryOptions } from "../components/books/bookOptions.js";
 import { Alert } from "../components/common/index.js";
 import { getBookErrorMessage, getBooks, resolveCoverUrl } from "../services/bookService.js";
+import { getDeliverers } from "../services/delivererService.js";
 import { createTransaction, getCreateTransactionErrorMessage } from "../services/transactionService.js";
 import {
   displayAuthorName,
@@ -176,11 +177,22 @@ function getInitialReturnDate() {
   return date.toISOString().slice(0, 10);
 }
 
+function getDelivererId(deliverer = {}) {
+  return normalizeId(deliverer.member_id ?? deliverer.memberId ?? deliverer.id);
+}
+
+function getDelivererLabel(deliverer = {}) {
+  return deliverer.full_name || deliverer.fullName || deliverer.name || deliverer.email || "Người giao sách";
+}
+
 function BookListPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [books, setBooks] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [delivererError, setDelivererError] = useState("");
+  const [delivererLoading, setDelivererLoading] = useState(false);
+  const [deliverers, setDeliverers] = useState([]);
   const [error, setError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -212,6 +224,22 @@ function BookListPage() {
     fetchBooks();
   }, [fetchBooks]);
 
+  const fetchDeliverers = useCallback(async () => {
+    setDelivererLoading(true);
+    setDelivererError("");
+
+    try {
+      const result = await getDeliverers();
+      setDeliverers(result);
+    } catch (loadError) {
+      console.error("Deliverer load error:", loadError.response?.data || loadError.message);
+      setDelivererError("Không tải được danh sách người giao, bạn vẫn có thể tạo giao dịch không cần người giao.");
+      setDeliverers([]);
+    } finally {
+      setDelivererLoading(false);
+    }
+  }, []);
+
   const filteredBooks = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
@@ -230,6 +258,10 @@ function BookListPage() {
 
   const allowedTransactionTypes = useMemo(() => getAllowedTransactionTypes(selectedBook), [selectedBook]);
   const hasValidTransactionType = allowedTransactionTypes.length > 0;
+  const availableDeliverers = useMemo(() => {
+    const currentUserId = getCurrentUserId(user);
+    return deliverers.filter((deliverer) => getDelivererId(deliverer) && getDelivererId(deliverer) !== currentUserId);
+  }, [deliverers, user]);
 
   function openTransactionModal(book) {
     const allowedTypes = getAllowedTransactionTypes(book);
@@ -242,6 +274,7 @@ function BookListPage() {
       expected_return_date: getInitialReturnDate(),
       deliverer_id: "",
     });
+    fetchDeliverers();
   }
 
   function closeTransactionModal() {
@@ -524,11 +557,11 @@ function BookListPage() {
             ) : null}
 
             <label className="booklist-modal-field" htmlFor="deliverer-id">
-              <span>Người giao sách (tùy chọn)</span>
+              <span>Người giao sách (tuỳ chọn)</span>
               <select
                 id="deliverer-id"
                 value={transactionValues.deliverer_id}
-                disabled
+                disabled={isCreating || delivererLoading}
                 onChange={(event) =>
                   setTransactionValues((currentValues) => ({
                     ...currentValues,
@@ -537,11 +570,19 @@ function BookListPage() {
                 }
               >
                 <option value="">Không chọn người giao sách</option>
+                {delivererLoading ? <option disabled>Đang tải người giao sách...</option> : null}
+                {availableDeliverers.map((deliverer) => (
+                  <option key={getDelivererId(deliverer)} value={getDelivererId(deliverer)}>
+                    {getDelivererLabel(deliverer)}
+                  </option>
+                ))}
               </select>
             </label>
-            <p className="booklist-point-notice">
-              Chưa có API danh sách người giao sách, nên giao dịch hiện sẽ tạo không kèm người giao.
-            </p>
+            {delivererLoading ? <p className="booklist-point-notice">Đang tải người giao sách...</p> : null}
+            {!delivererLoading && delivererError ? <p className="booklist-point-notice">{delivererError}</p> : null}
+            {!delivererLoading && !delivererError && availableDeliverers.length === 0 ? (
+              <p className="booklist-point-notice">Hiện chưa có người giao sách sẵn sàng. Bạn vẫn có thể tạo giao dịch không cần người giao.</p>
+            ) : null}
 
             {hasValidTransactionType ? (
               <p className="booklist-point-notice">
