@@ -16,6 +16,11 @@ export const updateMyProfile = asyncHandler(async (req, res) => {
   successResponse(res, member, "Member profile updated");
 });
 
+export const changeMyPassword = asyncHandler(async (req, res) => {
+  await memberService.changePassword(req.user.member_id, req.body);
+  successResponse(res, null, "Đổi mật khẩu thành công");
+});
+
 export const getMyPointHistory = asyncHandler(async (req, res) => {
   const history = await memberService.getPointHistory(req.user.member_id, req.query);
   successResponse(res, history, "Member point history");

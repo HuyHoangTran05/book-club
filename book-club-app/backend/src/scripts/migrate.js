@@ -4,6 +4,7 @@ import createCoreTables from "../migrations/202605300001-create-core-tables.js";
 import addUpdatedAtToTransactionPointHistory from "../migrations/202605310001-add-updated-at-to-transaction-point-history.js";
 import addTransactionDay5Indexes from "../migrations/202606010001-add-transaction-day5-indexes.js";
 import createDelivererProfiles from "../migrations/202606010002-create-deliverer-profiles.js";
+import createConversationsMessages from "../migrations/202606020001-create-conversations-messages.js";
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ const migrations = [
   addUpdatedAtToTransactionPointHistory,
   addTransactionDay5Indexes,
   createDelivererProfiles,
+  createConversationsMessages,
 ];
 const metaTable = "sequelize_migrations";
 
