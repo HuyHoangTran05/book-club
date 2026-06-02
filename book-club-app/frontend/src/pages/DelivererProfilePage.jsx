@@ -6,6 +6,7 @@ import {
   registerDeliverer,
   updateMyDelivererProfile,
 } from "../services/delivererService.js";
+import { getFriendlyApiError } from "../utils/apiError.js";
 import "./DelivererProfilePage.css";
 
 const initialValues = {
@@ -62,7 +63,7 @@ function DelivererProfilePage() {
         console.error("Deliverer profile load error:", loadError.response?.data || loadError.message);
 
         if (isMounted) {
-          setMessage("Không thể tải hồ sơ người giao sách. Bạn vẫn có thể thử đăng ký lại.");
+          setMessage(getFriendlyApiError(loadError, "deliverers"));
         }
       } finally {
         if (isMounted) {
@@ -134,7 +135,7 @@ function DelivererProfilePage() {
       }
     } catch (submitError) {
       console.error("Deliverer profile submit error:", submitError.response?.data || submitError.message);
-      setMessage(submitError.response?.data?.message || "Không thể lưu hồ sơ người giao sách. Vui lòng thử lại.");
+      setMessage(getFriendlyApiError(submitError, "deliverers"));
     } finally {
       setIsSubmitting(false);
     }

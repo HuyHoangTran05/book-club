@@ -1,4 +1,5 @@
 import api, { apiPath } from "./api.js";
+import { getFriendlyApiError } from "../utils/apiError.js";
 
 function unwrapResponse(response) {
   const body = response?.data ?? response;
@@ -96,9 +97,5 @@ export async function sendMessage(conversationId, payload = {}) {
 }
 
 export function getConversationErrorMessage(error, fallback = "Không thể tải tin nhắn. Vui lòng thử lại.") {
-  if (!error.response) {
-    return "Không thể kết nối máy chủ. Vui lòng kiểm tra backend.";
-  }
-
-  return error.response.data?.message || error.response.data?.error || fallback;
+  return getFriendlyApiError(error, "conversations") || fallback;
 }

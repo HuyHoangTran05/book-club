@@ -22,6 +22,7 @@ import {
   isHiddenBookStatus,
   normalizeDisplayText,
 } from "../utils/bookLabels.js";
+import { getFriendlyApiError } from "../utils/apiError.js";
 import "./BookListPage.css";
 
 function normalizeText(value, fallback = "Chưa rõ") {
@@ -276,7 +277,7 @@ function BookListPage() {
       setDeliverers(result);
     } catch (loadError) {
       console.error("Deliverer load error:", loadError.response?.data || loadError.message);
-      setDelivererError("Không tải được danh sách người giao, bạn vẫn có thể tạo giao dịch không cần người giao.");
+      setDelivererError(getFriendlyApiError(loadError, "deliverers"));
       setDeliverers([]);
     } finally {
       setDelivererLoading(false);

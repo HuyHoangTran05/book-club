@@ -1,4 +1,5 @@
 import api, { apiPath } from "./api.js";
+import { getFriendlyApiError } from "../utils/apiError.js";
 
 function unwrapResponse(response) {
   const body = response?.data ?? response;
@@ -61,15 +62,11 @@ export async function getMyGivenRatings() {
 }
 
 export function getRatingErrorMessage(error, fallback = "Không thể gửi đánh giá. Vui lòng thử lại.") {
-  if (!error.response) {
-    return "Không thể kết nối máy chủ. Vui lòng kiểm tra backend.";
-  }
+  const serverMessage = String(error?.response?.data?.message || error?.response?.data?.error || "").toLowerCase();
 
-  const serverMessage = String(error.response.data?.message || error.response.data?.error || "").toLowerCase();
-
-  if (error.response.status === 409 || serverMessage.includes("duplicate") || serverMessage.includes("already")) {
+  if (error?.response?.status === 409 || serverMessage.includes("duplicate") || serverMessage.includes("already")) {
     return "Bạn đã đánh giá người này trong giao dịch này.";
   }
 
-  return error.response.data?.message || error.response.data?.error || fallback;
+  return getFriendlyApiError(error, "ratings") || fallback;
 }
