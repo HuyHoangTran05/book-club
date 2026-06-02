@@ -285,10 +285,29 @@ function BookListPage() {
   }, []);
 
   const filteredBooks = useMemo(() => books.filter((book) => !isHiddenBookStatus(book.status)), [books]);
+  const displayedCount = filteredBooks.length;
+  const totalBooks =
+    pagination?.total ??
+    pagination?.totalItems ??
+    pagination?.total_books ??
+    pagination?.totalBooks ??
+    pagination?.count ??
+    pagination?.total_count ??
+    displayedCount;
   const totalPages = Number(
     pagination?.totalPages ?? pagination?.total_pages ?? pagination?.pages ?? pagination?.lastPage ?? 1
   );
   const safeTotalPages = Number.isFinite(totalPages) && totalPages > 0 ? totalPages : 1;
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    console.log("Books displayed count:", displayedCount);
+    console.log("Books pagination:", pagination);
+    console.log("Books total count:", totalBooks);
+  }, [displayedCount, pagination, totalBooks]);
 
   const allowedTransactionTypes = useMemo(() => getAllowedTransactionTypes(selectedBook), [selectedBook]);
   const hasValidTransactionType = allowedTransactionTypes.length > 0;
@@ -440,12 +459,12 @@ function BookListPage() {
         <div className="booklist-summary">
           <article className="booklist-summary-card">
             <span className="booklist-summary-icon">□</span>
-            <strong>{filteredBooks.length} sách</strong>
+            <strong>{displayedCount} sách</strong>
             <p>Đang hiển thị</p>
           </article>
           <article className="booklist-summary-card">
             <span className="booklist-summary-icon">◇</span>
-            <strong>{books.length} sách mới</strong>
+            <strong>{totalBooks} sách</strong>
             <p>Trong thư viện</p>
           </article>
         </div>

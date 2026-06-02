@@ -1,3 +1,4 @@
+// This file must be saved as UTF-8.
 import bcrypt from "bcrypt";
 
 const ids = {
