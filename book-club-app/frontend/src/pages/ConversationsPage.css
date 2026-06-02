@@ -1,0 +1,236 @@
+.conversations-page {
+  display: grid;
+  gap: 24px;
+  max-width: 1120px;
+  color: #082d24;
+}
+
+.conversations-header {
+  display: grid;
+  gap: 10px;
+}
+
+.conversations-detail-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.conversations-header p {
+  margin: 0;
+  color: #c9ad2e;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.conversations-header h1 {
+  margin: 0;
+  color: #033b2a;
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Roboto", "Arial", sans-serif;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.conversations-header span {
+  color: #64736d;
+  line-height: 1.7;
+}
+
+.conversation-list {
+  display: grid;
+  gap: 14px;
+}
+
+.conversation-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid #d9e2d8;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 14px 35px rgba(8, 45, 36, 0.1);
+  color: inherit;
+  padding: 18px;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.conversation-item:hover {
+  border-color: #b9dcc4;
+  transform: translateY(-1px);
+}
+
+.conversation-avatar {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 999px;
+  background: #064834;
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.conversation-item h2 {
+  margin: 0;
+  color: #082d24;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.conversation-item p,
+.conversation-item span,
+.conversation-item time {
+  color: #64736d;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.conversation-item p {
+  margin: 4px 0;
+}
+
+.conversation-item span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversation-item time {
+  white-space: nowrap;
+}
+
+.conversations-state,
+.conversations-state-inline {
+  color: #64736d;
+  font-weight: 750;
+  text-align: center;
+}
+
+.conversations-state h2,
+.conversations-state-inline h2 {
+  margin: 0;
+  color: #033b2a;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.conversations-state p,
+.conversations-state-inline p {
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+
+.conversation-back-link {
+  border: 1px solid #d9e2d8;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #064834;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.conversation-thread {
+  display: grid;
+  gap: 20px;
+}
+
+.message-list {
+  display: grid;
+  gap: 12px;
+  max-height: 58vh;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.message-bubble {
+  justify-self: start;
+  max-width: min(78%, 620px);
+  border-radius: 20px 20px 20px 6px;
+  background: #fbfaf3;
+  color: #082d24;
+  padding: 12px 14px;
+}
+
+.message-bubble-mine {
+  justify-self: end;
+  border-radius: 20px 20px 6px 20px;
+  background: #064834;
+  color: #ffffff;
+}
+
+.message-bubble p {
+  margin: 0;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.message-bubble span {
+  display: block;
+  margin-top: 6px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  opacity: 0.8;
+}
+
+.message-form {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid #d9e2d8;
+  padding-top: 18px;
+}
+
+.message-form label {
+  color: #082d24;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.message-form div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.message-form textarea {
+  width: 100%;
+  border: 1px solid #c9d8ce;
+  border-radius: 16px;
+  background: #fbfaf3;
+  color: #082d24;
+  font: inherit;
+  outline: none;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.message-form textarea:focus {
+  border-color: #064834;
+  box-shadow: 0 0 0 3px rgba(6, 72, 52, 0.12);
+}
+
+@media (max-width: 720px) {
+  .conversations-detail-header,
+  .conversation-item,
+  .message-form div {
+    grid-template-columns: 1fr;
+  }
+
+  .conversation-item time {
+    white-space: normal;
+  }
+
+  .message-bubble {
+    max-width: 100%;
+  }
+
+  .message-form button {
+    width: 100%;
+  }
+}

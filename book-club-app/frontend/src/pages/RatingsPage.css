@@ -1,0 +1,107 @@
+.ratings-page {
+  display: grid;
+  gap: 24px;
+  max-width: 1120px;
+  color: #082d24;
+}
+
+.ratings-header p {
+  margin: 0 0 10px;
+  color: #c9ad2e;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.ratings-header h1 {
+  margin: 0;
+  color: #033b2a;
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Roboto", "Arial", sans-serif;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.ratings-header span {
+  display: block;
+  max-width: 720px;
+  margin-top: 12px;
+  color: #64736d;
+  line-height: 1.7;
+}
+
+.ratings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ratings-tabs button {
+  border: 1px solid #d9e2d8;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #064834;
+  cursor: pointer;
+  padding: 10px 14px;
+  font-weight: 900;
+}
+
+.ratings-tabs button.active {
+  border-color: #064834;
+  background: #064834;
+  color: #ffffff;
+}
+
+.ratings-list {
+  display: grid;
+  gap: 16px;
+}
+
+.rating-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.rating-card h2 {
+  margin: 12px 0 0;
+  color: #082d24;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.rating-card p {
+  margin: 8px 0 0;
+  color: #64736d;
+  line-height: 1.6;
+}
+
+.rating-card > span {
+  color: #64736d;
+  font-size: 14px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.ratings-state {
+  color: #64736d;
+  font-weight: 750;
+  text-align: center;
+}
+
+.ratings-state h2 {
+  margin: 0;
+  color: #033b2a;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.ratings-state p {
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .rating-card {
+    flex-direction: column;
+  }
+}

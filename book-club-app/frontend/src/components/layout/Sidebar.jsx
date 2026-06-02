@@ -6,8 +6,10 @@ const navigationItems = [
   { label: "Thêm sách", to: "/books/add" },
   { label: "Sách của tôi", to: "/my-books" },
   { label: "Giao dịch", to: "/transactions" },
+  { label: "Tin nhắn", to: "/conversations" },
   { label: "Đăng ký giao sách", to: "/deliverer-profile" },
   { label: "Lịch sử điểm", to: "/points/history" },
+  { label: "Đánh giá", to: "/ratings" },
   { label: "Hồ sơ cá nhân", to: "/profile" },
 ];
 
@@ -22,6 +24,10 @@ function isActiveRoute(itemPath, pathname) {
 
   if (itemPath === "/points/history") {
     return pathname === "/points" || pathname === "/points/history";
+  }
+
+  if (itemPath === "/conversations") {
+    return pathname === "/conversations" || pathname.startsWith("/conversations/");
   }
 
   if (itemPath === "/profile") {

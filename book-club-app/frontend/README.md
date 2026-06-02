@@ -529,6 +529,9 @@ Kiểm tra các route:
 /my-books
 /books/new
 /transactions
+/conversations
+/conversations/:conversationId
+/ratings
 /points
 /points/history
 /profile
@@ -651,6 +654,9 @@ Invoke-RestMethod `
 - [x] Vietnamese display normalization works.
 - [x] Sidebar active route is correct.
 - [x] Profile page is protected and available at `/profile`.
+- [x] Conversations are connected to real API routes.
+- [x] Ratings are connected to real API routes.
+- [x] `/books` uses API pagination and author/year filters.
 - [x] End-to-end demo flow passes.
 - [x] `npm run build` passes.
 
