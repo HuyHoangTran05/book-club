@@ -7,6 +7,7 @@ import Conversation from "./conversation.model.js";
 import DelivererProfile from "./delivererProfile.model.js";
 import Message from "./message.model.js";
 import PointHistory from "./pointHistory.model.js";
+import Rating from "./rating.model.js";
 
 BookTitle.hasMany(BookCopy, {
   foreignKey: "book_id",
@@ -125,6 +126,33 @@ Message.belongsTo(Member, {
   as: "sender",
 });
 
+BookTransaction.hasMany(Rating, {
+  foreignKey: "transaction_id",
+  as: "ratings",
+});
+Rating.belongsTo(BookTransaction, {
+  foreignKey: "transaction_id",
+  as: "transaction",
+});
+
+Member.hasMany(Rating, {
+  foreignKey: "rater_id",
+  as: "givenRatings",
+});
+Rating.belongsTo(Member, {
+  foreignKey: "rater_id",
+  as: "rater",
+});
+
+Member.hasMany(Rating, {
+  foreignKey: "rated_member_id",
+  as: "receivedRatings",
+});
+Rating.belongsTo(Member, {
+  foreignKey: "rated_member_id",
+  as: "ratedMember",
+});
+
 export {
   sequelize,
   Member,
@@ -135,4 +163,5 @@ export {
   DelivererProfile,
   Message,
   PointHistory,
+  Rating,
 };
