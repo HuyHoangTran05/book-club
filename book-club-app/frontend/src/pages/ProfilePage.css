@@ -1,0 +1,274 @@
+.profile-page {
+  display: grid;
+  gap: 28px;
+  max-width: 1120px;
+}
+
+.profile-hero {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-hero p {
+  margin: 0;
+  color: #c9ad2e;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.profile-hero h1 {
+  margin: 0;
+  color: #033b2a;
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Roboto", "Arial", sans-serif;
+  font-size: clamp(38px, 5vw, 56px);
+  font-weight: 900;
+  letter-spacing: normal;
+  line-height: 1.05;
+}
+
+.profile-hero span {
+  color: #64736d;
+  font-size: 16px;
+  line-height: 1.7;
+  max-width: 720px;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.profile-left-column,
+.profile-right-column {
+  display: grid;
+  gap: 24px;
+}
+
+.profile-summary-card {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+
+.profile-avatar {
+  display: grid;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  border-radius: 999px;
+  background: #064834;
+  box-shadow: 0 14px 28px rgba(6, 72, 52, 0.18);
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.profile-summary-card h2 {
+  margin: 0;
+  color: #082d24;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.profile-summary-card p {
+  margin: 6px 0 0;
+  color: #64736d;
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.profile-point-badge {
+  font-size: 14px;
+  padding: 8px 12px;
+}
+
+.profile-section-header {
+  margin-bottom: 22px;
+}
+
+.profile-section-header h2 {
+  margin: 0;
+  color: #082d24;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.profile-section-header p {
+  margin: 8px 0 0;
+  color: #64736d;
+  line-height: 1.65;
+}
+
+.profile-account-card dl {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.profile-account-card dl div {
+  display: grid;
+  gap: 4px;
+  border-top: 1px solid #e7eee6;
+  padding-top: 14px;
+}
+
+.profile-account-card dt {
+  color: #64736d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.profile-account-card dd {
+  margin: 0;
+  color: #082d24;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.profile-form {
+  display: grid;
+  gap: 18px;
+}
+
+.profile-field {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-field span {
+  color: #082d24;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.profile-field input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #c9d8ce;
+  border-radius: 16px;
+  background: #fbfaf3;
+  color: #082d24;
+  font-family: "Be Vietnam Pro", "Inter", "Segoe UI", "Roboto", "Arial", sans-serif;
+  font-size: 15px;
+  font-weight: 650;
+  outline: none;
+  padding: 12px 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.profile-field input:focus {
+  border-color: #064834;
+  box-shadow: 0 0 0 3px rgba(6, 72, 52, 0.12);
+}
+
+.profile-field input:read-only {
+  background: #f1eee3;
+  color: #64736d;
+}
+
+.profile-field input:disabled {
+  cursor: not-allowed;
+  opacity: 0.78;
+}
+
+.profile-field small {
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.profile-field em {
+  color: #64736d;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.profile-password-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.profile-password-control button {
+  min-width: 70px;
+  min-height: 48px;
+  border: 1px solid #d9e2d8;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #064834;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 900;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.profile-password-control button:hover:not(:disabled) {
+  background: #e7f1e8;
+  color: #033b2a;
+}
+
+.profile-password-control button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.profile-state {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  color: #64736d;
+  font-weight: 800;
+  text-align: center;
+}
+
+.profile-state h2 {
+  margin: 0;
+  color: #033b2a;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.profile-state p {
+  margin: 0;
+  color: #64736d;
+  line-height: 1.6;
+}
+
+@media (max-width: 920px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-page {
+    gap: 22px;
+  }
+
+  .profile-password-control {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-password-control button,
+  .profile-actions button {
+    width: 100%;
+  }
+
+  .profile-actions {
+    justify-content: stretch;
+  }
+}

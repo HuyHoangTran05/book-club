@@ -531,6 +531,7 @@ Kiểm tra các route:
 /transactions
 /points
 /points/history
+/profile
 ```
 
 ### 5. Book CRUD flow
@@ -649,6 +650,7 @@ Invoke-RestMethod `
 - [x] Create transaction modal restricts invalid transaction type.
 - [x] Vietnamese display normalization works.
 - [x] Sidebar active route is correct.
+- [x] Profile page is protected and available at `/profile`.
 - [x] End-to-end demo flow passes.
 - [x] `npm run build` passes.
 

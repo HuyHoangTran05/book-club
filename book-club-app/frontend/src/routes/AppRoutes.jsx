@@ -8,6 +8,7 @@ import HomePage from "../pages/HomePage.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
 import MyBooksPage from "../pages/MyBooksPage.jsx";
 import PointHistoryPage from "../pages/PointHistoryPage.jsx";
+import ProfilePage from "../pages/ProfilePage.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
 import TransactionsPage from "../pages/TransactionsPage.jsx";
@@ -46,6 +47,7 @@ function AppRoutes() {
         <Route path="/my-books" element={<MyBooksPage />} />
         <Route path="/transactions" element={<TransactionsPage />} />
         <Route path="/deliverer-profile" element={<DelivererProfilePage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/points" element={<Navigate to="/points/history" replace />} />
         <Route path="/points/history" element={<PointHistoryPage />} />
       </Route>
