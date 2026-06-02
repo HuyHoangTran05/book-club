@@ -279,7 +279,17 @@ const getMyBooks = async (memberId) => {
   return books.map(sanitizeBookCopy);
 };
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+const assertValidUuid = (id) => {
+  if (!id || !UUID_REGEX.test(String(id))) {
+    throw createHttpError("ID sách không hợp lệ", 400);
+  }
+};
+
 const getBookById = async (copyId) => {
+  assertValidUuid(copyId);
+
   const bookCopy = await BookCopy.findByPk(copyId, {
     include: bookInclude,
   });
@@ -292,6 +302,8 @@ const getBookById = async (copyId) => {
 };
 
 const getBookCopyForOwnerAction = async (memberId, copyId) => {
+  assertValidUuid(copyId);
+
   const bookCopy = await BookCopy.findByPk(copyId, {
     include: bookInclude,
   });
