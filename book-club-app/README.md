@@ -141,7 +141,41 @@ For a production build:
 npm run build
 ```
 
-## Test API
+## Backend Environment
+
+Create `backend/.env` from `backend/.env.example`:
+
+```env
+NODE_ENV=development
+PORT=5000
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=book_club_db
+DB_USER=book_club_user
+DB_PASSWORD=book_club_password
+DB_DIALECT=postgres
+DB_LOGGING=false
+
+JWT_SECRET=change_this_secret
+JWT_EXPIRES_IN=7d
+```
+
+`DB_LOGGING=true` enables Sequelize SQL logs for debugging. Keep it `false`
+for a cleaner demo terminal.
+
+## Demo Accounts
+
+After running `npm run seed`, the demo password for every seeded account is
+`Password123`.
+
+| Role | Name | Email | Notes |
+|---|---|---|---|
+| User A / owner | Nguyễn Văn An | `an@example.com` | Owns available demo books |
+| User B / receiver | Trần Thị Bình | `binh@example.com` | Can request books and is marked as a deliverer |
+| User C / member | Lê Minh Chi | `chi@example.com` | Can register as a deliverer via API/UI |
+
+## Backend API Quick Reference
 
 ```text
 GET http://localhost:5000/api/health
@@ -166,73 +200,17 @@ GET http://localhost:5000/api/transactions/:transactionId
 PUT http://localhost:5000/api/transactions/:transactionId/confirm
 PUT http://localhost:5000/api/transactions/:transactionId/cancel
 GET http://localhost:5000/api/points/ping
+GET http://localhost:5000/api/points/history
+GET http://localhost:5000/api/deliverers
+POST http://localhost:5000/api/deliverers/register
+GET http://localhost:5000/api/deliverers/me
+PUT http://localhost:5000/api/deliverers/me
 ```
 
-Example login payload:
+All protected endpoints require:
 
-```json
-{
-  "email": "an@example.com",
-  "password": "Password123"
-}
-```
-
-Example create transaction payload:
-
-```json
-{
-  "copy_id": "book-copy-uuid",
-  "transaction_type": "permanent"
-}
-```
-
-Day 5 transaction rules:
-
-- Creating a transaction reserves an available book copy.
-- A member cannot request their own book.
-- Receiver must have enough points: `10` for `permanent`, `5` for `lending`.
-- When giver and receiver both confirm, points are updated atomically and point
-  history rows are written.
-- Completed `permanent` transactions mark the copy as `exchanged`; completed
-  `lending` transactions mark it as `borrowed`.
-- Cancelling a pending transaction restores a reserved book copy to `available`.
-
-Example create book payload:
-
-```json
-{
-  "title": "Nha Gia Kim",
-  "author": "Paulo Coelho",
-  "category": "Tieu thuyet",
-  "publication_year": 2020,
-  "condition": "good",
-  "exchange_type": "both",
-  "note": "San sang trao doi hoac cho muon"
-}
-```
-
-Expected health response:
-
-```json
-{
-  "success": true,
-  "message": "Book Club API is running",
-  "data": {
-    "status": "OK",
-    "timestamp": "2026-05-28T00:00:00.000Z",
-    "uptime": 12.345
-  }
-}
-```
-
-Expected module ping response:
-
-```json
-{
-  "success": true,
-  "message": "auth module is ready",
-  "data": null
-}
+```text
+Authorization: Bearer <token>
 ```
 
 ## Auth API
@@ -240,7 +218,8 @@ Expected module ping response:
 ### Register
 
 ```text
-POST http://localhost:5000/api/auth/register
+POST /api/auth/register
+Token: no
 Content-Type: application/json
 ```
 
@@ -250,12 +229,12 @@ Request:
 {
   "full_name": "Nguyen Van A",
   "email": "a@example.com",
-  "password": "12345678",
+  "password": "Password123",
   "phone": "0987654321"
 }
 ```
 
-Expected response:
+Response:
 
 ```json
 {
@@ -266,11 +245,10 @@ Expected response:
       "member_id": "uuid",
       "full_name": "Nguyen Van A",
       "email": "a@example.com",
-      "phone": "0987654321",
       "point_balance": 20,
       "role": "member"
     },
-    "token": "jwt-access-token"
+    "token": "jwt-token"
   }
 }
 ```
@@ -278,7 +256,8 @@ Expected response:
 ### Login
 
 ```text
-POST http://localhost:5000/api/auth/login
+POST /api/auth/login
+Token: no
 Content-Type: application/json
 ```
 
@@ -286,51 +265,314 @@ Request:
 
 ```json
 {
-  "email": "a@example.com",
-  "password": "12345678"
+  "email": "an@example.com",
+  "password": "Password123"
 }
 ```
 
-Expected response:
-
-```json
-{
-  "success": true,
-  "message": "Đăng nhập thành công",
-  "data": {
-    "user": {
-      "member_id": "uuid",
-      "full_name": "Nguyen Van A",
-      "email": "a@example.com",
-      "point_balance": 20,
-      "role": "member"
-    },
-    "token": "jwt-access-token"
-  }
-}
-```
-
-### Get Me
+### Get Current User
 
 ```text
-GET http://localhost:5000/api/auth/me
-Authorization: Bearer <token>
+GET /api/auth/me
+Token: required
 ```
 
-Expected response:
+Response does not include `password_hash`.
+
+## Books API
+
+### List Available Books
+
+```text
+GET /api/books
+Token: no
+Query: keyword, q, category
+```
+
+### List My Books
+
+```text
+GET /api/books/my
+Token: required
+```
+
+### Get Book Detail
+
+```text
+GET /api/books/:copyId
+Token: no
+```
+
+### Create Book
+
+```text
+POST /api/books
+Token: required
+Content-Type: application/json or multipart/form-data
+```
+
+JSON request:
+
+```json
+{
+  "title": "Nha Gia Kim",
+  "author": "Paulo Coelho",
+  "category": "Tieu thuyet",
+  "publication_year": 2020,
+  "condition": "good",
+  "exchange_type": "both",
+  "note": "San sang trao doi hoac cho muon",
+  "cover_url": "https://example.com/cover.jpg"
+}
+```
+
+Multipart upload uses field name `cover`:
+
+```text
+title=Nha Gia Kim
+author=Paulo Coelho
+condition=good
+exchange_type=both
+cover=<jpg/png/webp file>
+```
+
+Uploaded covers are saved under:
+
+```text
+backend/uploads/book-covers
+```
+
+The stored `cover_url` looks like:
+
+```text
+/uploads/book-covers/cover-1780000000000-file-name.jpg
+```
+
+The image is served publicly at:
+
+```text
+http://localhost:5000/uploads/book-covers/<filename>
+```
+
+If no file is uploaded, `cover_url` from the body still works.
+
+### Update Book
+
+```text
+PUT /api/books/:copyId
+Token: required, owner only
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "condition": "good",
+  "exchange_type": "lending",
+  "note": "Muon toi da 14 ngay",
+  "status": "available"
+}
+```
+
+### Delete Book
+
+```text
+DELETE /api/books/:copyId
+Token: required, owner only
+```
+
+Delete is a soft delete: the book copy status becomes `unavailable`.
+Book responses include `bookTitle` and `owner`, and owner data does not include
+`password_hash`.
+
+## Transactions API
+
+### Create Transaction
+
+```text
+POST /api/transactions
+Token: required
+Content-Type: application/json
+```
+
+Without deliverer:
+
+```json
+{
+  "copy_id": "book-copy-uuid",
+  "transaction_type": "permanent"
+}
+```
+
+With lending return date and deliverer:
+
+```json
+{
+  "copy_id": "book-copy-uuid",
+  "transaction_type": "lending",
+  "expected_return_date": "2026-06-30",
+  "deliverer_id": "member-uuid"
+}
+```
+
+Rules:
+
+- A member cannot request their own book.
+- The book copy must be `available`.
+- Receiver must have enough points: `10` for `permanent`, `5` for `lending`.
+- Creating a transaction reserves the book copy.
+- Without `deliverer_id`, giver and receiver confirmation completes it.
+- With `deliverer_id`, giver, receiver, and deliverer confirmation are required.
+- Completed transactions cannot be confirmed again, so points are not changed twice.
+
+### My Transactions
+
+```text
+GET /api/transactions/my
+Token: required
+```
+
+Returns transactions where current user is giver, receiver, or deliverer.
+
+### Transaction Detail
+
+```text
+GET /api/transactions/:transactionId
+Token: required, participant only
+```
+
+### Confirm Transaction
+
+```text
+PUT /api/transactions/:transactionId/confirm
+Token: required, participant only
+```
+
+The backend infers whether the current user confirms as giver, receiver, or
+deliverer.
+
+### Cancel Transaction
+
+```text
+PUT /api/transactions/:transactionId/cancel
+Token: required, participant only
+```
+
+Only pending transactions can be cancelled. Cancelling restores a reserved book
+copy to `available` and does not change points.
+
+## Points API
+
+### Point History
+
+```text
+GET /api/points/history
+Token: required
+```
+
+Response:
 
 ```json
 {
   "success": true,
-  "message": "Lấy thông tin người dùng thành công",
-  "data": {
-    "user": {
+  "message": "Lấy lịch sử điểm thành công",
+  "data": [
+    {
+      "point_history_id": "uuid",
       "member_id": "uuid",
-      "full_name": "Nguyen Van A",
-      "email": "a@example.com",
-      "point_balance": 20,
-      "role": "member"
+      "transaction_id": "uuid",
+      "point_change": 10,
+      "reason": "permanent_exchange",
+      "created_at": "2026-06-01T00:00:00.000Z"
     }
+  ]
+}
+```
+
+After a completed transaction:
+
+- Giver receives `+10` for `permanent` or `+5` for `lending`.
+- Receiver pays `-10` for `permanent` or `-5` for `lending`.
+- Deliverer receives `+2` when delivery is used and confirmed.
+
+## Deliverers API
+
+### List Deliverers
+
+```text
+GET /api/deliverers
+Token: required
+```
+
+Returns active members with `is_deliverer = true`. Response does not include
+`password_hash`.
+
+### Register As Deliverer
+
+```text
+POST /api/deliverers/register
+Token: required
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "service_area": "Cau Giay, Ha Noi",
+  "available_hours": "18:00 - 21:00"
+}
+```
+
+This sets `is_deliverer = true` and creates or updates the current user's
+`deliverer_profile`.
+
+### My Deliverer Profile
+
+```text
+GET /api/deliverers/me
+Token: required
+```
+
+### Update My Deliverer Profile
+
+```text
+PUT /api/deliverers/me
+Token: required
+Content-Type: application/json
+```
+
+```json
+{
+  "service_area": "Dong Da, Ha Noi",
+  "available_hours": "Weekend",
+  "is_active": true
+}
+```
+
+## Backend Demo Checklist
+
+```text
+1. docker compose up -d
+2. cd backend
+3. npm install
+4. copy .env.example .env
+5. npm run migrate
+6. npm run seed
+7. npm run dev
+```
+
+Expected health response:
+
+```json
+{
+  "success": true,
+  "message": "Book Club API is running",
+  "data": {
+    "status": "OK",
+    "timestamp": "2026-06-01T00:00:00.000Z",
+    "uptime": 12.345
   }
 }
 ```
@@ -343,4 +585,9 @@ Register trùng email: HTTP 409
 Login đúng: HTTP 200, có token
 Login sai password: HTTP 401
 Get me với Bearer token: HTTP 200, không trả password_hash
+GET /api/books: HTTP 200, không trả owner.password_hash
+POST /api/books multipart/form-data: HTTP 201, cover_url bắt đầu bằng /uploads/book-covers/
+POST /api/transactions: HTTP 201, sách chuyển reserved
+Confirm đủ các bên: transaction completed, point_histories được ghi
+Cancel pending: transaction cancelled, sách quay lại available
 ```

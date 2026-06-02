@@ -6,6 +6,7 @@ const navigationItems = [
   { label: "Thêm sách", to: "/books/add" },
   { label: "Sách của tôi", to: "/my-books" },
   { label: "Giao dịch", to: "/transactions" },
+  { label: "Đăng ký giao sách", to: "/deliverer-profile" },
   { label: "Lịch sử điểm", to: "/points/history" },
 ];
 
