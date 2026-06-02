@@ -2,12 +2,15 @@ import dotenv from "dotenv";
 import { DataTypes, QueryTypes, Sequelize } from "sequelize";
 import coreDemoData from "../seeders/202605300001-core-demo-data.js";
 import richDemoData from "../seeders/202606020003-rich-demo-data.js";
+import largeDemoData from "../seeders/202606020004-large-demo-data.js";
+import fixDemoUtf8Data from "../seeders/202606020005-fix-demo-utf8-data.js";
+import variedBookDescriptions from "../seeders/202606020006-varied-book-descriptions.js";
 
 dotenv.config();
 
 const { default: sequelize } = await import("../config/database.js");
 
-const seeders = [coreDemoData, richDemoData];
+const seeders = [coreDemoData, richDemoData, largeDemoData, fixDemoUtf8Data, variedBookDescriptions];
 const metaTable = "sequelize_seeders";
 
 const ensureMetaTable = async (queryInterface) => {
