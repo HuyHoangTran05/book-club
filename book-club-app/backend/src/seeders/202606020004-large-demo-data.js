@@ -1,5 +1,6 @@
 // This file must be saved as UTF-8.
 import bcrypt from "bcrypt";
+import { makeBookCover } from "./book-cover-helpers.js";
 
 const password = "manhdung123123";
 const now = () => new Date();
@@ -204,13 +205,6 @@ const unavailableIndexes = new Set([92, 96, 100]);
 const exchangeTypes = ["both", "lending", "permanent"];
 const conditions = ["good", "new", "fair", "worn"];
 
-const slugify = (value) => value
-  .toLowerCase()
-  .normalize("NFD")
-  .replace(/[\u0300-\u036f]/g, "")
-  .replace(/[^a-z0-9]+/g, "-")
-  .replace(/^-|-$/g, "");
-
 const statusForIndex = (index, fallback) => {
   if (fallback) return fallback;
   if (reservedIndexes.has(index)) return "reserved";
@@ -356,7 +350,7 @@ const getCopyNote = (title, index) => `${copyNoteTemplates[(index - 1) % copyNot
 const books = [
   ...requiredBooks.map((book, index) => {
     const itemIndex = index + 1;
-    const [title, author, category, publication_year, condition, exchange_type, status, owner_email, seed, isbn] = book;
+    const [title, author, category, publication_year, condition, exchange_type, status, owner_email, _seed, isbn] = book;
     return {
       index: itemIndex,
       book_id: firstBookIds[itemIndex] ?? uuid("22000000", itemIndex),
@@ -369,7 +363,7 @@ const books = [
       isbn,
       language: /[A-Za-z]/.test(title) && !/[áàâã�]/.test(title) ? "English" : "Vietnamese",
       description: getBookDescription(title),
-      cover_url: `https://picsum.photos/seed/${seed}/300/420`,
+      cover_url: makeBookCover(title, category),
       condition: condition === "like_new" ? "new" : condition,
       exchange_type,
       status,
@@ -392,7 +386,7 @@ const books = [
       isbn: `978000202606${String(itemIndex).padStart(4, "0")}`,
       language: /[A-Za-z]/.test(title) && !/[áàâã�]/.test(title) ? "English" : "Vietnamese",
       description: getBookDescription(title),
-      cover_url: `https://picsum.photos/seed/${slugify(title) || `book-${itemIndex}`}/300/420`,
+      cover_url: makeBookCover(title, category),
       condition: conditions[itemIndex % conditions.length],
       exchange_type: exchangeTypes[itemIndex % exchangeTypes.length],
       status: statusForIndex(itemIndex),
