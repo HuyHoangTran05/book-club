@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { classNames } from "../../utils/classNames.js";
+import { useAuth } from "../../contexts/AuthContext.jsx";
 
 const navigationItems = [
   { label: "Khám phá sách", to: "/books" },
@@ -11,6 +12,12 @@ const navigationItems = [
   { label: "Lịch sử điểm", to: "/points/history" },
   { label: "Đánh giá", to: "/ratings" },
   { label: "Hồ sơ cá nhân", to: "/profile" },
+];
+
+const adminNavigationItems = [
+  { label: "Bảng điều khiển", to: "/admin" },
+  { label: "Quản lý thành viên", to: "/admin/members" },
+  { label: "Giám sát giao dịch", to: "/admin/transactions" },
 ];
 
 function isActiveRoute(itemPath, pathname) {
@@ -39,6 +46,8 @@ function isActiveRoute(itemPath, pathname) {
 
 function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   return (
     <>
@@ -81,6 +90,31 @@ function Sidebar({ isOpen, onClose }) {
             </NavLink>
           ))}
         </nav>
+
+        {isAdmin ? (
+          <nav className="mt-4 space-y-2 border-t border-[#d9e2d8] pt-4">
+            <p className="px-3.5 pb-1 text-xs font-black uppercase tracking-wide text-[#98a59d]">
+              Quản trị
+            </p>
+            {adminNavigationItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={onClose}
+                className={() =>
+                  classNames(
+                    "block whitespace-nowrap rounded-xl px-3.5 py-3 text-[15px] font-bold transition",
+                    isActiveRoute(item.to, location.pathname)
+                      ? "bg-[#064834] text-white shadow-soft"
+                      : "text-[#64736d] hover:bg-white hover:text-[#082d24]"
+                  )
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        ) : null}
       </aside>
     </>
   );
