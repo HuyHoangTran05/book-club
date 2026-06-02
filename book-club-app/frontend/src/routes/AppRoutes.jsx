@@ -13,8 +13,12 @@ import PointHistoryPage from "../pages/PointHistoryPage.jsx";
 import ProfilePage from "../pages/ProfilePage.jsx";
 import RatingsPage from "../pages/RatingsPage.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
+import AdminRoute from "./AdminRoute.jsx";
 import RegisterPage from "../pages/RegisterPage.jsx";
 import TransactionsPage from "../pages/TransactionsPage.jsx";
+import AdminDashboardPage from "../pages/AdminDashboardPage.jsx";
+import AdminMembersPage from "../pages/AdminMembersPage.jsx";
+import AdminTransactionsPage from "../pages/AdminTransactionsPage.jsx";
 
 function AppRoutes() {
   return (
@@ -56,6 +60,18 @@ function AppRoutes() {
         <Route path="/ratings" element={<RatingsPage />} />
         <Route path="/points" element={<Navigate to="/points/history" replace />} />
         <Route path="/points/history" element={<PointHistoryPage />} />
+      </Route>
+
+      <Route
+        element={
+          <AdminRoute>
+            <MainLayout />
+          </AdminRoute>
+        }
+      >
+        <Route path="/admin" element={<AdminDashboardPage />} />
+        <Route path="/admin/members" element={<AdminMembersPage />} />
+        <Route path="/admin/transactions" element={<AdminTransactionsPage />} />
       </Route>
     </Routes>
   );

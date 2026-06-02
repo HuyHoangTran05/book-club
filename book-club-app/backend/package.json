@@ -7,8 +7,10 @@
   "scripts": {
     "db:migrate": "node src/scripts/migrate.js",
     "db:seed": "node src/scripts/seed.js",
+    "db:create-admin": "node src/scripts/create-admin.js",
     "migrate": "node src/scripts/migrate.js",
     "seed": "node src/scripts/seed.js",
+    "create-admin": "node src/scripts/create-admin.js",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
   },
@@ -19,9 +21,11 @@
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
+    "pdfkit": "^0.15.2",
     "pg": "^8.21.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.8"

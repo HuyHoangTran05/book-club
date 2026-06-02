@@ -7,6 +7,8 @@ import ratingRoutes from "../modules/ratings/rating.routes.js";
 import transactionRoutes from "../modules/transactions/transaction.routes.js";
 import pointRoutes from "../modules/points/point.routes.js";
 import delivererRoutes from "../modules/deliverers/deliverer.routes.js";
+import adminRoutes from "../modules/admin/admin.routes.js";
+import reportRoutes from "../modules/admin/report.routes.js";
 import { successResponse } from "../utils/response.js";
 
 const router = Router();
@@ -31,5 +33,7 @@ router.use("/transactions", transactionRoutes);
 router.use("/points", pointRoutes);
 router.use("/deliverers", delivererRoutes);
 router.use("/ratings", ratingRoutes);
+router.use("/admin", adminRoutes);
+router.use("/reports", reportRoutes);
 
 export default router;
