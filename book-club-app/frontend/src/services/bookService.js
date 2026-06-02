@@ -18,13 +18,84 @@ function unwrapResponse(response) {
   return body?.data ?? body;
 }
 
-function unwrapBookList(response) {
-  const payload = unwrapResponse(response);
-  const items = payload?.items || payload?.books || payload?.bookCopies || payload?.data || payload;
+function toPositiveNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : fallback;
+}
+
+function toNonNegativeNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : fallback;
+}
+
+function normalizePagination(rawPagination = {}, payload = {}, response = {}, itemCount = 0, params = {}) {
+  const responseBody = response?.data ?? response ?? {};
+  const pagination = rawPagination || {};
+  const payloadData = payload && typeof payload === "object" ? payload : {};
+  const page = toPositiveNumber(
+    pagination.page ?? pagination.currentPage ?? payloadData.page ?? payloadData.currentPage ?? responseBody.page ?? params.page,
+    1
+  );
+  const limit = toPositiveNumber(
+    pagination.limit ?? pagination.perPage ?? pagination.pageSize ?? payloadData.limit ?? responseBody.limit ?? params.limit,
+    itemCount || 20
+  );
+  const total = toNonNegativeNumber(
+    pagination.total ??
+      pagination.totalItems ??
+      pagination.total_books ??
+      pagination.totalBooks ??
+      pagination.count ??
+      pagination.total_count ??
+      payloadData.total ??
+      payloadData.totalItems ??
+      payloadData.total_books ??
+      payloadData.totalBooks ??
+      payloadData.count ??
+      payloadData.total_count ??
+      responseBody.total ??
+      responseBody.totalItems ??
+      responseBody.total_books ??
+      responseBody.totalBooks ??
+      responseBody.count ??
+      responseBody.total_count,
+    itemCount
+  );
+  const totalPages = toPositiveNumber(
+    pagination.totalPages ??
+      pagination.total_pages ??
+      pagination.pages ??
+      payloadData.totalPages ??
+      payloadData.total_pages ??
+      responseBody.totalPages ??
+      responseBody.total_pages,
+    Math.max(1, Math.ceil(total / limit))
+  );
 
   return {
-    items: Array.isArray(items) ? items.map(normalizeBook).filter((book) => !isHiddenBookStatus(book.status)) : [],
-    pagination: payload?.pagination || response?.data?.pagination || null,
+    page,
+    limit,
+    total,
+    totalPages,
+  };
+}
+
+function unwrapBookList(response, params = {}) {
+  const payload = unwrapResponse(response);
+  const items = payload?.items || payload?.books || payload?.bookCopies || payload?.data || payload;
+  const normalizedItems = Array.isArray(items) ? items.map(normalizeBook).filter((book) => !isHiddenBookStatus(book.status)) : [];
+  const pagination = normalizePagination(
+    payload?.pagination || response?.data?.pagination || null,
+    payload,
+    response,
+    normalizedItems.length,
+    params
+  );
+
+  return {
+    items: normalizedItems,
+    books: normalizedItems,
+    pagination,
     raw: payload,
   };
 }
@@ -161,12 +232,12 @@ export function getBookErrorMessage(error, fallback = "Đã có lỗi xảy ra. 
 
 export async function getBooks(params = {}) {
   const response = await api.get(apiPath("/books"), { params });
-  return unwrapBookList(response);
+  return unwrapBookList(response, params);
 }
 
 export async function getMyBooks() {
   const response = await api.get(apiPath("/books/my"), { params: { limit: 100 } });
-  return unwrapBookList(response);
+  return unwrapBookList(response, { limit: 100 });
 }
 
 export async function getBookById(copyId) {
