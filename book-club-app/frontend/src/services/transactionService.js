@@ -182,6 +182,20 @@ function normalizeBook(book = {}) {
   };
 }
 
+function getTransactionBook(rawTransaction = {}) {
+  const bookCopy = rawTransaction.bookCopy ?? rawTransaction.book_copy ?? rawTransaction.copy ?? {};
+  const bookTitle = bookCopy.bookTitle ?? bookCopy.book_title ?? {};
+
+  return (
+    rawTransaction.book ??
+    {
+      title: rawTransaction.bookTitle ?? rawTransaction.title ?? bookTitle.title,
+      author: rawTransaction.author ?? bookTitle.author,
+      category: rawTransaction.category ?? bookTitle.category,
+    }
+  );
+}
+
 export function normalizeTransaction(rawTransaction = {}) {
   const transactionId = firstDefined(rawTransaction.transaction_id, rawTransaction.transactionId, rawTransaction.id);
   const transactionType = firstDefined(rawTransaction.transaction_type, rawTransaction.transactionType, rawTransaction.type, "lending");
@@ -228,10 +242,18 @@ export function normalizeTransaction(rawTransaction = {}) {
     completedAt,
     created_at: createdAt,
     createdAt,
+<<<<<<< HEAD
+    delivery_confirmed: Boolean(rawTransaction.delivery_confirmed ?? rawTransaction.deliveryConfirmed),
+    deliveryConfirmed: Boolean(rawTransaction.delivery_confirmed ?? rawTransaction.deliveryConfirmed),
+    book: normalizeBook(getTransactionBook(rawTransaction)),
+    giver: normalizePerson(rawTransaction.giver ?? rawTransaction.owner ?? rawTransaction.fromMember),
+    receiver: normalizePerson(rawTransaction.receiver ?? rawTransaction.borrower ?? rawTransaction.toMember),
+=======
     book: normalizeBookFromTransaction(rawTransaction),
     giver: giver ?? normalizePerson({}),
     receiver: receiver ?? normalizePerson({}),
     deliverer,
+>>>>>>> b86729fa19f3247762b376c4cf29fe281ea4f5cf
     raw: rawTransaction,
   };
 }

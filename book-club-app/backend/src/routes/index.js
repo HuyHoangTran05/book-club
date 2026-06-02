@@ -3,6 +3,7 @@ import authRoutes from "../modules/auth/auth.routes.js";
 import bookRoutes from "../modules/books/book.routes.js";
 import conversationRoutes from "../modules/conversations/conversation.routes.js";
 import memberRoutes from "../modules/members/member.routes.js";
+import ratingRoutes from "../modules/ratings/rating.routes.js";
 import transactionRoutes from "../modules/transactions/transaction.routes.js";
 import pointRoutes from "../modules/points/point.routes.js";
 import delivererRoutes from "../modules/deliverers/deliverer.routes.js";
@@ -29,5 +30,6 @@ router.use("/conversations", conversationRoutes);
 router.use("/transactions", transactionRoutes);
 router.use("/points", pointRoutes);
 router.use("/deliverers", delivererRoutes);
+router.use("/ratings", ratingRoutes);
 
 export default router;

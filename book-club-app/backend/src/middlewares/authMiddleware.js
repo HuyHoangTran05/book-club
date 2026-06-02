@@ -1,14 +1,26 @@
 import jwt from "jsonwebtoken";
 import createHttpError from "../utils/createHttpError.js";
 
-export const protect = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return next(createHttpError("Not authorized, no token", 401));
+const getBearerToken = (authHeader) => {
+  if (!authHeader || typeof authHeader !== "string") {
+    return null;
   }
 
-  const token = authHeader.split(" ")[1];
+  const [scheme, token] = authHeader.split(" ");
+
+  if (scheme?.toLowerCase() !== "bearer" || !token) {
+    return null;
+  }
+
+  return token;
+};
+
+export const protect = (req, res, next) => {
+  if (!process.env.JWT_SECRET) {
+    return next(createHttpError("JWT_SECRET is not configured", 500));
+  }
+
+  const token = getBearerToken(req.headers.authorization);
 
   if (!token) {
     return next(createHttpError("Not authorized, no token", 401));
@@ -16,6 +28,11 @@ export const protect = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (!decoded.member_id) {
+      return next(createHttpError("Not authorized, invalid token payload", 401));
+    }
+
     req.user = decoded;
     return next();
   } catch (error) {

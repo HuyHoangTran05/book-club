@@ -26,6 +26,7 @@ export const getMyDelivererProfile = asyncHandler(async (req, res) => {
 export const updateMyDelivererProfile = asyncHandler(async (req, res) => {
   const profile = await delivererService.upsertMyProfile(req.user.member_id, req.body, {
     defaultActive: true,
+    requireProfileFields: false,
   });
   successResponse(res, profile, "Cập nhật hồ sơ người giao sách thành công");
 });
