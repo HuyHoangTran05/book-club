@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Alert, Button, Card } from "../components/common/index.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import {
   getConversationErrorMessage,
   getConversationMessages,
+  normalizeMessage,
   sendMessage,
 } from "../services/conversationService.js";
 import { getCurrentUser as getStoredCurrentUser } from "../utils/auth.js";
@@ -55,6 +56,7 @@ function ConversationDetailPage() {
   const [isSending, setIsSending] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [messages, setMessages] = useState([]);
+  const messagesEndRef = useRef(null);
 
   async function loadMessages() {
     setIsLoading(true);
@@ -74,15 +76,32 @@ function ConversationDetailPage() {
     loadMessages();
   }, [conversationId]);
 
+  const scrollToBottom = () => {
+    window.requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
+  };
+
   const sortedMessages = useMemo(() => {
     return [...messages].sort((first, second) => {
       return new Date(first.created_at).getTime() - new Date(second.created_at).getTime();
     });
   }, [messages]);
 
-  async function handleSendMessage(event) {
-    event.preventDefault();
-    const content = messageText.trim();
+  useEffect(() => {
+    if (!isLoading) {
+      scrollToBottom();
+    }
+  }, [isLoading, sortedMessages.length]);
+
+  async function handleSendMessage(event, rawContent = messageText) {
+    event?.preventDefault?.();
+
+    if (isSending) {
+      return;
+    }
+
+    const content = rawContent.trim();
 
     if (!content) {
       setError("Vui lòng nhập nội dung tin nhắn.");
@@ -93,14 +112,30 @@ function ConversationDetailPage() {
     setError("");
 
     try {
-      await sendMessage(conversationId, { content });
+      const createdMessage = normalizeMessage(await sendMessage(conversationId, { content }));
+      setMessages((currentMessages) => {
+        if (
+          createdMessage.message_id &&
+          currentMessages.some((message) => normalizeId(message.message_id) === createdMessage.message_id)
+        ) {
+          return currentMessages;
+        }
+
+        return [...currentMessages, createdMessage];
+      });
       setMessageText("");
-      const result = await getConversationMessages(conversationId);
-      setMessages(result);
+      scrollToBottom();
     } catch (sendError) {
       setError(getConversationErrorMessage(sendError, "Không thể gửi tin nhắn. Vui lòng thử lại."));
     } finally {
       setIsSending(false);
+    }
+  }
+
+  function handleMessageKeyDown(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSendMessage(undefined, event.currentTarget.value);
     }
   }
 
@@ -143,6 +178,7 @@ function ConversationDetailPage() {
                 </article>
               );
             })}
+            <div ref={messagesEndRef} aria-hidden="true" />
           </div>
         ) : null}
 
@@ -153,11 +189,12 @@ function ConversationDetailPage() {
               id="message-content"
               value={messageText}
               onChange={(event) => setMessageText(event.target.value)}
+              onKeyDown={handleMessageKeyDown}
               disabled={isSending}
               placeholder="Nhập tin nhắn..."
               rows={3}
             />
-            <Button type="submit" disabled={isSending}>
+            <Button type="submit" disabled={isSending || !messageText.trim()}>
               {isSending ? "Đang gửi..." : "Gửi"}
             </Button>
           </div>
