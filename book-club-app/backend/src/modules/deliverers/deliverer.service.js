@@ -1,5 +1,6 @@
 import { Member, DelivererProfile, sequelize } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
+import notificationService from "../notifications/notification.service.js";
 
 const delivererAttributes = [
   "member_id",
@@ -153,6 +154,8 @@ const upsertMyProfile = async (
   const requestedIsActive = payload.is_active ?? payload.isActive;
   const isActive = requestedIsActive === undefined ? defaultActive : Boolean(requestedIsActive);
 
+  let createdNew = true;
+
   await sequelize.transaction(async (transaction) => {
     const member = await Member.findByPk(memberId, { transaction });
 
@@ -193,6 +196,7 @@ const upsertMyProfile = async (
         updates,
         { transaction },
       );
+      createdNew = false;
       return;
     }
 
@@ -214,6 +218,14 @@ const upsertMyProfile = async (
       },
       { transaction },
     );
+  });
+
+  await notificationService.createNotification({
+    member_id: memberId,
+    type: "system",
+    content: createdNew
+      ? "Bạn đã đăng ký làm người giao sách miễn phí."
+      : "Bạn đã cập nhật hồ sơ người giao sách.",
   });
 
   return getMyProfile(memberId);

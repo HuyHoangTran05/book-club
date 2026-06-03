@@ -9,6 +9,7 @@ import {
   PointHistory,
 } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
+import notificationService from "../notifications/notification.service.js";
 
 const TRANSACTION_COST = {
   permanent: 10,
@@ -90,6 +91,185 @@ const sanitizeTransaction = (transaction) => {
   }
 
   return plain;
+};
+
+const TYPE_VERB = {
+  permanent: "trao đổi",
+  lending: "mượn",
+};
+
+const bookTitleOf = (transaction) => transaction?.book?.title ?? "một cuốn sách";
+
+const memberNameInTransaction = (transaction, memberId) => {
+  if (transaction?.giver?.member_id === memberId) {
+    return transaction.giver.full_name;
+  }
+  if (transaction?.receiver?.member_id === memberId) {
+    return transaction.receiver.full_name;
+  }
+  if (transaction?.deliverer?.member_id === memberId) {
+    return transaction.deliverer.full_name;
+  }
+  return "Một thành viên";
+};
+
+// --- Notification emitters (best-effort, run AFTER the DB transaction commits) ---
+
+const emitCreateNotifications = async (transaction) => {
+  if (!transaction) {
+    return;
+  }
+
+  const title = bookTitleOf(transaction);
+  const receiverName = transaction.receiver?.full_name ?? "Một thành viên";
+  const verb = TYPE_VERB[transaction.transaction_type] ?? "trao đổi";
+
+  const notifications = [
+    {
+      member_id: transaction.giver_id,
+      type: "transaction",
+      reference_id: transaction.transaction_id,
+      content: `${receiverName} muốn ${verb} cuốn "${title}". Vào mục Giao dịch để xác nhận.`,
+    },
+  ];
+
+  if (transaction.deliverer_id) {
+    notifications.push({
+      member_id: transaction.deliverer_id,
+      type: "transaction",
+      reference_id: transaction.transaction_id,
+      content: `Bạn được chọn làm người giao cuốn "${title}". Hãy hỗ trợ giao nhận và xác nhận khi xong.`,
+    });
+  }
+
+  await notificationService.createNotifications(notifications);
+  await notificationService.notifyAdmins({
+    type: "transaction",
+    reference_id: transaction.transaction_id,
+    content: `Giao dịch mới: ${receiverName} muốn ${verb} cuốn "${title}".`,
+  });
+};
+
+const emitConfirmPendingNotifications = async (transaction, actorId) => {
+  if (!transaction) {
+    return;
+  }
+
+  const title = bookTitleOf(transaction);
+  const actorName = memberNameInTransaction(transaction, actorId);
+  const pendingTargets = [];
+
+  if (!transaction.giver_confirmed && transaction.giver_id !== actorId) {
+    pendingTargets.push(transaction.giver_id);
+  }
+  if (!transaction.receiver_confirmed && transaction.receiver_id !== actorId) {
+    pendingTargets.push(transaction.receiver_id);
+  }
+  if (
+    transaction.deliverer_id &&
+    !transaction.delivery_confirmed &&
+    transaction.deliverer_id !== actorId
+  ) {
+    pendingTargets.push(transaction.deliverer_id);
+  }
+
+  const notifications = pendingTargets.filter(Boolean).map((memberId) => ({
+    member_id: memberId,
+    type: "transaction",
+    reference_id: transaction.transaction_id,
+    content: `${actorName} đã xác nhận giao dịch cuốn "${title}". Đang chờ bạn xác nhận hoàn tất.`,
+  }));
+
+  await notificationService.createNotifications(notifications);
+};
+
+const emitCompletionNotifications = async (transaction) => {
+  if (!transaction) {
+    return;
+  }
+
+  const title = bookTitleOf(transaction);
+  const cost = TRANSACTION_COST[transaction.transaction_type] ?? 0;
+
+  const notifications = [
+    {
+      member_id: transaction.giver_id,
+      type: "point",
+      reference_id: transaction.transaction_id,
+      content: `Giao dịch cuốn "${title}" đã hoàn tất. Bạn được cộng +${cost} điểm.`,
+    },
+    {
+      member_id: transaction.receiver_id,
+      type: "point",
+      reference_id: transaction.transaction_id,
+      content: `Giao dịch cuốn "${title}" đã hoàn tất. Bạn đã dùng ${cost} điểm.`,
+    },
+  ];
+
+  if (transaction.deliverer_id) {
+    notifications.push({
+      member_id: transaction.deliverer_id,
+      type: "point",
+      reference_id: transaction.transaction_id,
+      content: `Bạn đã giao thành công cuốn "${title}" và được cộng +2 điểm.`,
+    });
+  }
+
+  await notificationService.createNotifications(notifications);
+
+  const pointChanges = [
+    {
+      name: transaction.giver?.full_name ?? "Chủ sách",
+      change: cost,
+      reason: `hoàn tất giao dịch cuốn "${title}"`,
+    },
+    {
+      name: transaction.receiver?.full_name ?? "Người nhận",
+      change: -cost,
+      reason: `hoàn tất giao dịch cuốn "${title}"`,
+    },
+  ];
+
+  if (transaction.deliverer_id) {
+    pointChanges.push({
+      name: transaction.deliverer?.full_name ?? "Người giao sách",
+      change: 2,
+      reason: `giao thành công cuốn "${title}"`,
+    });
+  }
+
+  await Promise.all(
+    pointChanges.map((item) =>
+      notificationService.notifyAdmins({
+        type: "point",
+        reference_id: transaction.transaction_id,
+        content: `Biến động điểm: ${item.name} ${item.change > 0 ? "+" : ""}${item.change} điểm sau khi ${item.reason}.`,
+      }),
+    ),
+  );
+};
+
+const emitCancelNotifications = async (transaction, actorId) => {
+  if (!transaction) {
+    return;
+  }
+
+  const title = bookTitleOf(transaction);
+  const actorName = memberNameInTransaction(transaction, actorId);
+  const targets = [
+    transaction.giver_id,
+    transaction.receiver_id,
+    transaction.deliverer_id,
+  ].filter((id) => id && id !== actorId);
+
+  const notifications = targets.map((memberId) => ({
+    member_id: memberId,
+    type: "transaction",
+    reference_id: transaction.transaction_id,
+    content: `${actorName} đã huỷ giao dịch cuốn "${title}".`,
+  }));
+
+  await notificationService.createNotifications(notifications);
 };
 
 const assertTransactionParticipant = (transaction, memberId) => {
@@ -255,7 +435,9 @@ const createTransaction = async (memberId, payload) => {
     return newTransaction;
   });
 
-  return getTransactionById(createdTransaction.transaction_id);
+  const fullTransaction = await getTransactionById(createdTransaction.transaction_id);
+  await emitCreateNotifications(fullTransaction);
+  return fullTransaction;
 };
 
 const completeTransactionIfReady = async (transaction, dbTransaction) => {
@@ -372,6 +554,8 @@ const completeTransactionIfReady = async (transaction, dbTransaction) => {
 };
 
 const confirmTransaction = async (memberId, transactionId) => {
+  let justCompleted = false;
+
   await sequelize.transaction(async (dbTransaction) => {
     const transaction = await BookTransaction.findByPk(transactionId, {
       transaction: dbTransaction,
@@ -400,9 +584,18 @@ const confirmTransaction = async (memberId, transactionId) => {
 
     await transaction.update(updates, { transaction: dbTransaction });
     await completeTransactionIfReady(transaction, dbTransaction);
+    justCompleted = transaction.status === "completed";
   });
 
-  return getTransactionById(transactionId);
+  const fullTransaction = await getTransactionById(transactionId);
+
+  if (justCompleted) {
+    await emitCompletionNotifications(fullTransaction);
+  } else {
+    await emitConfirmPendingNotifications(fullTransaction, memberId);
+  }
+
+  return fullTransaction;
 };
 
 const cancelTransaction = async (memberId, transactionId) => {
@@ -452,7 +645,9 @@ const cancelTransaction = async (memberId, transactionId) => {
     }
   });
 
-  return getTransactionById(transactionId);
+  const fullTransaction = await getTransactionById(transactionId);
+  await emitCancelNotifications(fullTransaction, memberId);
+  return fullTransaction;
 };
 
 const listMyTransactions = async (memberId) => {

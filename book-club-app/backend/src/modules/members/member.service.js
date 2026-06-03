@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { Member, PointHistory } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
+import notificationService from "../notifications/notification.service.js";
 
 const allowedProfileFields = ["full_name", "phone", "address"];
 const MIN_PASSWORD_LENGTH = 8;
@@ -73,6 +74,12 @@ const updateProfile = async (memberId, payload) => {
 
   await member.update(updateData);
 
+  await notificationService.createNotification({
+    member_id: memberId,
+    type: "system",
+    content: "Bạn đã cập nhật thông tin hồ sơ cá nhân.",
+  });
+
   return sanitizeMember(member);
 };
 
@@ -111,6 +118,12 @@ const changePassword = async (memberId, payload = {}) => {
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await member.update({
     password_hash: passwordHash,
+  });
+
+  await notificationService.createNotification({
+    member_id: memberId,
+    type: "system",
+    content: "Mật khẩu của bạn vừa được thay đổi thành công.",
   });
 };
 

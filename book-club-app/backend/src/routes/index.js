@@ -3,6 +3,7 @@ import authRoutes from "../modules/auth/auth.routes.js";
 import bookRoutes from "../modules/books/book.routes.js";
 import conversationRoutes from "../modules/conversations/conversation.routes.js";
 import memberRoutes from "../modules/members/member.routes.js";
+import notificationRoutes from "../modules/notifications/notification.routes.js";
 import ratingRoutes from "../modules/ratings/rating.routes.js";
 import transactionRoutes from "../modules/transactions/transaction.routes.js";
 import pointRoutes from "../modules/points/point.routes.js";
@@ -27,6 +28,7 @@ router.get("/health", (req, res) => {
 
 router.use("/auth", authRoutes);
 router.use("/members", memberRoutes);
+router.use("/notifications", notificationRoutes);
 router.use("/books", bookRoutes);
 router.use("/conversations", conversationRoutes);
 router.use("/transactions", transactionRoutes);

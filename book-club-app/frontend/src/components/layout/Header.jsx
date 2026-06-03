@@ -1,9 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Badge } from "../common/index.js";
+import NotificationBell from "../notifications/NotificationBell.jsx";
 
 function Header({ currentUser, onLogout, onMenuClick }) {
   const navigate = useNavigate();
   const points = currentUser?.points ?? currentUser?.pointBalance ?? currentUser?.point_balance ?? 20;
+  const isAdmin = currentUser?.role === "admin";
+  const roleLabel = isAdmin ? "Quản trị viên" : "Thành viên";
 
   function handleLogout() {
     onLogout();
@@ -29,9 +32,10 @@ function Header({ currentUser, onLogout, onMenuClick }) {
         </div>
 
         <div className="flex items-center gap-3">
+          <NotificationBell />
           <div className="hidden text-right sm:block">
-            <p className="text-sm font-bold text-[#082d24]">{currentUser?.fullName || currentUser?.full_name || currentUser?.name || "Thành viên"}</p>
-            <p className="text-xs text-[#64736d]">Thành viên cộng đồng</p>
+            <p className="text-sm font-bold text-[#082d24]">{currentUser?.fullName || currentUser?.full_name || currentUser?.name || roleLabel}</p>
+            <p className="text-xs font-semibold text-[#64736d]">{roleLabel}</p>
           </div>
           <Badge status="completed">{points} điểm</Badge>
           <button className="rounded-xl px-3 py-2 text-sm font-semibold text-[#064834] hover:bg-[#e7f1e8]" type="button" onClick={handleLogout}>

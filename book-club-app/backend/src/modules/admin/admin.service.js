@@ -8,6 +8,7 @@ import {
   PointHistory,
 } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
+import notificationService from "../notifications/notification.service.js";
 
 const ACCOUNT_STATUSES = ["active", "locked"];
 
@@ -213,6 +214,11 @@ const updateMemberStatus = async (adminId, memberId, accountStatus) => {
   }
 
   await member.update({ account_status: status });
+  await notificationService.notifyAdmins({
+    type: "system",
+    reference_id: member.member_id,
+    content: `Tài khoản "${member.full_name}" đã được ${status === "locked" ? "khoá" : "mở khoá"}.`,
+  });
 
   return member.get({ plain: true });
 };
@@ -232,6 +238,12 @@ const deleteMember = async (adminId, memberId) => {
     throw createHttpError("Không thể xoá tài khoản quản trị", 403);
   }
 
+  const deletedMember = {
+    member_id: member.member_id,
+    full_name: member.full_name,
+    email: member.email,
+  };
+
   try {
     await member.destroy();
   } catch (error) {
@@ -243,6 +255,12 @@ const deleteMember = async (adminId, memberId) => {
     }
     throw error;
   }
+
+  await notificationService.notifyAdmins({
+    type: "system",
+    reference_id: deletedMember.member_id,
+    content: `Tài khoản "${deletedMember.full_name}" (${deletedMember.email}) đã bị xoá khỏi hệ thống.`,
+  });
 
   return { member_id: memberId, deleted: true };
 };

@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { sequelize, Member, PointHistory } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
+import notificationService from "../notifications/notification.service.js";
 
 const INITIAL_POINT_BALANCE = 20;
 const DEFAULT_ROLE = "member";
@@ -114,6 +115,18 @@ const register = async (dto) => {
       );
 
       return createdMember;
+    });
+
+    await notificationService.createNotification({
+      member_id: user.member_id,
+      type: "point",
+      content: `Chào mừng bạn đến với Cộng Đồng Sách! Bạn được tặng ${INITIAL_POINT_BALANCE} điểm khởi đầu.`,
+    });
+
+    await notificationService.notifyAdmins({
+      type: "system",
+      reference_id: user.member_id,
+      content: `Thành viên mới "${user.full_name}" vừa đăng ký tài khoản và nhận ${INITIAL_POINT_BALANCE} điểm khởi đầu.`,
     });
 
     return {

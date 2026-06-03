@@ -9,6 +9,7 @@ import DelivererProfilePage from "../pages/DelivererProfilePage.jsx";
 import HomePage from "../pages/HomePage.jsx";
 import LoginPage from "../pages/LoginPage.jsx";
 import MyBooksPage from "../pages/MyBooksPage.jsx";
+import NotificationsPage from "../pages/NotificationsPage.jsx";
 import PointHistoryPage from "../pages/PointHistoryPage.jsx";
 import ProfilePage from "../pages/ProfilePage.jsx";
 import RatingsPage from "../pages/RatingsPage.jsx";
@@ -55,6 +56,7 @@ function AppRoutes() {
         <Route path="/transactions" element={<TransactionsPage />} />
         <Route path="/conversations" element={<ConversationsPage />} />
         <Route path="/conversations/:conversationId" element={<ConversationDetailPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/deliverer-profile" element={<DelivererProfilePage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/ratings" element={<RatingsPage />} />

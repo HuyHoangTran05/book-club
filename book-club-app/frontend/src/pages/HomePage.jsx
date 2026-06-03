@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import homeLibrary from "../assets/home-library.png";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import NotificationBell from "../components/notifications/NotificationBell.jsx";
 import { homepageContent } from "../data/homepageContent.js";
 import "./HomePage.css";
 
@@ -68,6 +69,7 @@ function HomePage() {
         </nav>
 
         <div className="home-actions">
+          {isAuthenticated ? <NotificationBell /> : null}
           <button
             className="theme-toggle"
             type="button"

@@ -1,0 +1,460 @@
+/* ============================================================
+   Notification system styles — shared by the bell dropdown and
+   the dedicated notifications page. Self-contained tokens so it
+   looks identical on the homepage (light/dark) and inside the app.
+   ============================================================ */
+
+.notif {
+  --notif-surface: #ffffff;
+  --notif-surface-soft: #f6faf7;
+  --notif-border: rgba(8, 45, 36, 0.1);
+  --notif-text: #0f231d;
+  --notif-muted: #5d6f68;
+  --notif-brand: #064834;
+  --notif-brand-soft: rgba(6, 72, 52, 0.08);
+  --notif-shadow: 0 24px 60px -18px rgba(8, 45, 36, 0.38);
+  --notif-unread-bg: rgba(6, 72, 52, 0.06);
+  --notif-unread-bar: linear-gradient(180deg, #0b6b4a, #0a8f5f);
+}
+
+/* ---------- Bell button ---------- */
+
+.notif-bell {
+  position: relative;
+}
+
+.notif-bell-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--notif-border);
+  background: var(--notif-surface);
+  color: var(--notif-brand);
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease,
+    border-color 180ms ease;
+}
+
+.notif-bell-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -10px rgba(8, 45, 36, 0.45);
+}
+
+.notif-bell-btn.is-open {
+  background: var(--notif-brand-soft);
+  border-color: rgba(6, 72, 52, 0.28);
+}
+
+.notif-bell-btn svg {
+  width: 21px;
+  height: 21px;
+}
+
+/* gentle swing when there are unread items */
+.notif-bell-btn.has-unread svg {
+  transform-origin: top center;
+  animation: notif-swing 2.6s ease-in-out infinite;
+}
+
+@keyframes notif-swing {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  68% { transform: rotate(11deg); }
+  76% { transform: rotate(-9deg); }
+  84% { transform: rotate(6deg); }
+  92% { transform: rotate(-3deg); }
+}
+
+.notif-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0 0 2px var(--notif-surface);
+}
+
+.notif-badge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.55);
+  animation: notif-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  z-index: -1;
+}
+
+@keyframes notif-ping {
+  0% { transform: scale(1); opacity: 0.7; }
+  80%, 100% { transform: scale(2.1); opacity: 0; }
+}
+
+/* Red dot indicator (shown top-right of the bell when there are unread items) */
+.notif-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f87171, #dc2626);
+  box-shadow: 0 0 0 2px var(--notif-surface);
+}
+
+.notif-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.55);
+  animation: notif-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  z-index: -1;
+}
+
+/* ---------- Dropdown panel ---------- */
+
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 380px;
+  max-width: calc(100vw - 28px);
+  background: var(--notif-surface);
+  border: 1px solid var(--notif-border);
+  border-radius: 18px;
+  box-shadow: var(--notif-shadow);
+  z-index: 60;
+  overflow: hidden;
+  transform-origin: top right;
+  animation: notif-pop 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes notif-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.notif-panel::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 14px;
+  width: 12px;
+  height: 12px;
+  background: var(--notif-surface);
+  border-left: 1px solid var(--notif-border);
+  border-top: 1px solid var(--notif-border);
+  transform: rotate(45deg);
+}
+
+.notif-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 15px 18px 12px;
+  border-bottom: 1px solid var(--notif-border);
+}
+
+.notif-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--notif-text);
+}
+
+.notif-count-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--notif-brand);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.notif-markall {
+  border: 0;
+  background: transparent;
+  color: var(--notif-brand);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+  transition: background 150ms ease;
+}
+
+.notif-markall:hover {
+  background: var(--notif-brand-soft);
+}
+
+.notif-markall:disabled {
+  color: var(--notif-muted);
+  cursor: default;
+}
+
+.notif-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 396px;
+  overflow-y: auto;
+}
+
+.notif-list-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(8, 45, 36, 0.25) transparent;
+}
+
+.notif-list-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notif-list-scroll::-webkit-scrollbar-thumb {
+  background: rgba(8, 45, 36, 0.2);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* ---------- A single notification row ---------- */
+
+.notif-item {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px 12px 16px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 150ms ease, transform 120ms ease;
+}
+
+.notif-item + .notif-item {
+  margin-top: 2px;
+}
+
+.notif-item:hover {
+  background: var(--notif-surface-soft);
+}
+
+.notif-item:active {
+  transform: scale(0.992);
+}
+
+/* read items are visually dimmed */
+.notif-item.is-read {
+  opacity: 0.62;
+}
+
+.notif-item.is-read:hover {
+  opacity: 0.85;
+}
+
+/* unread items: tinted bg + accent bar + bolder text */
+.notif-item.is-unread {
+  background: var(--notif-unread-bg);
+}
+
+.notif-item.is-unread::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--notif-unread-bar);
+}
+
+.notif-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+}
+
+.notif-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.notif-icon.accent-transaction { background: rgba(4, 120, 87, 0.14); color: #047857; }
+.notif-icon.accent-point { background: rgba(202, 138, 4, 0.16); color: #b45309; }
+.notif-icon.accent-message { background: rgba(37, 99, 235, 0.14); color: #2563eb; }
+.notif-icon.accent-book { background: rgba(14, 116, 144, 0.14); color: #0e7490; }
+.notif-icon.accent-rating { background: rgba(124, 58, 237, 0.14); color: #7c3aed; }
+.notif-icon.accent-system { background: rgba(71, 85, 105, 0.14); color: #475569; }
+
+.notif-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.notif-content {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--notif-text);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.notif-item.is-unread .notif-content {
+  font-weight: 700;
+}
+
+.notif-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--notif-muted);
+}
+
+.notif-tag {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.notif-dot-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.notif-unread-dot {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--notif-brand);
+  box-shadow: 0 0 0 3px rgba(6, 72, 52, 0.14);
+}
+
+/* ---------- Footer ---------- */
+
+.notif-foot {
+  padding: 9px;
+  border-top: 1px solid var(--notif-border);
+  background: var(--notif-surface);
+}
+
+.notif-foot-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--notif-brand);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.notif-foot-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px -12px rgba(6, 72, 52, 0.7);
+  background: #053a2a;
+}
+
+/* ---------- Empty / loading states ---------- */
+
+.notif-empty,
+.notif-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 38px 22px;
+  color: var(--notif-muted);
+  text-align: center;
+}
+
+.notif-empty svg {
+  width: 40px;
+  height: 40px;
+  opacity: 0.5;
+}
+
+.notif-empty p {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.notif-empty span {
+  font-size: 12px;
+}
+
+.notif-spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 3px solid rgba(6, 72, 52, 0.18);
+  border-top-color: var(--notif-brand);
+  animation: notif-spin 800ms linear infinite;
+}
+
+@keyframes notif-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   Dark theme overrides (homepage dark mode)
+   ============================================================ */
+
+.home-page.is-dark .notif {
+  --notif-surface: #18231d;
+  --notif-surface-soft: rgba(245, 241, 232, 0.05);
+  --notif-border: rgba(245, 241, 232, 0.14);
+  --notif-text: #f3efe6;
+  --notif-muted: #aab4ad;
+  --notif-brand: #8cc6a9;
+  --notif-brand-soft: rgba(140, 198, 169, 0.16);
+  --notif-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.6);
+  --notif-unread-bg: rgba(140, 198, 169, 0.12);
+}
+
+.home-page.is-dark .notif-count-chip,
+.home-page.is-dark .notif-foot-btn {
+  color: #0c1a14;
+}
+
+.home-page.is-dark .notif-foot-btn:hover {
+  background: #7bbd9b;
+}
