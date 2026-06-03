@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Badge, Button, Card, Loading } from "../components/common/index.js";
+import { Alert, Badge, Button, Card, Loading, Modal } from "../components/common/index.js";
 import { getAdminErrorMessage } from "../services/adminService.js";
 import {
   adminCancelTransaction,
@@ -22,13 +22,41 @@ const statusBadge = {
 
 const confirmLabel = (value) => (value ? "Đã xác nhận" : "Chưa xác nhận");
 
+const defaultActionModal = {
+  open: false,
+  type: null,
+  transaction: null,
+};
+
+const actionConfig = {
+  cancel: {
+    title: "Hủy giao dịch",
+    description: "Vui lòng nhập lý do admin hủy giao dịch này.",
+    confirmLabel: "Xác nhận hủy",
+    loadingLabel: "Đang hủy...",
+    successMessage: "Admin đã hủy giao dịch thành công.",
+    buttonVariant: "danger",
+  },
+  "force-complete": {
+    title: "Cưỡng chế hoàn tất giao dịch",
+    description: "Vui lòng nhập lý do admin xác nhận giao dịch đã hoàn tất.",
+    confirmLabel: "Xác nhận hoàn tất",
+    loadingLabel: "Đang xử lý...",
+    successMessage: "Admin đã cưỡng chế hoàn tất giao dịch thành công.",
+    buttonVariant: "primary",
+  },
+};
+
 function AdminTransactionsPage() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [status, setStatus] = useState("");
-  const [actionKey, setActionKey] = useState("");
+  const [actionModal, setActionModal] = useState(defaultActionModal);
+  const [adminReason, setAdminReason] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
@@ -54,48 +82,66 @@ function AdminTransactionsPage() {
     );
   };
 
-  const handleAdminAction = async (transaction, action) => {
-    const isCancel = action === "cancel";
-    const label = isCancel ? "hủy giao dịch" : "cưỡng chế hoàn tất giao dịch";
-    const reason = window.prompt(`Nhập lý do ${label}:`);
-
-    if (reason === null) {
-      return;
-    }
-
-    const confirmed = window.confirm(`Xác nhận ${label} này?`);
-
-    if (!confirmed) {
-      return;
-    }
-
-    const key = `${action}-${transaction.transaction_id}`;
-    setActionKey(key);
+  const openAdminActionModal = (type, transaction) => {
+    setActionModal({ open: true, type, transaction });
+    setAdminReason("");
+    setActionError("");
     setError("");
     setSuccessMessage("");
+  };
+
+  const closeAdminActionModal = () => {
+    if (actionLoading) {
+      return;
+    }
+
+    setActionModal(defaultActionModal);
+    setAdminReason("");
+    setActionError("");
+  };
+
+  const submitAdminAction = async (event) => {
+    event.preventDefault();
+
+    const reason = adminReason.trim();
+    const { type, transaction } = actionModal;
+    const config = actionConfig[type];
+
+    if (!reason) {
+      setActionError("Vui lòng nhập lý do trước khi xác nhận.");
+      return;
+    }
+
+    if (!transaction || !config) {
+      setActionError("Không xác định được giao dịch cần xử lý.");
+      return;
+    }
+
+    setActionLoading(true);
+    setActionError("");
 
     try {
-      const payload = { reason: reason.trim() };
-      const updatedTransaction = isCancel
+      const payload = { reason };
+      const updatedTransaction = type === "cancel"
         ? await adminCancelTransaction(transaction.transaction_id, payload)
         : await adminForceCompleteTransaction(transaction.transaction_id, payload);
 
       updateTransactionInList(updatedTransaction);
-      setSuccessMessage(
-        isCancel
-          ? "Admin đã hủy giao dịch thành công."
-          : "Admin đã cưỡng chế hoàn tất giao dịch thành công.",
-      );
+      setSuccessMessage(config.successMessage);
+      setActionModal(defaultActionModal);
+      setAdminReason("");
     } catch (err) {
-      setError(getAdminErrorMessage(err));
+      setActionError(getAdminErrorMessage(err));
     } finally {
-      setActionKey("");
+      setActionLoading(false);
     }
   };
 
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
+
+  const currentActionConfig = actionConfig[actionModal.type] || actionConfig.cancel;
 
   return (
     <div className="space-y-6">
@@ -147,8 +193,6 @@ function AdminTransactionsPage() {
               <tbody>
                 {transactions.map((transaction) => {
                   const isPending = transaction.status === "pending";
-                  const cancelKey = `cancel-${transaction.transaction_id}`;
-                  const forceKey = `force-${transaction.transaction_id}`;
 
                   return (
                     <tr key={transaction.transaction_id} className="border-t border-[#ede9da]">
@@ -184,19 +228,19 @@ function AdminTransactionsPage() {
                               type="button"
                               variant="danger"
                               className="rounded-xl px-3 py-2 text-xs"
-                              disabled={Boolean(actionKey)}
-                              onClick={() => handleAdminAction(transaction, "cancel")}
+                              disabled={actionLoading}
+                              onClick={() => openAdminActionModal("cancel", transaction)}
                             >
-                              {actionKey === cancelKey ? "Đang hủy..." : "Hủy giao dịch"}
+                              Hủy giao dịch
                             </Button>
                             <Button
                               type="button"
                               variant="secondary"
                               className="rounded-xl px-3 py-2 text-xs"
-                              disabled={Boolean(actionKey)}
-                              onClick={() => handleAdminAction(transaction, "force")}
+                              disabled={actionLoading}
+                              onClick={() => openAdminActionModal("force-complete", transaction)}
                             >
-                              {actionKey === forceKey ? "Đang xử lý..." : "Cưỡng chế hoàn tất"}
+                              Cưỡng chế hoàn tất
                             </Button>
                           </div>
                         ) : (
@@ -218,6 +262,66 @@ function AdminTransactionsPage() {
           </div>
         </Card>
       ) : null}
+
+      <Modal
+        isOpen={actionModal.open}
+        title={currentActionConfig.title}
+        onClose={closeAdminActionModal}
+      >
+        <form className="space-y-4" onSubmit={submitAdminAction}>
+          <div className="space-y-2">
+            <p className="text-sm font-bold leading-6 text-[#64736d]">
+              {currentActionConfig.description}
+            </p>
+            <div className="rounded-2xl border border-[#ede9da] bg-[#fbfaf3] px-4 py-3 text-sm text-[#082d24]">
+              <p className="font-black">
+                {actionModal.transaction?.book?.title ?? "Giao dịch chưa rõ sách"}
+              </p>
+              <p className="mt-1 text-[#64736d]">
+                Người cho: {actionModal.transaction?.giver?.full_name ?? "—"} · Người nhận:{" "}
+                {actionModal.transaction?.receiver?.full_name ?? "—"}
+              </p>
+            </div>
+          </div>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-black text-[#082d24]">Lý do xử lý</span>
+            <textarea
+              className="min-h-28 w-full resize-y rounded-2xl border border-[#c9d8ce] bg-[#fbfaf3] px-4 py-3 text-sm font-semibold text-[#082d24] outline-none transition focus:border-[#064834] focus:ring-4 focus:ring-[#064834]/10"
+              value={adminReason}
+              onChange={(event) => {
+                setAdminReason(event.target.value);
+                if (actionError) {
+                  setActionError("");
+                }
+              }}
+              disabled={actionLoading}
+              placeholder="Nhập lý do để lưu lại trong thao tác demo..."
+              rows={4}
+            />
+          </label>
+
+          {actionError ? <Alert type="error">{actionError}</Alert> : null}
+
+          <div className="flex flex-wrap justify-end gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={actionLoading}
+              onClick={closeAdminActionModal}
+            >
+              Hủy bỏ
+            </Button>
+            <Button
+              type="submit"
+              variant={currentActionConfig.buttonVariant}
+              disabled={actionLoading || !adminReason.trim()}
+            >
+              {actionLoading ? currentActionConfig.loadingLabel : currentActionConfig.confirmLabel}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
