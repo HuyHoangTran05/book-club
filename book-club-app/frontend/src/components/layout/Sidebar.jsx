@@ -14,6 +14,16 @@ const navigationItems = [
   { label: "Hồ sơ cá nhân", to: "/profile" },
 ];
 
+const hiddenAdminNavigationLabels = new Set([
+  "Thêm sách",
+  "Sách của tôi",
+  "Giao dịch",
+  "Tin nhắn",
+  "Đăng ký giao sách",
+  "Lịch sử điểm",
+  "Đánh giá",
+]);
+
 const adminNavigationItems = [
   { label: "Bảng điều khiển", to: "/admin" },
   { label: "Quản lý thành viên", to: "/admin/members" },
@@ -48,6 +58,9 @@ function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const visibleNavigationItems = isAdmin
+    ? navigationItems.filter((item) => !hiddenAdminNavigationLabels.has(item.label))
+    : navigationItems;
 
   return (
     <>
@@ -60,7 +73,7 @@ function Sidebar({ isOpen, onClose }) {
       />
       <aside
         className={classNames(
-          "fixed left-0 top-0 z-50 h-full w-64 border-r border-[#d9e2d8] bg-[#fbfaf3]/95 p-3 shadow-stitch transition-transform lg:sticky lg:top-20 lg:z-20 lg:h-[calc(100vh-5rem)] lg:w-[220px] lg:min-w-[220px] lg:translate-x-0 lg:bg-transparent lg:shadow-none",
+          "fixed left-0 top-0 z-50 h-full w-64 overflow-y-auto border-r border-[#d9e2d8] bg-[#fbfaf3]/95 p-3 pb-6 shadow-stitch transition-transform lg:sticky lg:top-20 lg:z-20 lg:h-[calc(100vh-5rem)] lg:w-[220px] lg:min-w-[220px] lg:translate-x-0 lg:bg-transparent lg:shadow-none",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -72,7 +85,7 @@ function Sidebar({ isOpen, onClose }) {
         </div>
 
         <nav className="space-y-2">
-          {navigationItems.map((item) => (
+          {visibleNavigationItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
