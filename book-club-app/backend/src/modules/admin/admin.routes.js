@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { authorizeRoles, protect } from "../../middlewares/authMiddleware.js";
 import {
+  cancelTransaction,
   deleteMember,
+  forceCompleteTransaction,
   getStats,
   listMembers,
   listTransactions,
@@ -20,5 +22,7 @@ router.put("/members/:memberId/status", updateMemberStatus);
 router.delete("/members/:memberId", deleteMember);
 
 router.get("/transactions", listTransactions);
+router.put("/transactions/:transactionId/cancel", cancelTransaction);
+router.put("/transactions/:transactionId/force-complete", forceCompleteTransaction);
 
 export default router;

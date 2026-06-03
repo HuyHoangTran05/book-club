@@ -33,6 +33,19 @@ export const listTransactions = asyncHandler(async (req, res) => {
   successResponse(res, transactions, "Lấy danh sách giao dịch thành công");
 });
 
+export const cancelTransaction = asyncHandler(async (req, res) => {
+  const transaction = await adminService.cancelTransactionByAdmin(req.params.transactionId, req.body);
+  successResponse(res, transaction, "Admin đã hủy giao dịch thành công");
+});
+
+export const forceCompleteTransaction = asyncHandler(async (req, res) => {
+  const transaction = await adminService.forceCompleteTransactionByAdmin(
+    req.params.transactionId,
+    req.body,
+  );
+  successResponse(res, transaction, "Admin đã cưỡng chế hoàn tất giao dịch thành công");
+});
+
 export const downloadSummaryReport = asyncHandler(async (req, res) => {
   const format = String(req.query.format ?? "xlsx").toLowerCase();
   const stamp = new Date().toISOString().slice(0, 10);
