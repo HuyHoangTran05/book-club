@@ -44,13 +44,8 @@ export async function getAdminTransactions(params = {}) {
   return unwrap(response);
 }
 
-export async function cancelTransaction(transactionId) {
-  const response = await api.put(apiPath(`/admin/transactions/${transactionId}/cancel`));
-  return unwrap(response);
-}
-
 export async function downloadReport(format = "xlsx") {
-  const response = await api.get(apiPath("/admin/reports/summary"), {
+  const response = await api.get(apiPath("/reports/summary"), {
     params: { format },
     responseType: "blob",
   });

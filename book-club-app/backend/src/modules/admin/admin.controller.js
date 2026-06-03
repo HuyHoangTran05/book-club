@@ -1,4 +1,5 @@
 import asyncHandler from "../../utils/asyncHandler.js";
+import createHttpError from "../../utils/createHttpError.js";
 import { successResponse } from "../../utils/response.js";
 import adminService from "./admin.service.js";
 import { buildSummaryPdf, buildSummaryWorkbook } from "./report.service.js";
@@ -32,11 +33,6 @@ export const listTransactions = asyncHandler(async (req, res) => {
   successResponse(res, transactions, "Lấy danh sách giao dịch thành công");
 });
 
-export const cancelTransaction = asyncHandler(async (req, res) => {
-  const transaction = await adminService.forceCancelTransaction(req.params.transactionId);
-  successResponse(res, transaction, "Huỷ giao dịch thành công");
-});
-
 export const downloadSummaryReport = asyncHandler(async (req, res) => {
   const format = String(req.query.format ?? "xlsx").toLowerCase();
   const stamp = new Date().toISOString().slice(0, 10);
@@ -48,9 +44,8 @@ export const downloadSummaryReport = asyncHandler(async (req, res) => {
     return res.send(pdf);
   }
 
-  if (format === "json") {
-    const stats = await adminService.getStats();
-    return successResponse(res, stats, "Báo cáo tổng hợp");
+  if (format !== "xlsx") {
+    throw createHttpError("format chỉ hỗ trợ xlsx hoặc pdf", 400);
   }
 
   const workbook = await buildSummaryWorkbook();

@@ -36,12 +36,10 @@ sidebar "Quản trị" section only renders for admin accounts.
 | --- | --- | --- |
 | GET | `/api/admin/stats` | Dashboard totals, status/type breakdown, today/7d/30d, top 10 by points, transactions pending > 7 days |
 | GET | `/api/admin/members` | List members (filters: `q`, `status`, `role`) |
-| PUT | `/api/admin/members/:memberId/status` | Lock / unlock / deactivate (`{ "account_status": "active" \| "locked" \| "inactive" }`) |
+| PUT | `/api/admin/members/:memberId/status` | Lock / unlock (`{ "account_status": "active" \| "locked" }`) |
 | DELETE | `/api/admin/members/:memberId` | Delete a member (blocked with 409 if they own books or have transactions — lock instead) |
 | GET | `/api/admin/transactions` | List all transactions (filters: `status`, `type`) |
-| PUT | `/api/admin/transactions/:transactionId/cancel` | Force-cancel a pending transaction and release the book |
-| GET | `/api/admin/reports/summary?format=xlsx\|pdf\|json` | Download summary report |
-| GET | `/api/reports/summary?format=…` | Same report, alias matching the PTTK API design |
+| GET | `/api/reports/summary?format=xlsx\|pdf` | Download summary report, matching the PTTK API design |
 
 ## Frontend pages
 
@@ -49,7 +47,7 @@ sidebar "Quản trị" section only renders for admin accounts.
 | --- | --- |
 | `/admin` | Dashboard — stat cards, status/type breakdown, top members, pending-over-7-days alerts, Excel/PDF export |
 | `/admin/members` | Member management — search, lock/unlock, delete |
-| `/admin/transactions` | Transaction monitor — filter by status, force-cancel |
+| `/admin/transactions` | Transaction monitor — filter by status |
 
 ## Notes
 
@@ -57,5 +55,5 @@ sidebar "Quản trị" section only renders for admin accounts.
   (e.g. "Nguyen Van An") because pdfkit's built-in fonts lack Vietnamese
   diacritics; embed a Unicode TTF font to render full Vietnamese in PDF.
 - The admin starts with `point_balance = 0` and does not take part in trading.
-- Admin accounts cannot lock, deactivate, or delete other admin accounts, nor
+- Admin accounts cannot lock, unlock, or delete other admin accounts, nor
   act on their own account.

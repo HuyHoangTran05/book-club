@@ -1,4 +1,4 @@
-import { Op, Transaction } from "sequelize";
+import { Op } from "sequelize";
 import {
   sequelize,
   Member,
@@ -9,7 +9,7 @@ import {
 } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
 
-const ACCOUNT_STATUSES = ["active", "locked", "inactive"];
+const ACCOUNT_STATUSES = ["active", "locked"];
 
 const memberPublicAttributes = [
   "member_id",
@@ -247,18 +247,6 @@ const deleteMember = async (adminId, memberId) => {
   return { member_id: memberId, deleted: true };
 };
 
-const getTransactionById = async (transactionId) => {
-  const transaction = await BookTransaction.findByPk(transactionId, {
-    include: transactionInclude,
-  });
-
-  if (!transaction) {
-    throw createHttpError("Không tìm thấy giao dịch", 404);
-  }
-
-  return sanitizeTransaction(transaction);
-};
-
 const listTransactions = async (query = {}) => {
   const where = {};
   const status = String(query.status ?? "").trim();
@@ -282,44 +270,12 @@ const listTransactions = async (query = {}) => {
   return transactions.map(sanitizeTransaction);
 };
 
-const forceCancelTransaction = async (transactionId) => {
-  await sequelize.transaction(async (dbTransaction) => {
-    const transaction = await BookTransaction.findByPk(transactionId, {
-      transaction: dbTransaction,
-      lock: Transaction.LOCK.UPDATE,
-    });
-
-    if (!transaction) {
-      throw createHttpError("Không tìm thấy giao dịch", 404);
-    }
-
-    if (transaction.status !== "pending") {
-      throw createHttpError("Chỉ có thể huỷ giao dịch đang chờ xử lý", 400);
-    }
-
-    const bookCopy = await BookCopy.findByPk(transaction.copy_id, {
-      transaction: dbTransaction,
-      lock: Transaction.LOCK.UPDATE,
-    });
-
-    await transaction.update({ status: "cancelled" }, { transaction: dbTransaction });
-
-    if (bookCopy && bookCopy.status === "reserved") {
-      await bookCopy.update({ status: "available" }, { transaction: dbTransaction });
-    }
-  });
-
-  return getTransactionById(transactionId);
-};
-
 const adminService = {
   getStats,
   listMembers,
   updateMemberStatus,
   deleteMember,
   listTransactions,
-  forceCancelTransaction,
-  getTransactionById,
 };
 
 export default adminService;

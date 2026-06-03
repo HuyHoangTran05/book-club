@@ -11,7 +11,6 @@ const statusOptions = [
   { value: "", label: "Tất cả trạng thái" },
   { value: "active", label: "Đang hoạt động" },
   { value: "locked", label: "Đã khoá" },
-  { value: "inactive", label: "Ngừng hoạt động" },
 ];
 
 function statusBadge(status) {
@@ -23,7 +22,7 @@ function statusBadge(status) {
 function statusLabel(status) {
   if (status === "active") return "Hoạt động";
   if (status === "locked") return "Đã khoá";
-  return "Ngừng";
+  return "Thông tin";
 }
 
 function AdminMembersPage() {
@@ -160,9 +159,14 @@ function AdminMembersPage() {
                       <td className="px-2 py-2 font-bold text-[#082d24]">{member.full_name}</td>
                       <td className="px-2 py-2 text-[#64736d]">{member.email}</td>
                       <td className="px-2 py-2">
-                        <Badge status={isAdmin ? "reserved" : "neutral"}>
-                          {isAdmin ? "Quản trị" : "Thành viên"}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1.5">
+                          <Badge status={isAdmin ? "reserved" : "neutral"}>
+                            {isAdmin ? "Quản trị" : "Thành viên"}
+                          </Badge>
+                          {!isAdmin && member.is_deliverer ? (
+                            <Badge status="completed">Người giao sách</Badge>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-2 py-2">{member.point_balance}</td>
                       <td className="px-2 py-2">

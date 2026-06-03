@@ -210,6 +210,7 @@ function getDelivererLabel(deliverer = {}) {
 function BookListPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [books, setBooks] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [contactingOwnerId, setContactingOwnerId] = useState("");
@@ -317,6 +318,10 @@ function BookListPage() {
   }, [deliverers, user]);
 
   function openTransactionModal(book) {
+    if (isAdmin) {
+      return;
+    }
+
     const allowedTypes = getAllowedTransactionTypes(book);
 
     setSelectedBook(book);
@@ -392,7 +397,7 @@ function BookListPage() {
   async function handleCreateTransaction(event) {
     event.preventDefault();
 
-    if (!selectedBook) {
+    if (isAdmin || !selectedBook) {
       return;
     }
 
@@ -568,7 +573,7 @@ function BookListPage() {
             const ownerName = getOwnerName(book);
             const coverUrl = getCoverUrl(book);
             const isOwnBook = bookBelongsToUser(book, user);
-            const canCreateTransaction = book.status === "available" && !isOwnBook;
+            const canCreateTransaction = book.status === "available" && !isOwnBook && !isAdmin;
 
             return (
               <article className="booklist-card" key={getBookKey(book)}>
@@ -651,7 +656,7 @@ function BookListPage() {
         </>
       ) : null}
 
-      {selectedBook ? (
+      {selectedBook && !isAdmin ? (
         <div className="booklist-modal-backdrop">
           <form className="booklist-transaction-modal" onSubmit={handleCreateTransaction}>
             <div className="booklist-modal-header">

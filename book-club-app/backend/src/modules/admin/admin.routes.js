@@ -1,9 +1,7 @@
 import { Router } from "express";
 import { authorizeRoles, protect } from "../../middlewares/authMiddleware.js";
 import {
-  cancelTransaction,
   deleteMember,
-  downloadSummaryReport,
   getStats,
   listMembers,
   listTransactions,
@@ -22,8 +20,5 @@ router.put("/members/:memberId/status", updateMemberStatus);
 router.delete("/members/:memberId", deleteMember);
 
 router.get("/transactions", listTransactions);
-router.put("/transactions/:transactionId/cancel", cancelTransaction);
-
-router.get("/reports/summary", downloadSummaryReport);
 
 export default router;
