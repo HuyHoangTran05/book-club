@@ -1,17 +1,67 @@
 # BookCommunity - Hệ thống kết nối thành viên câu lạc bộ đọc sách
 
-BookCommunity, hay Cộng Đồng Sách, là ứng dụng web giúp thành viên câu lạc bộ đọc sách chia sẻ, trao đổi và cho mượn sách trong cộng đồng.
+BookCommunity, hay Cộng Đồng Sách, là hệ thống web hỗ trợ thành viên câu lạc bộ đọc sách đăng sách, tìm kiếm sách, liên hệ chủ sách, tạo giao dịch mượn/trao đổi sách, tích điểm, đăng ký người giao sách và đánh giá sau giao dịch.
 
-Hệ thống dùng cơ chế điểm để khuyến khích chia sẻ:
+Hệ thống giải quyết bài toán chia sẻ sách trong cộng đồng:
 
-- Thành viên mới nhận 20 điểm khi đăng ký.
-- Trao đổi vĩnh viễn: chủ sách +10 điểm, người nhận -10 điểm.
-- Cho mượn sách: chủ sách +5 điểm, người mượn -5 điểm.
-- Người giao sách xác nhận giao thành công nhận +2 điểm.
+- Thành viên có sách muốn chia sẻ, trao đổi hoặc cho mượn.
+- Thành viên khác muốn tìm sách phù hợp và liên hệ chủ sách.
+- Giao dịch được quản lý bằng trạng thái xác nhận rõ ràng.
+- Điểm thưởng giúp khuyến khích đóng góp sách và hỗ trợ giao sách.
+- Admin có thể giám sát hệ thống, quản lý thành viên và xử lý giao dịch đang treo.
 
-Ứng dụng có các luồng chính: đăng sách, tìm kiếm sách, liên hệ chủ sách, nhắn tin, tạo giao dịch mượn hoặc trao đổi, chọn người giao sách, xác nhận giao dịch, xem lịch sử điểm và đánh giá sau giao dịch.
+## 1. Giới thiệu hệ thống
 
-## Tổng quan chức năng
+BookCommunity gồm frontend React, backend Express và database PostgreSQL. Frontend gọi API backend qua HTTP, backend xác thực người dùng bằng JWT, xử lý nghiệp vụ sách/giao dịch/điểm/tin nhắn và lưu dữ liệu bằng Sequelize.
+
+Cơ chế điểm hiện tại:
+
+| Hoạt động | Điểm |
+|---|---:|
+| Thành viên mới đăng ký | +20 |
+| Trao đổi vĩnh viễn | Chủ sách +10, người nhận -10 |
+| Cho mượn sách | Chủ sách +5, người mượn -5 |
+| Người giao sách hoàn tất giao sách | +2 |
+
+### Một số giao diện chính
+
+#### Trang chủ
+
+![Homepage](docs/images/homepage.png)
+
+#### Đăng nhập
+
+![Login](docs/images/login.png)
+
+#### Đăng ký
+
+![Register](docs/images/register.png)
+
+#### Khám phá sách
+
+![Books](docs/images/books.png)
+
+#### Thêm sách
+
+![Add Book](docs/images/add-book.png)
+
+#### Giao dịch của tôi
+
+![Transactions](docs/images/transactions.png)
+
+#### Lịch sử điểm
+
+![Point History](docs/images/point-history.png)
+
+#### Tin nhắn
+
+![Conversations](docs/images/conversations.png)
+
+#### Admin dashboard
+
+![Admin Dashboard](docs/images/admin-dashboard.png)
+
+## 2. Chức năng chính
 
 ### Khách
 
@@ -21,51 +71,54 @@ Hệ thống dùng cơ chế điểm để khuyến khích chia sẻ:
 
 ### Thành viên
 
-- Quản lý hồ sơ cá nhân.
+- Xem và cập nhật hồ sơ cá nhân.
 - Đổi mật khẩu.
 - Xem danh sách sách.
-- Tìm kiếm, lọc và phân trang sách.
-- Thêm sách mới.
-- Upload ảnh bìa sách.
-- Xem sách của tôi.
-- Sửa hoặc xóa sách của tôi.
-- Liên hệ chủ sách.
-- Nhắn tin trong cuộc trò chuyện.
+- Tìm kiếm, lọc và phân trang sách theo từ khóa, thể loại, tác giả, năm xuất bản.
+- Thêm sách và upload ảnh bìa.
+- Xem, sửa, ẩn/xóa sách của tôi.
+- Liên hệ chủ sách và nhắn tin trong cuộc trò chuyện.
 - Tạo giao dịch mượn hoặc trao đổi sách.
 - Chọn người giao sách nếu cần.
-- Xác nhận hoặc hủy giao dịch.
+- Xác nhận hoặc hủy giao dịch đang chờ.
 - Xem lịch sử điểm.
+- Xem thông báo cá nhân.
 - Đăng ký làm người giao sách.
 - Đánh giá thành viên sau giao dịch hoàn tất.
 
 ### Người giao sách
 
-- Đăng ký hồ sơ giao sách.
+- Đăng ký hồ sơ người giao.
 - Cập nhật khu vực và thời gian giao sách.
-- Bật hoặc tắt trạng thái hoạt động.
+- Bật/tắt trạng thái hoạt động.
+- Xem giao dịch có mình là người giao.
 - Xác nhận giao sách.
-- Nhận điểm thưởng +2 khi giao dịch hoàn tất có người giao sách.
+- Nhận điểm thưởng khi giao dịch có giao sách hoàn tất.
 
 ### Admin
 
-Admin hiện có các chức năng:
+Các chức năng admin đã có trong code hiện tại:
 
-- Đăng nhập bằng tài khoản quản trị.
-- Xem dashboard thống kê hệ thống.
+- Dashboard thống kê tổng quan hệ thống.
 - Quản lý thành viên.
-- Tìm kiếm, lọc thành viên theo trạng thái hoặc vai trò.
-- Khóa, mở khóa hoặc xóa thành viên.
-- Giám sát danh sách giao dịch.
-- Lọc giao dịch theo trạng thái hoặc loại giao dịch.
-- Xuất báo cáo tổng hợp dạng Excel hoặc PDF qua API báo cáo.
+- Tìm kiếm, lọc thành viên theo trạng thái.
+- Khóa/mở khóa tài khoản thành viên.
+- Xóa thành viên nếu không vướng dữ liệu liên quan.
+- Giám sát danh sách giao dịch toàn hệ thống.
+- Lọc giao dịch theo trạng thái.
+- Hủy giao dịch đang chờ xử lý.
+- Cưỡng chế hoàn tất giao dịch đang chờ xử lý.
+- Xuất báo cáo tổng hợp dạng Excel hoặc PDF.
 
-Chưa có trang admin quản lý sách riêng. Nếu báo cáo hoặc demo cần phần này, có thể xem là hướng phát triển tiếp theo.
+Chưa có trang admin quản lý sách riêng và chưa có realtime chat/notification bằng WebSocket.
 
-## Công nghệ sử dụng
+## 3. Công nghệ sử dụng
 
 | Thành phần | Công nghệ |
 |---|---|
 | Frontend | React, Vite, CSS |
+| Routing | React Router |
+| HTTP client | Axios |
 | Backend | Node.js, Express |
 | Database | PostgreSQL |
 | ORM | Sequelize |
@@ -74,7 +127,22 @@ Chưa có trang admin quản lý sách riêng. Nếu báo cáo hoặc demo cần
 | Report export | exceljs, pdfkit |
 | DevOps | Docker, Docker Compose |
 
-## Cấu trúc thư mục
+## 4. Kiến trúc tổng quan
+
+```text
+React Frontend  <---- REST API ---->  Express Backend  <---- Sequelize ----> PostgreSQL
+                                           |
+                                           +---- backend/uploads/book-covers
+```
+
+- Frontend React chạy bằng Vite tại `http://localhost:5173`.
+- Backend Express chạy tại `http://localhost:5000`.
+- API backend có prefix `/api`.
+- Các API cần đăng nhập sử dụng header `Authorization: Bearer <token>`.
+- Ảnh bìa sách upload được lưu trong `backend/uploads/book-covers`.
+- Static upload được phục vụ qua `/uploads`, ví dụ `http://localhost:5000/uploads/book-covers/<filename>`.
+
+## 5. Cấu trúc thư mục
 
 ```text
 book-club-app/
@@ -93,6 +161,7 @@ book-club-app/
 │   │   │   ├── conversations/
 │   │   │   ├── deliverers/
 │   │   │   ├── members/
+│   │   │   ├── notifications/
 │   │   │   ├── points/
 │   │   │   ├── ratings/
 │   │   │   └── transactions/
@@ -114,11 +183,12 @@ book-club-app/
 │   │   └── utils/
 │   └── package.json
 ├── docs/
+│   └── images/
 ├── docker-compose.yml
 └── README.md
 ```
 
-## Yêu cầu cài đặt
+## 6. Yêu cầu cài đặt
 
 - Node.js >= 18.
 - npm >= 9.
@@ -126,45 +196,47 @@ book-club-app/
 - Docker Desktop hoặc Docker Engine nếu chạy PostgreSQL bằng Docker Compose.
 - PostgreSQL >= 14 nếu không dùng Docker.
 
-Project hiện dùng PostgreSQL 16 trong `docker-compose.yml`.
+Project hiện cấu hình PostgreSQL 16 trong `docker-compose.yml`.
 
-## Cách chạy project
+## 7. Cách chạy project
 
-### 1. Clone project
+### 7.1. Clone project
 
 ```bash
 git clone <repo-url>
 cd <project-folder>/book-club-app
 ```
 
-Nếu repository của bạn clone trực tiếp vào thư mục `book-club-app`, chỉ cần:
+Nếu repository được clone trực tiếp vào thư mục `book-club-app`:
 
 ```bash
 cd book-club-app
 ```
 
-### 2. Chạy PostgreSQL bằng Docker
+### 7.2. Chạy PostgreSQL bằng Docker
 
 ```bash
 docker compose up -d
 ```
 
-Theo cấu hình hiện tại:
+Cấu hình database mặc định:
 
-- PostgreSQL trong container chạy ở port `5432`.
-- Máy host truy cập PostgreSQL qua port `5433`.
+| Biến | Giá trị |
+|---|---|
+| Database | `book_club_db` |
+| User | `book_club_user` |
+| Password | `book_club_password` |
+| Host | `localhost` |
+| Port trên máy host | `5433` |
+| Port trong container | `5432` |
 
-Thông tin database:
+Kiểm tra container:
 
-```text
-Database: book_club_db
-User: book_club_user
-Password: book_club_password
-Host: localhost
-Port: 5433
+```bash
+docker compose ps
 ```
 
-### 3. Cài đặt và cấu hình backend
+### 7.3. Cài đặt backend
 
 ```bash
 cd backend
@@ -172,7 +244,7 @@ npm install
 cp .env.example .env
 ```
 
-Nếu dùng Windows PowerShell:
+Trên Windows PowerShell:
 
 ```powershell
 cd backend
@@ -180,7 +252,7 @@ npm install
 copy .env.example .env
 ```
 
-Nội dung `backend/.env` nên có dạng:
+Nội dung `backend/.env.example` hiện có:
 
 ```env
 NODE_ENV=development
@@ -194,13 +266,13 @@ DB_PASSWORD=book_club_password
 DB_DIALECT=postgres
 DB_LOGGING=false
 
-JWT_SECRET=change_this_secret_in_local_env
+JWT_SECRET=change_this_secret
 JWT_EXPIRES_IN=7d
 ```
 
-Lưu ý: `JWT_SECRET` ở trên chỉ là ví dụ cho môi trường local. Không dùng secret này cho production.
+Lưu ý: đổi `JWT_SECRET` khi triển khai môi trường thật. Không dùng secret demo cho production.
 
-### 4. Chạy migration, seed data và tạo admin
+### 7.4. Chạy migration, seed data và tạo admin
 
 Từ thư mục `backend`:
 
@@ -210,7 +282,7 @@ npm run db:seed
 npm run db:create-admin
 ```
 
-Các alias tương đương cũng tồn tại:
+Các alias tương đương:
 
 ```bash
 npm run migrate
@@ -218,14 +290,7 @@ npm run seed
 npm run create-admin
 ```
 
-`npm run db:create-admin` tạo hoặc cập nhật tài khoản admin mặc định:
-
-```text
-Email: admin@gmail.com
-Password: Hungdzvcl2005
-```
-
-### 5. Chạy backend
+### 7.5. Chạy backend
 
 Từ thư mục `backend`:
 
@@ -239,7 +304,7 @@ Backend chạy tại:
 http://localhost:5000
 ```
 
-Kiểm tra backend:
+Kiểm tra API:
 
 ```bash
 curl http://localhost:5000/api/health
@@ -254,9 +319,9 @@ Kết quả mong đợi:
 }
 ```
 
-### 6. Cài đặt và chạy frontend
+### 7.6. Cài đặt và chạy frontend
 
-Mở terminal khác, từ thư mục `book-club-app`:
+Mở terminal khác từ thư mục `book-club-app`:
 
 ```bash
 cd frontend
@@ -265,7 +330,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Nếu dùng Windows PowerShell:
+Trên Windows PowerShell:
 
 ```powershell
 cd frontend
@@ -274,7 +339,7 @@ copy .env.example .env
 npm run dev
 ```
 
-Nội dung `frontend/.env`:
+Nội dung `frontend/.env.example` hiện có:
 
 ```env
 VITE_API_URL=http://localhost:5000
@@ -287,7 +352,7 @@ Frontend chạy tại:
 http://localhost:5173
 ```
 
-### 7. Build frontend
+### 7.7. Build frontend
 
 Từ thư mục `frontend`:
 
@@ -295,9 +360,9 @@ Từ thư mục `frontend`:
 npm run build
 ```
 
-## Tài khoản demo
+## 8. Tài khoản demo
 
-Sau khi chạy seed, có nhiều tài khoản demo. Một số tài khoản thường dùng:
+Sau khi chạy seed và `db:create-admin`, có thể dùng các tài khoản sau:
 
 | Vai trò | Email | Password |
 |---|---|---|
@@ -308,14 +373,14 @@ Sau khi chạy seed, có nhiều tài khoản demo. Một số tài khoản thư
 | Người nhận phụ | `receiver2@example.com` | `manhdung123123` |
 | Admin | `admin@gmail.com` | `Hungdzvcl2005` |
 
-Nếu tài khoản admin không đăng nhập được, chạy lại:
+Nếu admin không đăng nhập được:
 
 ```bash
 cd backend
 npm run db:create-admin
 ```
 
-## API chính
+## 9. API chính
 
 Base URL:
 
@@ -323,7 +388,7 @@ Base URL:
 http://localhost:5000/api
 ```
 
-Các API cần đăng nhập dùng header:
+Header cho API cần đăng nhập:
 
 ```text
 Authorization: Bearer <token>
@@ -336,7 +401,7 @@ Authorization: Bearer <token>
 | GET | `/api/auth/ping` | Kiểm tra module auth |
 | POST | `/api/auth/register` | Đăng ký |
 | POST | `/api/auth/login` | Đăng nhập |
-| GET | `/api/auth/me` | Lấy user hiện tại |
+| GET | `/api/auth/me` | Lấy thông tin user hiện tại |
 
 ### Members/Profile
 
@@ -367,21 +432,22 @@ keyword
 category
 author
 year
+publication_year
 ```
 
 Upload ảnh bìa khi thêm sách:
 
 - Dùng `multipart/form-data`.
 - Field file: `cover`.
-- Ảnh được lưu tại `backend/uploads/book-covers`.
+- Chỉ nhận JPG, PNG, WEBP theo middleware upload.
 - URL lưu trong database dạng `/uploads/book-covers/<filename>`.
 
 ### Conversations
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
-| POST | `/api/conversations/:userId` | Tạo hoặc lấy cuộc trò chuyện với user |
 | GET | `/api/conversations` | Danh sách cuộc trò chuyện của tôi |
+| POST | `/api/conversations/:userId` | Tạo hoặc lấy cuộc trò chuyện với user |
 | GET | `/api/conversations/:conversationId/messages` | Tin nhắn trong cuộc trò chuyện |
 | POST | `/api/conversations/:conversationId/messages` | Gửi tin nhắn |
 
@@ -389,13 +455,14 @@ Upload ảnh bìa khi thêm sách:
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
+| GET | `/api/transactions/ping` | Kiểm tra module transaction |
 | POST | `/api/transactions` | Tạo giao dịch |
 | GET | `/api/transactions/my` | Giao dịch liên quan tới tôi |
 | GET | `/api/transactions/:transactionId` | Chi tiết giao dịch |
 | PUT | `/api/transactions/:transactionId/confirm` | Xác nhận giao dịch hoặc xác nhận giao sách |
 | PUT | `/api/transactions/:transactionId/cancel` | Hủy giao dịch pending |
 
-Payload tạo giao dịch không có người giao sách:
+Payload tạo giao dịch không có người giao:
 
 ```json
 {
@@ -404,7 +471,7 @@ Payload tạo giao dịch không có người giao sách:
 }
 ```
 
-Payload tạo giao dịch có người giao sách:
+Payload tạo giao dịch có người giao:
 
 ```json
 {
@@ -419,16 +486,28 @@ Payload tạo giao dịch có người giao sách:
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
+| GET | `/api/points/ping` | Kiểm tra module points |
 | GET | `/api/points/history` | Lịch sử điểm của user hiện tại |
 
 ### Deliverers
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
+| GET | `/api/deliverers/ping` | Kiểm tra module deliverers |
 | GET | `/api/deliverers` | Danh sách người giao sách đang hoạt động |
 | POST | `/api/deliverers/register` | Đăng ký làm người giao sách |
 | GET | `/api/deliverers/me` | Hồ sơ giao sách của tôi |
 | PUT | `/api/deliverers/me` | Cập nhật hồ sơ giao sách |
+
+### Notifications
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| GET | `/api/notifications` | Danh sách thông báo của tôi |
+| GET | `/api/notifications/summary` | Tóm tắt thông báo |
+| GET | `/api/notifications/unread-count` | Số thông báo chưa đọc |
+| PUT | `/api/notifications/read-all` | Đánh dấu tất cả đã đọc |
+| PUT | `/api/notifications/:notificationId/read` | Đánh dấu một thông báo đã đọc |
 
 ### Ratings
 
@@ -450,10 +529,12 @@ Admin API yêu cầu JWT hợp lệ và role `admin`.
 | PUT | `/api/admin/members/:memberId/status` | Khóa hoặc mở khóa thành viên |
 | DELETE | `/api/admin/members/:memberId` | Xóa thành viên nếu không vướng dữ liệu liên quan |
 | GET | `/api/admin/transactions` | Danh sách giao dịch toàn hệ thống |
+| PUT | `/api/admin/transactions/:transactionId/cancel` | Admin hủy giao dịch pending |
+| PUT | `/api/admin/transactions/:transactionId/force-complete` | Admin cưỡng chế hoàn tất giao dịch pending |
 | GET | `/api/reports/summary?format=xlsx` | Xuất báo cáo Excel |
 | GET | `/api/reports/summary?format=pdf` | Xuất báo cáo PDF |
 
-## Frontend routes
+## 10. Frontend routes
 
 ### Public
 
@@ -474,6 +555,7 @@ Admin API yêu cầu JWT hợp lệ và role `admin`.
 | `/transactions` | Giao dịch của tôi |
 | `/conversations` | Danh sách cuộc trò chuyện |
 | `/conversations/:conversationId` | Chi tiết cuộc trò chuyện |
+| `/notifications` | Thông báo |
 | `/deliverer-profile` | Hồ sơ người giao sách |
 | `/profile` | Hồ sơ cá nhân |
 | `/ratings` | Đánh giá |
@@ -485,13 +567,13 @@ Admin API yêu cầu JWT hợp lệ và role `admin`.
 |---|---|
 | `/admin` | Dashboard admin |
 | `/admin/members` | Quản lý thành viên |
-| `/admin/transactions` | Giám sát giao dịch |
+| `/admin/transactions` | Giám sát và xử lý giao dịch |
 
-## Luồng demo gợi ý
+## 11. Luồng demo gợi ý
 
 ### Luồng 1: Thành viên tạo giao dịch không có người giao
 
-1. Đăng nhập bằng tài khoản người nhận.
+1. Đăng nhập bằng tài khoản người nhận, ví dụ `23020520@vnu.edu.vn`.
 2. Vào `/books`.
 3. Chọn sách của thành viên khác.
 4. Tạo giao dịch vĩnh viễn hoặc cho mượn.
@@ -508,22 +590,22 @@ Admin API yêu cầu JWT hợp lệ và role `admin`.
 3. Tạo giao dịch và chọn người giao sách.
 4. Người nhận và chủ sách xác nhận.
 5. Giao dịch vẫn `pending` nếu người giao chưa xác nhận.
-6. Đăng nhập bằng người giao sách.
+6. Đăng nhập bằng người giao sách, ví dụ `deliverer@example.com`.
 7. Vào `/transactions`.
 8. Xác nhận giao sách.
 9. Giao dịch chuyển `completed`.
 10. Người giao sách nhận +2 điểm.
 
-### Luồng 3: Admin
+### Luồng 3: Admin xử lý giao dịch
 
 1. Đăng nhập bằng `admin@gmail.com`.
-2. Vào `/admin`.
-3. Xem thống kê tổng quan.
-4. Vào `/admin/members` để khóa/mở khóa thành viên.
-5. Vào `/admin/transactions` để xem giao dịch.
-6. Xuất báo cáo từ dashboard.
+2. Vào `/admin` để xem thống kê.
+3. Vào `/admin/members` để khóa/mở khóa thành viên.
+4. Vào `/admin/transactions` để xem giao dịch.
+5. Với giao dịch `pending`, admin có thể hủy hoặc cưỡng chế hoàn tất.
+6. Xuất báo cáo từ dashboard admin nếu cần.
 
-## Script npm
+## 12. Script npm
 
 ### Backend
 
@@ -546,7 +628,7 @@ Admin API yêu cầu JWT hợp lệ và role `admin`.
 | `npm run build` | Build production |
 | `npm run preview` | Preview bản build |
 
-## Troubleshooting
+## 13. Troubleshooting
 
 ### Backend không kết nối được PostgreSQL
 
@@ -572,7 +654,11 @@ Backend API có prefix `/api`. Endpoint đúng là:
 POST http://localhost:5000/api/auth/register
 ```
 
-Frontend phải dùng `VITE_API_URL=http://localhost:5000`.
+Frontend nên dùng:
+
+```env
+VITE_API_URL=http://localhost:5000
+```
 
 ### Giao dịch hiển thị dữ liệu giả
 
@@ -581,8 +667,6 @@ Kiểm tra frontend env:
 ```env
 VITE_USE_MOCK_TRANSACTION=false
 ```
-
-Service transaction chỉ bật mock khi biến này đúng bằng `"true"`.
 
 ### Admin không đăng nhập được
 
@@ -613,7 +697,11 @@ Kiểm tra file có tồn tại trong:
 backend/uploads/book-covers
 ```
 
-## Kiểm tra nhanh trước demo
+### Chạy `npm` trong WSL bị nhảy sang CMD/UNC path
+
+Nếu terminal WSL báo `UNC paths are not supported`, hãy đảm bảo dùng Node/npm trong WSL thay vì Node Windows. Một cách đơn giản là cài Node bằng `nvm` trong WSL hoặc mở terminal trực tiếp tại đường dẫn Linux như `/home/<user>/...`.
+
+## 14. Kiểm tra nhanh trước demo
 
 Từ `book-club-app/backend`:
 
@@ -645,19 +733,18 @@ Kiểm tra API:
 curl http://localhost:5000/api/health
 ```
 
-## Hướng phát triển
+## 15. Hướng phát triển
 
-Các chức năng sau chưa phải phần hoàn thiện chính trong code hiện tại hoặc có thể mở rộng thêm:
-
-- Notification/thông báo thời gian thực.
 - Chat realtime bằng WebSocket.
+- Notification realtime.
 - Trang admin quản lý sách riêng.
 - Admin xử lý báo cáo vi phạm.
 - Export báo cáo nâng cao theo khoảng thời gian.
 - Upload ảnh lên cloud storage như S3 hoặc Cloudinary.
-- Tích hợp email verification thật.
+- Email verification thật.
+- Test tự động end-to-end cho các luồng giao dịch chính.
 
-## Ghi chú bảo mật
+## 16. Ghi chú bảo mật
 
 - Không commit file `.env` thật.
 - Không dùng `JWT_SECRET` mặc định cho production.
