@@ -44,6 +44,19 @@ export async function getAdminTransactions(params = {}) {
   return unwrap(response);
 }
 
+export async function adminCancelTransaction(transactionId, payload = {}) {
+  const response = await api.put(apiPath(`/admin/transactions/${transactionId}/cancel`), payload);
+  return unwrap(response);
+}
+
+export async function adminForceCompleteTransaction(transactionId, payload = {}) {
+  const response = await api.put(
+    apiPath(`/admin/transactions/${transactionId}/force-complete`),
+    payload,
+  );
+  return unwrap(response);
+}
+
 export async function downloadReport(format = "xlsx") {
   const response = await api.get(apiPath("/reports/summary"), {
     params: { format },
