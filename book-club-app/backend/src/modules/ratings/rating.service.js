@@ -5,6 +5,7 @@ import {
   Rating,
 } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
+import notificationService from "../notifications/notification.service.js";
 
 const MAX_COMMENT_LENGTH = 1000;
 
@@ -176,7 +177,17 @@ const createRating = async (currentMemberId, payload = {}) => {
       comment,
     });
 
-    return getRatingById(rating.rating_id);
+    const created = await getRatingById(rating.rating_id);
+
+    const raterName = created?.rater?.full_name ?? "Một thành viên";
+    await notificationService.createNotification({
+      member_id: ratedMemberId,
+      type: "rating",
+      reference_id: created?.rating_id ?? rating.rating_id,
+      content: `${raterName} đã đánh giá bạn ${score}★ sau giao dịch.`,
+    });
+
+    return created;
   } catch (error) {
     if (error instanceof UniqueConstraintError) {
       throw createHttpError("You have already rated this member for this transaction", 409);

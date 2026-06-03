@@ -6,6 +6,7 @@ import {
   sequelize,
 } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
+import notificationService from "../notifications/notification.service.js";
 
 const MAX_MESSAGE_LENGTH = 2000;
 
@@ -211,7 +212,23 @@ const sendMessage = async (memberId, conversationId, payload = {}) => {
     });
   });
 
-  return sanitizePlain(message);
+  const plainMessage = sanitizePlain(message);
+
+  const recipientId = [conversation.member1_id, conversation.member2_id].find(
+    (id) => id && id !== memberId,
+  );
+
+  if (recipientId) {
+    const senderName = plainMessage?.sender?.full_name ?? "Một thành viên";
+    await notificationService.createNotification({
+      member_id: recipientId,
+      type: "message",
+      reference_id: conversationId,
+      content: `${senderName} đã gửi cho bạn một tin nhắn mới.`,
+    });
+  }
+
+  return plainMessage;
 };
 
 const conversationService = {

@@ -8,6 +8,7 @@ const navigationItems = [
   { label: "Sách của tôi", to: "/my-books" },
   { label: "Giao dịch", to: "/transactions" },
   { label: "Tin nhắn", to: "/conversations" },
+  { label: "Thông báo", to: "/notifications" },
   { label: "Đăng ký giao sách", to: "/deliverer-profile" },
   { label: "Lịch sử điểm", to: "/points/history" },
   { label: "Đánh giá", to: "/ratings" },

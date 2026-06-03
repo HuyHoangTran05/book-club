@@ -6,6 +6,7 @@ import BookTransaction from "./bookTransaction.model.js";
 import Conversation from "./conversation.model.js";
 import DelivererProfile from "./delivererProfile.model.js";
 import Message from "./message.model.js";
+import Notification from "./notification.model.js";
 import PointHistory from "./pointHistory.model.js";
 import Rating from "./rating.model.js";
 
@@ -135,6 +136,15 @@ Rating.belongsTo(BookTransaction, {
   as: "transaction",
 });
 
+Member.hasMany(Notification, {
+  foreignKey: "member_id",
+  as: "notifications",
+});
+Notification.belongsTo(Member, {
+  foreignKey: "member_id",
+  as: "member",
+});
+
 Member.hasMany(Rating, {
   foreignKey: "rater_id",
   as: "givenRatings",
@@ -162,6 +172,7 @@ export {
   Conversation,
   DelivererProfile,
   Message,
+  Notification,
   PointHistory,
   Rating,
 };

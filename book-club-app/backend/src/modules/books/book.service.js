@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import { sequelize, BookCopy, BookTitle, Member } from "../../models/index.js";
 import createHttpError from "../../utils/createHttpError.js";
+import notificationService from "../notifications/notification.service.js";
 
 const BOOK_TITLE_ALIAS = "bookTitle";
 const OWNER_ALIAS = "owner";
@@ -323,7 +324,7 @@ const createBook = async (memberId, dto) => {
   validateTitlePayload(dto);
   validateCopyPayload(dto);
 
-  return sequelize.transaction(async (transaction) => {
+  const created = await sequelize.transaction(async (transaction) => {
     const bookTitle = await findOrCreateBookTitle(dto, transaction);
     const bookCopy = await BookCopy.create(
       {
@@ -344,6 +345,16 @@ const createBook = async (memberId, dto) => {
 
     return sanitizeBookCopy(createdBook);
   });
+
+  const title = created?.bookTitle?.title ?? "một cuốn sách";
+  await notificationService.createNotification({
+    member_id: memberId,
+    type: "book",
+    reference_id: created?.copy_id ?? null,
+    content: `Bạn đã thêm sách "${title}" vào danh mục trao đổi.`,
+  });
+
+  return created;
 };
 
 const updateBook = async (memberId, copyId, dto) => {
@@ -396,7 +407,16 @@ const updateBook = async (memberId, copyId, dto) => {
 
   await bookCopy.update(updates);
 
-  return getBookById(copyId);
+  const updated = await getBookById(copyId);
+  const title = updated?.bookTitle?.title ?? "một cuốn sách";
+  await notificationService.createNotification({
+    member_id: memberId,
+    type: "book",
+    reference_id: copyId,
+    content: `Bạn đã cập nhật thông tin sách "${title}".`,
+  });
+
+  return updated;
 };
 
 const deleteBook = async (memberId, copyId) => {
@@ -406,8 +426,17 @@ const deleteBook = async (memberId, copyId) => {
     throw createHttpError("Không thể xóa sách đang trong giao dịch", 400);
   }
 
+  const title = bookCopy.bookTitle?.title ?? "một cuốn sách";
+
   await bookCopy.update({
     status: "unavailable",
+  });
+
+  await notificationService.createNotification({
+    member_id: memberId,
+    type: "book",
+    reference_id: copyId,
+    content: `Bạn đã gỡ sách "${title}" khỏi danh mục.`,
   });
 
   return {
